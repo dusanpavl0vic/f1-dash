@@ -1,0 +1,7 @@
+{
+  "name": "scalars replace, including a type change",
+  "why": "The feed is loosely typed and a field can change shape between sessions. A type change must not throw.",
+  "initial": { "Status": "1", "Remaining": "01:23:45", "Extrapolating": true, "Nested": { "a": 1 } },
+  "patch":   { "Status": "4", "Extrapolating": false, "Nested": "now-a-string" },
+  "expected":{ "Status": "4", "Remaining": "01:23:45", "Extrapolating": false, "Nested": "now-a-string" }
+}

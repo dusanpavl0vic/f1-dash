@@ -1,0 +1,7 @@
+{
+  "name": "_deleted removes the listed keys",
+  "why": "Ignoring a deletion leaves a ghost driver on the timing tower for the rest of the session.",
+  "initial": { "Lines": { "1": { "Position": "1" }, "44": { "Position": "2" } } },
+  "patch":   { "Lines": { "_deleted": ["1"] } },
+  "expected":{ "Lines": { "44": { "Position": "2" } } }
+}
