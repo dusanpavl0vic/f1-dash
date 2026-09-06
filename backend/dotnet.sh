@@ -9,7 +9,7 @@
 # the explicit DOTNET_CLI_HOME and XDG_DATA_HOME on a tmpfs-ish path.
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-exec docker run --rm -t \
+exec docker run --rm \
   -v "$REPO_ROOT:/repo" \
   -v f1dash-nuget:/nuget \
   -v f1dash-dotnet-home:/dotnet-home \
@@ -19,7 +19,10 @@ exec docker run --rm -t \
   -e XDG_DATA_HOME=/dotnet-home \
   -e DOTNET_CLI_TELEMETRY_OPTOUT=1 \
   -e DOTNET_NOLOGO=1 \
+  -e MSBUILDTERMINALLOGGER=off \
   -e DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 \
+  -e "ARCHIVE_PATH=${ARCHIVE_PATH:-/repo/data/archive}" \
+  -e "F1_HTTP_PROXY=${F1_HTTP_PROXY:-}" \
   --user "$(id -u):$(id -g)" \
   -w /repo/backend \
   mcr.microsoft.com/dotnet/sdk:9.0 \
