@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #08090c; }
+  * { box-sizing: border-box; }
+  a { color: #2dd4bf; text-decoration: none; }
+  a:hover { color: #5eead4; }
+  table { border-collapse: separate; border-spacing: 0; }
+  ::-webkit-scrollbar { width: 7px; height: 7px; }
+  ::-webkit-scrollbar-thumb { background: #2c3038; border-radius: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  @keyframes toastin { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</helmet>
+<div style="width:1440px;background:#08090c;color:#f7f8fa;font-family:Archivo, system-ui, sans-serif;font-size:13px;display:flex;flex-direction:column;position:relative;">
+
+  <div style="display:flex;align-items:center;gap:18px;padding:14px 20px;background:linear-gradient(180deg,#101319 0%,#0b0d11 100%);border-bottom:1px solid #1c2128;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:30px;height:30px;border-radius:9px;background:#16221f;border:1px solid #22453e;display:flex;align-items:center;justify-content:center;">
+        <div style="width:9px;height:9px;border-radius:3px;background:#2dd4bf;box-shadow:0 0 12px #2dd4bf;"></div>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:800;letter-spacing:.02em;line-height:1.1;">APEX</div>
+        <div style="font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:#6c7480;">Live timing</div>
+      </div>
+    </div>
+
+    <div style="width:1px;height:34px;background:#1c2128;"></div>
+
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="width:32px;height:22px;border-radius:4px;background:#c8102e;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;letter-spacing:.08em;color:#fff;">BHR</div>
+      <div>
+        <div style="font-size:16px;font-weight:700;letter-spacing:-.015em;line-height:1.15;">Bahrain Grand Prix</div>
+        <div style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#6c7480;">Race · Lap 34/57 · 1:24:31 left</div>
+      </div>
+    </div>
+
+    <div style="flex:1 1 auto;"></div>
+
+    <div style="display:flex;align-items:center;gap:14px;height:38px;padding:0 14px;border-radius:11px;background:#0f1318;border:1px solid #1f242c;">
+      <div style="display:flex;align-items:baseline;gap:6px;">
+        <div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#6c7480;">Track</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-size:15px;font-weight:600;">40.2<span style="font-size:10px;color:#79818d;">°C</span></div>
+      </div>
+      <div style="width:1px;height:16px;background:#1f242c;"></div>
+      <div style="display:flex;align-items:baseline;gap:6px;">
+        <div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#6c7480;">Air</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-size:15px;font-weight:600;">23.4<span style="font-size:10px;color:#79818d;">°C</span></div>
+      </div>
+      <div style="width:1px;height:16px;background:#1f242c;"></div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" style="display:block;"><path d="M12 3 L12 21 M12 3 L7 9 M12 3 L17 9" fill="none" stroke="#9aa3af" stroke-width="2.2" transform="rotate(215 12 12)"></path></svg>
+        <div style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-size:15px;font-weight:600;">7.0<span style="font-size:10px;color:#79818d;">km/h</span></div>
+      </div>
+      <div style="width:1px;height:16px;background:#1f242c;"></div>
+      <div style="display:flex;align-items:baseline;gap:6px;">
+        <div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#6c7480;">Hum</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-size:15px;font-weight:600;">32<span style="font-size:10px;color:#79818d;">%</span></div>
+      </div>
+      <div style="width:1px;height:16px;background:#1f242c;"></div>
+      <div style="display:flex;align-items:baseline;gap:6px;">
+        <div style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#6c7480;">Rain</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:#5fd142;">NO</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;height:38px;padding:0 13px;border-radius:11px;background:#20180a;border:1px solid #5c460f;cursor:pointer;">
+      <div style="width:6px;height:6px;border-radius:50%;background:#ffd12e;box-shadow:0 0 8px #ffd12e;"></div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.16em;color:#ffd12e;">DELAY</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-size:14px;font-weight:600;color:#ffd12e;">{{ delayLabel }}</div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;height:38px;padding:0 13px;border-radius:11px;background:#0d1a12;border:1px solid #1d3a26;">
+      <div style="width:7px;height:7px;border-radius:50%;background:#43b02a;box-shadow:0 0 10px #43b02a;"></div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#5fd142;">Live</div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:#0a0c10;border-bottom:1px solid #161b21;">
+    <div style="display:flex;padding:4px;border-radius:12px;background:#0d1014;border:1px solid #1c2128;gap:3px;">
+      <div onClick="{{ goTiming }}" style="display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:9px;cursor:pointer;background:{{ tabTimingBg }};">
+        <div style="font-size:12px;font-weight:700;letter-spacing:.03em;color:{{ tabTimingFg }};">Timing &amp; map</div>
+      </div>
+      <div onClick="{{ goTelemetry }}" style="display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:9px;cursor:pointer;background:{{ tabTeleBg }};">
+        <div style="font-size:12px;font-weight:700;letter-spacing:.03em;color:{{ tabTeleFg }};">Telemetry</div>
+      </div>
+      <div onClick="{{ goNotifications }}" style="display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:9px;cursor:pointer;background:{{ tabNotifBg }};">
+        <div style="font-size:12px;font-weight:700;letter-spacing:.03em;color:{{ tabNotifFg }};">Notifications</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;background:#3a1512;color:#ff6b5e;">{{ notifCount }}</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#535b66;">Status</div>
+      <div style="display:flex;align-items:center;gap:9px;height:32px;padding:0 13px;border-radius:9px;background:{{ statusBg }};border:1px solid {{ statusBd }};">
+        <div style="width:8px;height:8px;border-radius:2px;background:{{ statusFg }};box-shadow:0 0 10px {{ statusFg }};"></div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:{{ statusFg }};">{{ statusLabel }}</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;color:{{ statusFg }};opacity:.75;">{{ statusMeta }}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;height:32px;padding:0 13px;border-radius:9px;background:#0a1526;border:1px solid #1a2b4d;">
+        <div style="width:8px;height:8px;border-radius:2px;background:#5f9dff;box-shadow:0 0 10px #5f9dff;"></div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#5f9dff;">DRS enabled</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <div style="height:32px;padding:0 12px;border-radius:9px;background:#0f1318;border:1px solid #1f242c;display:flex;align-items:center;font-size:11px;font-weight:600;color:#9aa3af;cursor:pointer;">Panels</div>
+        <div style="height:32px;padding:0 12px;border-radius:9px;background:#0f1318;border:1px solid #1f242c;display:flex;align-items:center;font-size:11px;font-weight:600;color:#9aa3af;cursor:pointer;">Settings</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="position:absolute;top:118px;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;z-index:40;">
+    <sc-for list="{{ toasts }}" as="t" hint-placeholder-count="2">
+      <div style="pointer-events:auto;min-width:420px;max-width:640px;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:13px;background:{{ t.bg }};border:1px solid {{ t.bd }};box-shadow:0 18px 40px -14px rgba(0,0,0,.85), 0 0 0 1px rgba(255,255,255,.02) inset;animation:toastin .28s ease-out both;">
+        <div style="flex:0 0 auto;width:34px;height:34px;border-radius:10px;background:{{ t.iconBg }};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:{{ t.fg }};">{{ t.icon }}</div>
+        <div style="min-width:0;flex:1 1 auto;">
+          <div style="display:flex;align-items:center;gap:9px;">
+            <div style="font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:{{ t.fg }};">{{ t.title }}</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;padding:2px 6px;border-radius:5px;background:rgba(255,255,255,.06);color:{{ t.fg }};">{{ t.meta }}</div>
+          </div>
+          <div style="font-size:12px;line-height:1.35;color:{{ t.bodyFg }};margin-top:3px;text-wrap:pretty;">{{ t.body }}</div>
+        </div>
+        <div onClick="{{ t.dismiss }}" style="flex:0 0 auto;width:24px;height:24px;border-radius:7px;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:12px;color:{{ t.fg }};cursor:pointer;">✕</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ viewTiming }}" hint-placeholder-val="{{ true }}">
+    <div style="padding:16px 20px 8px 20px;">
+      <div style="border:1px solid #1c2128;background:#0f1216;border-radius:14px;overflow:hidden;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #1c2128;background:#12161c;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="font-size:13px;font-weight:700;">Timing tower</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.1em;color:#6c7480;padding:3px 8px;border-radius:6px;background:#0d1014;border:1px solid #1f242c;">20 CARS</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="display:flex;align-items:center;gap:16px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#5b636e;">
+              <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:3px;background:#b16cea;"></div>Session best</div>
+              <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:3px;background:#43b02a;"></div>Personal best</div>
+              <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:3px;background:#ffd12e;"></div>Slower</div>
+              <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:3px;background:#0067ad;"></div>Pit lane</div>
+            </div>
+            <div style="display:flex;padding:3px;border-radius:9px;background:#0b0e12;border:1px solid #1f242c;gap:2px;">
+              <div style="padding:5px 12px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;background:{{ gapTabBg }};color:{{ gapTabFg }};">Gap</div>
+              <div style="padding:5px 12px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;background:{{ intTabBg }};color:{{ intTabFg }};">Interval</div>
+            </div>
+          </div>
+        </div>
+
+        <table style="width:100%;table-layout:fixed;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;">
+          <thead>
+            <tr style="height:34px;background:#0b0e12;">
+              <th style="width:56px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.14em;color:#5b636e;border-bottom:1px solid #232a33;">POS</th>
+              <th style="width:132px;text-align:left;padding-left:12px;font-size:10px;font-weight:600;letter-spacing:.14em;color:#5b636e;border-bottom:1px solid #232a33;">DRIVER</th>
+              <th style="width:120px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.14em;color:#5b636e;border-bottom:1px solid #232a33;">TEAM</th>
+              <th style="width:52px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.1em;color:#5b636e;border-bottom:1px solid #232a33;">DRS</th>
+              <th style="width:92px;text-align:right;padding-right:14px;font-size:10px;font-weight:600;letter-spacing:.14em;color:#9aa3af;border-bottom:1px solid #232a33;cursor:pointer;">{{ gapHeader }} ⇅</th>
+              <th style="text-align:left;padding-left:14px;font-size:10px;font-weight:600;letter-spacing:.14em;color:#5b636e;border-bottom:1px solid #232a33;">MINI-SECTORS</th>
+              <th style="width:74px;text-align:right;font-size:10px;font-weight:600;letter-spacing:.1em;color:#5b636e;border-bottom:1px solid #232a33;">S1</th>
+              <th style="width:74px;text-align:right;font-size:10px;font-weight:600;letter-spacing:.1em;color:#5b636e;border-bottom:1px solid #232a33;">S2</th>
+              <th style="width:74px;text-align:right;font-size:10px;font-weight:600;letter-spacing:.1em;color:#5b636e;border-bottom:1px solid #232a33;">S3</th>
+              <th style="width:86px;text-align:right;font-size:10px;font-weight:600;letter-spacing:.1em;color:#5b636e;border-bottom:1px solid #232a33;">LAST LAP</th>
+              <th style="width:86px;text-align:right;font-size:10px;font-weight:600;letter-spacing:.1em;color:#5b636e;border-bottom:1px solid #232a33;">BEST LAP</th>
+              <th style="width:82px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.1em;color:#5b636e;border-bottom:1px solid #232a33;">TYRE</th>
+              <th style="width:54px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.1em;color:#5b636e;border-bottom:1px solid #232a33;">STOPS</th>
+              <th style="width:74px;text-align:center;padding-right:12px;font-size:10px;font-weight:600;letter-spacing:.1em;color:#5b636e;border-bottom:1px solid #232a33;">STATUS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <sc-for list="{{ drivers }}" as="d" hint-placeholder-count="20">
+              <tr style="height:38px;background:{{ d.rowBg }};opacity:{{ d.rowOpacity }};">
+                <td style="text-align:center;position:relative;border-bottom:1px solid #16191f;">
+                  <div style="position:absolute;left:0;top:6px;bottom:6px;width:3px;border-radius:0 3px 3px 0;background:{{ d.color }};"></div>
+                  <div style="position:absolute;left:0;top:0;bottom:0;width:2px;background:{{ d.favBar }};"></div>
+                  <span style="font-size:16px;font-weight:600;letter-spacing:-.02em;color:{{ d.posColor }};">{{ d.pos }}</span>
+                </td>
+                <td style="padding-left:12px;border-bottom:1px solid #16191f;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <div style="width:26px;height:22px;border-radius:5px;background:#0b0e12;border:1px solid #232a33;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#8b94a0;">{{ d.num }}</div>
+                    <span style="font-family:Archivo, sans-serif;font-size:15px;font-weight:700;letter-spacing:.01em;color:{{ d.tlaColor }};">{{ d.tla }}</span>
+                  </div>
+                </td>
+                <td style="border-bottom:1px solid #16191f;">
+                  <span style="font-family:Archivo, sans-serif;font-size:11px;font-weight:500;letter-spacing:.04em;color:#79818d;">{{ d.team }}</span>
+                </td>
+                <td style="text-align:center;border-bottom:1px solid #16191f;">
+                  <div style="display:inline-flex;align-items:center;justify-content:center;padding:3px 7px;border-radius:5px;font-size:9px;font-weight:700;letter-spacing:.08em;background:{{ d.drsBg }};color:{{ d.drsFg }};border:1px solid {{ d.drsBd }};">DRS</div>
+                </td>
+                <td style="text-align:right;padding-right:14px;border-bottom:1px solid #16191f;">
+                  <span style="font-size:14px;font-weight:600;letter-spacing:-.01em;color:{{ d.gapColor }};">{{ d.gapValue }}</span>
+                </td>
+                <td style="padding:0 14px;border-bottom:1px solid #16191f;">
+                  <div style="display:flex;gap:2px;align-items:center;">
+                    <sc-for list="{{ d.segs }}" as="seg" hint-placeholder-count="20">
+                      <div style="flex:1 1 0;height:12px;border-radius:2px;background:{{ seg.c }};"></div>
+                    </sc-for>
+                  </div>
+                </td>
+                <td style="text-align:right;border-bottom:1px solid #16191f;"><span style="font-size:13px;color:{{ d.s1c }};">{{ d.s1 }}</span></td>
+                <td style="text-align:right;border-bottom:1px solid #16191f;"><span style="font-size:13px;color:{{ d.s2c }};">{{ d.s2 }}</span></td>
+                <td style="text-align:right;border-bottom:1px solid #16191f;background:{{ d.s3flash }};"><span style="font-size:13px;color:{{ d.s3c }};">{{ d.s3 }}</span></td>
+                <td style="text-align:right;border-bottom:1px solid #16191f;"><span style="font-size:13px;font-weight:500;color:{{ d.lastc }};">{{ d.last }}</span></td>
+                <td style="text-align:right;border-bottom:1px solid #16191f;"><span style="font-size:13px;font-weight:500;color:{{ d.bestc }};">{{ d.best }}</span></td>
+                <td style="border-bottom:1px solid #16191f;">
+                  <div style="display:flex;align-items:center;justify-content:center;gap:7px;">
+                    <div style="width:20px;height:20px;border-radius:50%;border:1.5px solid {{ d.tyreRing }};background:{{ d.tyreBg }};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:{{ d.tyreFg }};">{{ d.tyre }}</div>
+                    <span style="font-size:12px;font-weight:500;color:{{ d.ageColor }};">{{ d.age }}</span>
+                  </div>
+                </td>
+                <td style="text-align:center;border-bottom:1px solid #16191f;"><span style="font-size:12px;color:#8b94a0;">{{ d.stops }}</span></td>
+                <td style="text-align:center;padding-right:12px;border-bottom:1px solid #16191f;">
+                  <div style="display:inline-flex;padding:3px 8px;border-radius:6px;font-size:9px;font-weight:700;letter-spacing:.1em;background:{{ d.stBg }};color:{{ d.stFg }};">{{ d.stLabel }}</div>
+                </td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="padding:8px 20px 16px 20px;">
+      <div style="border:1px solid #1c2128;background:#0f1216;border-radius:14px;overflow:hidden;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #1c2128;background:#12161c;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="font-size:13px;font-weight:700;">Track map</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.08em;color:#6c7480;padding:3px 8px;border-radius:6px;background:#0d1014;border:1px solid #1f242c;">BAHRAIN INT'L · 5.412 KM · 15 TURNS</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:18px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#5b636e;">
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:16px;height:3px;border-radius:2px;background:#2b7fff;"></div>DRS zone</div>
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:16px;height:3px;border-radius:2px;background:#ffd12e;"></div>Flagged sector</div>
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:50%;border:2px solid #f7f8fa;"></div>Favourite</div>
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:10px;height:10px;border-radius:50%;background:#6c7480;opacity:.4;"></div>In pit</div>
+            <div style="color:#3f4650;">Retired removed</div>
+          </div>
+        </div>
+        <div style="padding:14px 16px;display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start;">
+          <div style="position:relative;">
+            <svg viewBox="0 0 1000 820" style="width:100%;display:block;">
+              <path d="M 180 780 L 180 300 C 180 246 214 214 268 214 L 520 214 C 574 214 606 246 606 300 L 606 366 L 470 366 C 432 366 410 392 410 424 C 410 462 438 486 478 486 L 700 486 C 762 486 796 448 796 396 L 796 300 C 796 250 838 232 872 258 L 902 302 L 902 700 C 902 754 866 786 812 786 L 300 786 C 232 786 180 812 180 780 Z" fill="none" stroke="#0c0f13" stroke-width="26" stroke-linejoin="round" stroke-linecap="round"></path>
+              <path d="M 180 780 L 180 300 C 180 246 214 214 268 214 L 520 214 C 574 214 606 246 606 300 L 606 366 L 470 366 C 432 366 410 392 410 424 C 410 462 438 486 478 486 L 700 486 C 762 486 796 448 796 396 L 796 300 C 796 250 838 232 872 258 L 902 302 L 902 700 C 902 754 866 786 812 786 L 300 786 C 232 786 180 812 180 780 Z" fill="none" stroke="{{ marshalStroke }}" stroke-width="40" stroke-dasharray="200 4000" stroke-dashoffset="-1520" stroke-linecap="butt"></path>
+              <path d="M 180 780 L 180 300 C 180 246 214 214 268 214 L 520 214 C 574 214 606 246 606 300 L 606 366 L 470 366 C 432 366 410 392 410 424 C 410 462 438 486 478 486 L 700 486 C 762 486 796 448 796 396 L 796 300 C 796 250 838 232 872 258 L 902 302 L 902 700 C 902 754 866 786 812 786 L 300 786 C 232 786 180 812 180 780 Z" fill="none" stroke="#6b7280" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"></path>
+              <path d="M 240 786 L 520 786" fill="none" stroke="#2b7fff" stroke-width="5" stroke-linecap="round"></path>
+              <path d="M 902 430 L 902 640" fill="none" stroke="#2b7fff" stroke-width="5" stroke-linecap="round"></path>
+              <path d="M 214 460 L 214 700" fill="none" stroke="#2a2f37" stroke-width="8" stroke-linecap="round" stroke-dasharray="14 10"></path>
+              <rect x="171" y="616" width="18" height="4" rx="2" fill="#f7f8fa"></rect>
+              <sc-for list="{{ cars }}" as="c" hint-placeholder-count="19">
+                <circle cx="{{ c.x }}" cy="{{ c.y }}" r="{{ c.r }}" fill="{{ c.color }}" stroke="{{ c.ring }}" stroke-width="4" opacity="{{ c.op }}"></circle>
+              </sc-for>
+            </svg>
+            <sc-for list="{{ cars }}" as="c" hint-placeholder-count="19">
+              <div style="position:absolute;left:{{ c.lxp }};top:{{ c.lyp }};font-family:Archivo, sans-serif;font-size:12px;font-weight:700;line-height:1;white-space:nowrap;color:{{ c.labelFill }};opacity:{{ c.labelOp }};text-shadow:0 0 4px #08090c, 0 0 8px #08090c;pointer-events:none;">{{ c.tla }}</div>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#535b66;">Stint tracker</div>
+            <sc-for list="{{ stints }}" as="s" hint-placeholder-count="5">
+              <div style="display:flex;align-items:center;gap:9px;">
+                <div style="width:36px;font-family:Archivo,sans-serif;font-size:12px;font-weight:700;">{{ s.tla }}</div>
+                <div style="flex:1 1 auto;display:flex;gap:3px;height:13px;">
+                  <sc-for list="{{ s.bars }}" as="b" hint-placeholder-count="3">
+                    <div style="flex:{{ b.w }} 1 0;border-radius:3px;background:{{ b.c }};border:1px solid {{ b.ring }};"></div>
+                  </sc-for>
+                </div>
+                <div style="width:48px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:10px;color:#79818d;">{{ s.stops }} stop</div>
+              </div>
+            </sc-for>
+            <div style="height:1px;background:#1a1f26;margin:4px 0;"></div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#535b66;">Gap to leader</div>
+            <sc-for list="{{ gapBars }}" as="g" hint-placeholder-count="6">
+              <div style="display:flex;align-items:center;gap:9px;">
+                <div style="width:36px;font-family:Archivo,sans-serif;font-size:12px;font-weight:700;">{{ g.tla }}</div>
+                <div style="flex:1 1 auto;height:8px;border-radius:5px;background:#171b21;overflow:hidden;">
+                  <div style="width:{{ g.w }};height:100%;border-radius:5px;background:{{ g.c }};"></div>
+                </div>
+                <div style="width:60px;text-align:right;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-size:11px;color:#c3c9d1;">{{ g.gap }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ viewTelemetry }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:16px 20px;display:flex;flex-direction:column;gap:16px;">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#535b66;padding-right:6px;">Driver</div>
+        <sc-for list="{{ driverChips }}" as="dc" hint-placeholder-count="8">
+          <div onClick="{{ dc.select }}" style="display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border-radius:10px;cursor:pointer;background:{{ dc.bg }};border:1px solid {{ dc.bd }};">
+            <div style="width:3px;height:16px;border-radius:2px;background:{{ dc.color }};"></div>
+            <div style="font-size:12px;font-weight:700;color:{{ dc.fg }};">{{ dc.tla }}</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#6c7480;">P{{ dc.pos }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px;align-items:start;">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div style="border:1px solid #1c2128;background:#0f1216;border-radius:14px;overflow:hidden;">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #1c2128;background:#12161c;">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div style="width:4px;height:26px;border-radius:2px;background:{{ selColor }};"></div>
+                <div>
+                  <div style="font-size:19px;font-weight:800;letter-spacing:-.01em;line-height:1.1;">{{ selName }}</div>
+                  <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#6c7480;">{{ selTeam }} · car {{ selNum }} · P{{ selPos }}</div>
+                </div>
+              </div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.1em;color:#6c7480;padding:4px 9px;border-radius:6px;background:#0d1014;border:1px solid #1f242c;">4 UPDATES / SEC · SMOOTHED</div>
+            </div>
+            <div style="padding:18px;display:flex;flex-direction:column;gap:18px;">
+              <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;">
+                <div style="border:1px solid #1f242c;background:#0b0e12;padding:12px 13px;border-radius:12px;">
+                  <div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#6c7480;">Speed</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-size:32px;font-weight:600;letter-spacing:-.03em;line-height:1.1;">318</div>
+                  <div style="font-size:10px;color:#79818d;">km/h</div>
+                </div>
+                <div style="border:1px solid #1f242c;background:#0b0e12;padding:12px 13px;border-radius:12px;">
+                  <div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#6c7480;">Gear</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-size:32px;font-weight:600;letter-spacing:-.03em;line-height:1.1;">7</div>
+                  <div style="font-size:10px;color:#79818d;">of 8</div>
+                </div>
+                <div style="border:1px solid #1f242c;background:#0b0e12;padding:12px 13px;border-radius:12px;">
+                  <div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#6c7480;">RPM</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-size:32px;font-weight:600;letter-spacing:-.03em;line-height:1.1;">11.4<span style="font-size:15px;color:#79818d;">k</span></div>
+                  <div style="height:5px;border-radius:3px;background:#171b21;overflow:hidden;margin-top:5px;"><div style="width:86%;height:100%;background:#ffd12e;"></div></div>
+                </div>
+                <div style="border:1px solid #1f242c;background:#0b0e12;padding:12px 13px;border-radius:12px;">
+                  <div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#6c7480;">Engine</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-size:32px;font-weight:600;letter-spacing:-.03em;line-height:1.1;">112<span style="font-size:15px;color:#79818d;">°C</span></div>
+                  <div style="height:5px;border-radius:3px;background:#171b21;overflow:hidden;margin-top:5px;"><div style="width:64%;height:100%;background:#43b02a;"></div></div>
+                </div>
+                <div style="border:1px solid #1a2b4d;background:#0a1526;padding:12px 13px;border-radius:12px;">
+                  <div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#5c7ba8;">DRS</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:32px;font-weight:600;letter-spacing:-.03em;line-height:1.1;color:#5f9dff;">OPEN</div>
+                  <div style="font-size:10px;color:#5c7ba8;">zone 3</div>
+                </div>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <div style="width:70px;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#6c7480;">Throttle</div>
+                  <div style="flex:1 1 auto;height:12px;border-radius:6px;background:#171b21;overflow:hidden;"><div style="width:92%;height:100%;border-radius:6px;background:#43b02a;"></div></div>
+                  <div style="width:46px;text-align:right;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-size:14px;font-weight:600;">92%</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <div style="width:70px;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#6c7480;">Brake</div>
+                  <div style="flex:1 1 auto;height:12px;border-radius:6px;background:#171b21;overflow:hidden;"><div style="width:0%;height:100%;border-radius:6px;background:#da291c;"></div></div>
+                  <div style="width:46px;text-align:right;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-size:14px;font-weight:600;color:#5b636e;">0%</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <div style="width:70px;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#6c7480;">Fuel</div>
+                  <div style="flex:1 1 auto;height:12px;border-radius:6px;background:#171b21;overflow:hidden;"><div style="width:41%;height:100%;border-radius:6px;background:#2dd4bf;"></div></div>
+                  <div style="width:46px;text-align:right;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-size:14px;font-weight:600;">41%</div>
+                </div>
+              </div>
+
+              <div style="border:1px solid #1f242c;background:#0b0e12;border-radius:12px;padding:12px 14px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                  <div style="font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#9aa3af;">Speed trace</div>
+                  <div style="display:flex;align-items:center;gap:14px;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#6c7480;">
+                    <div style="display:flex;align-items:center;gap:6px;"><div style="width:16px;height:2px;background:{{ selColor }};"></div>{{ selTla }}</div>
+                    <div style="display:flex;align-items:center;gap:6px;"><div style="width:16px;height:2px;background:#4b525c;"></div>Leader</div>
+                    <div>Last 30s</div>
+                  </div>
+                </div>
+                <svg viewBox="0 0 1000 150" preserveAspectRatio="none" style="width:100%;height:150px;display:block;">
+                  <line x1="0" y1="37" x2="1000" y2="37" stroke="#171b21" stroke-width="1"></line>
+                  <line x1="0" y1="75" x2="1000" y2="75" stroke="#171b21" stroke-width="1"></line>
+                  <line x1="0" y1="113" x2="1000" y2="113" stroke="#171b21" stroke-width="1"></line>
+                  <polyline points="{{ traceRivalBig }}" fill="none" stroke="#4b525c" stroke-width="2" stroke-dasharray="6 5"></polyline>
+                  <polyline points="{{ tracePointsBig }}" fill="none" stroke="{{ selColor }}" stroke-width="3"></polyline>
+                </svg>
+              </div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div style="border:1px solid #1f242c;background:#0b0e12;border-radius:12px;padding:12px 14px;">
+                  <div style="font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#9aa3af;margin-bottom:8px;">Throttle / brake trace</div>
+                  <svg viewBox="0 0 480 96" preserveAspectRatio="none" style="width:100%;height:96px;display:block;">
+                    <polyline points="{{ throttleTrace }}" fill="none" stroke="#43b02a" stroke-width="2.4"></polyline>
+                    <polyline points="{{ brakeTrace }}" fill="none" stroke="#da291c" stroke-width="2.4"></polyline>
+                  </svg>
+                </div>
+                <div style="border:1px solid #1f242c;background:#0b0e12;border-radius:12px;padding:12px 14px;">
+                  <div style="font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#9aa3af;margin-bottom:8px;">Gear trace</div>
+                  <svg viewBox="0 0 480 96" preserveAspectRatio="none" style="width:100%;height:96px;display:block;">
+                    <polyline points="{{ gearTrace }}" fill="none" stroke="#2dd4bf" stroke-width="2.4"></polyline>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div style="border:1px solid #1c2128;background:#0f1216;border-radius:14px;overflow:hidden;">
+            <div style="padding:13px 16px;border-bottom:1px solid #1c2128;background:#12161c;font-size:13px;font-weight:700;">Tyre status</div>
+            <div style="padding:16px;display:flex;flex-direction:column;gap:14px;">
+              <div style="display:flex;align-items:center;gap:14px;">
+                <div style="width:64px;height:64px;border-radius:50%;border:5px solid #ffd12e;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                  <div style="font-size:11px;font-weight:800;letter-spacing:.04em;">MED</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;">8L</div>
+                </div>
+                <div style="flex:1 1 auto;display:flex;flex-direction:column;gap:7px;">
+                  <div>
+                    <div style="display:flex;justify-content:space-between;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#6c7480;"><div>Wear</div><div style="font-family:'JetBrains Mono',monospace;color:#c3c9d1;">38%</div></div>
+                    <div style="height:8px;border-radius:5px;background:#171b21;overflow:hidden;margin-top:4px;"><div style="width:38%;height:100%;border-radius:5px;background:#43b02a;"></div></div>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:10px;">
+                    <div style="letter-spacing:.14em;text-transform:uppercase;color:#6c7480;">Condition</div>
+                    <div style="font-weight:700;color:#5fd142;">GOOD</div>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:10px;">
+                    <div style="letter-spacing:.14em;text-transform:uppercase;color:#6c7480;">Est. remaining</div>
+                    <div style="font-family:'JetBrains Mono',monospace;color:#c3c9d1;">~23 laps</div>
+                  </div>
+                </div>
+              </div>
+              <div style="border:1px solid #1f242c;background:#0b0e12;border-radius:10px;padding:10px 12px;">
+                <div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#6c7480;">Pit window estimate</div>
+                <div style="display:flex;align-items:baseline;gap:8px;margin-top:3px;">
+                  <div style="font-size:11px;color:#9aa3af;">Optimal</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:600;color:#5fd142;">Lap 41–44</div>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#6c7480;margin-bottom:6px;">Stop history</div>
+                <div style="display:flex;gap:6px;">
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:10px;padding:4px 8px;border-radius:6px;background:#0b0e12;border:1px solid #1f242c;color:#c3c9d1;">L26: S → M</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="border:1px solid #1c2128;background:#0f1216;border-radius:14px;overflow:hidden;">
+            <div style="padding:13px 16px;border-bottom:1px solid #1c2128;background:#12161c;font-size:13px;font-weight:700;">Corner-by-corner deltas</div>
+            <div>
+              <sc-for list="{{ deltas }}" as="dl" hint-placeholder-count="6">
+                <div style="display:flex;align-items:center;gap:12px;padding:9px 16px;border-bottom:1px solid #161a20;">
+                  <div style="width:48px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#79818d;">{{ dl.corner }}</div>
+                  <div style="flex:1 1 auto;height:6px;border-radius:4px;background:#171b21;position:relative;">
+                    <div style="position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:#2a303a;"></div>
+                    <div style="position:absolute;left:{{ dl.left }};width:{{ dl.w }};top:0;bottom:0;border-radius:4px;background:{{ dl.c }};"></div>
+                  </div>
+                  <div style="width:64px;text-align:right;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-size:12px;font-weight:600;color:{{ dl.c }};">{{ dl.val }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ viewNotifications }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:16px 20px;display:grid;grid-template-columns:minmax(0,1fr) 520px;gap:16px;align-items:start;">
+      <div style="border:1px solid #1c2128;background:#0f1216;border-radius:14px;overflow:hidden;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #1c2128;background:#12161c;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="font-size:13px;font-weight:700;">Race control · all notifications</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;color:#6c7480;padding:3px 8px;border-radius:6px;background:#0d1014;border:1px solid #1f242c;">{{ notifCount }} TODAY</div>
+          </div>
+          <div style="display:flex;gap:5px;">
+            <div style="padding:5px 11px;border-radius:7px;font-size:10px;font-weight:700;letter-spacing:.1em;background:#182027;color:#c3c9d1;">ALL</div>
+            <div style="padding:5px 11px;border-radius:7px;font-size:10px;font-weight:700;letter-spacing:.1em;background:#0d1014;color:#5b636e;">FLAGS</div>
+            <div style="padding:5px 11px;border-radius:7px;font-size:10px;font-weight:700;letter-spacing:.1em;background:#0d1014;color:#5b636e;">SC / VSC</div>
+            <div style="padding:5px 11px;border-radius:7px;font-size:10px;font-weight:700;letter-spacing:.1em;background:#0d1014;color:#5b636e;">DRS</div>
+            <div style="padding:5px 11px;border-radius:7px;font-size:10px;font-weight:700;letter-spacing:.1em;background:#0d1014;color:#5b636e;">CAR EVENTS</div>
+          </div>
+        </div>
+        <div>
+          <sc-for list="{{ messages }}" as="m" hint-placeholder-count="12">
+            <div style="display:flex;gap:12px;padding:13px 16px;border-bottom:1px solid #161a20;background:{{ m.rowBg }};">
+              <div style="flex:0 0 auto;width:30px;height:30px;border-radius:9px;background:{{ m.iconBg }};border:1px solid {{ m.iconBd }};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:{{ m.accent }};">{{ m.icon }}</div>
+              <div style="min-width:0;flex:1 1 auto;">
+                <div style="display:flex;align-items:center;gap:9px;">
+                  <div style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:{{ m.accent }};">{{ m.cat }}</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-size:10px;color:#5b636e;">LAP {{ m.lap }}</div>
+                  <div style="flex:1 1 auto;"></div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-size:10px;color:#4d545e;">{{ m.time }}</div>
+                </div>
+                <div style="font-size:12px;line-height:1.45;color:#c3c9d1;letter-spacing:.01em;text-wrap:pretty;margin-top:4px;">{{ m.text }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div style="border:1px solid #1c2128;background:#0f1216;border-radius:14px;overflow:hidden;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #1c2128;background:#12161c;">
+            <div style="font-size:13px;font-weight:700;">Penalties &amp; investigations</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;color:#6c7480;">{{ penaltyCount }} ENTRIES</div>
+          </div>
+          <div>
+            <sc-for list="{{ penalties }}" as="p" hint-placeholder-count="6">
+              <div style="padding:13px 16px;border-bottom:1px solid #161a20;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <div style="width:3px;height:22px;border-radius:2px;background:{{ p.color }};"></div>
+                  <div style="font-family:Archivo,sans-serif;font-size:14px;font-weight:700;">{{ p.tla }}</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#5b636e;">#{{ p.num }}</div>
+                  <div style="font-size:11px;color:#79818d;">{{ p.team }}</div>
+                  <div style="flex:1 1 auto;"></div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#4d545e;">LAP {{ p.lap }}</div>
+                  <div style="padding:3px 9px;border-radius:6px;font-size:9px;font-weight:700;letter-spacing:.1em;background:{{ p.stateBg }};color:{{ p.stateFg }};">{{ p.state }}</div>
+                </div>
+                <div style="display:flex;align-items:baseline;gap:10px;margin-top:6px;padding-left:13px;">
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;color:{{ p.penaltyFg }};">{{ p.penalty }}</div>
+                  <div style="font-size:11.5px;color:#79818d;text-wrap:pretty;">{{ p.reason }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="border:1px solid #1c2128;background:#0f1216;border-radius:14px;overflow:hidden;">
+          <div style="padding:13px 16px;border-bottom:1px solid #1c2128;background:#12161c;font-size:13px;font-weight:700;">Session state timeline</div>
+          <div style="padding:16px;display:flex;flex-direction:column;gap:11px;">
+            <sc-for list="{{ timeline }}" as="tl" hint-placeholder-count="5">
+              <div style="display:flex;align-items:center;gap:11px;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#5b636e;width:56px;">L{{ tl.from }}–{{ tl.to }}</div>
+                <div style="flex:1 1 auto;height:10px;border-radius:6px;background:{{ tl.c }};opacity:{{ tl.op }};"></div>
+                <div style="width:96px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:{{ tl.fg }};">{{ tl.label }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:28px;padding:16px 20px 22px 20px;border-top:1px solid #161b21;">
+    <div style="font-size:10px;line-height:1.6;color:#4d545e;max-width:860px;text-wrap:pretty;">This project is unofficial and is not associated in any way with the Formula 1 companies. F1, FORMULA ONE, FORMULA 1, FIA FORMULA ONE WORLD CHAMPIONSHIP, GRAND PRIX and related marks are trade marks of Formula One Licensing B.V.</div>
+    <div style="display:flex;gap:18px;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#5b636e;flex:0 0 auto;">
+      <div>Schedule</div><div>Replay</div><div>Standings</div><div>Settings</div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1500},&quot;trackState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;none&quot;,&quot;yellow&quot;,&quot;safety-car&quot;,&quot;vsc&quot;,&quot;red-flag&quot;,&quot;chequered&quot;],&quot;default&quot;:&quot;yellow&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Session state&quot;},&quot;gapMode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;gap&quot;,&quot;interval&quot;],&quot;default&quot;:&quot;gap&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Session state&quot;},&quot;delaySeconds&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;min&quot;:0,&quot;max&quot;:120,&quot;step&quot;:5,&quot;default&quot;:30,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Session state&quot;},&quot;teamPalette&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;current&quot;,&quot;awkward&quot;],&quot;default&quot;:&quot;current&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Data&quot;}}">
+const TEAMS_REAL = {
+  RBR: "#3671C6", FER: "#E8002D", MER: "#27F4D2", MCL: "#FF8000", AST: "#229971",
+  ALP: "#0093CC", WIL: "#64C4FF", RB: "#6692FF", SAU: "#52E252", HAA: "#B6BABD"
+};
+const TEAMS_AWKWARD = {
+  RBR: "#2f5fd0", FER: "#3462d6", MER: "#f4f4f0", MCL: "#0e1014", AST: "#3d6ad8",
+  ALP: null, WIL: "#8a8f95", RB: "#2f5fd0", SAU: "#f0efe8", HAA: "#101216"
+};
+const TEAM_NAME = {
+  RBR: "Red Bull", FER: "Ferrari", MER: "Mercedes", MCL: "McLaren", AST: "Aston Martin",
+  ALP: "Alpine", WIL: "Williams", RB: "RB", SAU: "Kick Sauber", HAA: "Haas"
+};
+const FULL_NAME = {
+  VER: "M. Verstappen", NOR: "L. Norris", LEC: "C. Leclerc", PIA: "O. Piastri", SAI: "C. Sainz",
+  RUS: "G. Russell", HAM: "L. Hamilton", PER: "S. Pérez", ALO: "F. Alonso", GAS: "P. Gasly",
+  HUL: "N. Hülkenberg", TSU: "Y. Tsunoda", STR: "L. Stroll", OCO: "E. Ocon", ALB: "A. Albon",
+  MAG: "K. Magnussen", RIC: "D. Ricciardo", BOT: "V. Bottas", ZHO: "G. Zhou", SAR: "L. Sargeant"
+};
+const FALLBACK = "#5e5e5e";
+
+const TYRE = {
+  S: { bg: "#da291c", fg: "#ffffff", ring: "#da291c" },
+  M: { bg: "#ffd12e", fg: "#241d00", ring: "#ffd12e" },
+  H: { bg: "#f0f0ec", fg: "#141414", ring: "#8a8a8a" },
+  I: { bg: "#43b02a", fg: "#04180a", ring: "#43b02a" },
+  W: { bg: "#0067ad", fg: "#ffffff", ring: "#0067ad" }
+};
+
+const C = { purple: "#b16cea", green: "#43b02a", yellow: "#ffd12e", red: "#da291c", blue: "#0067ad", grey: "#242a32", text: "#f7f8fa", dim: "#9aa3af", faint: "#5b636e" };
+
+const ROWS = [
+  ["VER", 1, "RBR", 1, "", "", ["29.114","p"], ["38.902","g"], ["27.507","y"], "1:35.523", "1:34.918", "H", 12, 1, "", 0, 1],
+  ["NOR", 4, "MCL", 2, "+2.318", "+2.318", ["29.240","g"], ["38.744","p"], ["27.612","g"], "1:35.596", "1:35.011", "H", 10, 1, "", 0, 0],
+  ["LEC", 16, "FER", 3, "+5.902", "+3.584", ["29.331","y"], ["38.901","g"], ["27.418","p"], "1:35.650", "1:35.104", "M", 8, 1, "", 0, 1],
+  ["PIA", 81, "MCL", 4, "+8.115", "+2.213", ["29.402","g"], ["39.014","y"], ["27.744","g"], "1:36.160", "1:35.298", "H", 14, 1, "", 0, 0],
+  ["SAI", 55, "FER", 5, "+11.483", "+3.368", ["29.518","y"], ["39.102","y"], ["27.809","y"], "1:36.429", "1:35.401", "H", 21, 1, "", 0, 0],
+  ["RUS", 63, "MER", 6, "+15.207", "+3.724", ["29.480","g"], ["39.244","y"], ["27.902","g"], "1:36.626", "1:35.512", "M", 6, 2, "", 0, 0],
+  ["HAM", 44, "MER", 7, "+18.636", "+3.429", ["29.601","y"], ["39.188","g"], ["27.988","y"], "1:36.777", "1:35.640", "M", 5, 2, "", 0, 1],
+  ["PER", 11, "RBR", 8, "+22.014", "+3.378", ["29.744","y"], ["39.310","y"], ["28.104","y"], "1:37.158", "1:35.902", "H", 18, 1, "", 0, 0],
+  ["ALO", 14, "AST", 9, "+26.881", "+4.867", ["29.902","y"], ["39.402","y"], ["28.211","g"], "1:37.515", "1:36.088", "H", 20, 1, "", 0, 0],
+  ["GAS", 10, "ALP", 10, "+31.402", "+4.521", ["30.014","y"], ["39.518","y"], ["28.302","y"], "1:37.834", "1:36.244", "M", 4, 2, "", 0, 0],
+  ["HUL", 27, "HAA", 11, "+36.744", "+5.342", ["30.118","y"], ["39.602","y"], ["28.418","y"], "1:38.138", "1:36.501", "H", 16, 1, "", 0, 0],
+  ["TSU", 22, "RB", 12, "+41.203", "+4.459", ["","-"], ["","-"], ["","-"], "—", "1:36.712", "M", 1, 2, "PIT", 0, 0],
+  ["STR", 18, "AST", 13, "+45.618", "+4.415", ["30.244","y"], ["39.744","y"], ["28.502","y"], "1:38.490", "1:36.804", "H", 19, 1, "", 0, 0],
+  ["OCO", 31, "ALP", 14, "+52.104", "+6.486", ["30.318","y"], ["39.811","y"], ["28.614","y"], "1:38.743", "1:37.002", "H", 22, 1, "", 0, 0],
+  ["ALB", 23, "WIL", 15, "+58.902", "+6.798", ["30.402","y"], ["39.902","y"], ["28.702","y"], "1:39.006", "1:37.214", "M", 3, 2, "OUT", 0, 0],
+  ["MAG", 20, "HAA", 16, "1 L", "1 L", ["30.518","y"], ["40.014","y"], ["28.811","y"], "1:39.343", "1:37.418", "H", 24, 1, "", 0, 0],
+  ["RIC", 3, "RB", 17, "1 L", "+3.204", ["30.602","y"], ["40.118","y"], ["28.902","y"], "1:39.622", "1:37.601", "H", 25, 1, "", 0, 0],
+  ["BOT", 77, "SAU", 18, "1 L", "+5.118", ["30.744","y"], ["40.244","y"], ["29.014","y"], "1:40.002", "1:37.844", "M", 9, 2, "", 0, 0],
+  ["ZHO", 24, "SAU", 19, "2 L", "1 L", ["30.902","y"], ["40.402","y"], ["29.118","y"], "1:40.422", "1:38.104", "H", 27, 1, "", 0, 0],
+  ["SAR", 2, "WIL", 20, "", "", ["","-"], ["","-"], ["","-"], "—", "1:38.402", "H", 14, 1, "STOP", 1, 0]
+];
+
+class Component extends DCLogic {
+  state = { view: "timing", sel: "LEC", dismissed: [] };
+
+  segs(i, row) {
+    const status = row[14];
+    const out = [];
+    const done = status === "STOP" ? 0 : 20 - (i % 7);
+    for (let s = 0; s < 20; s++) {
+      if (status === "PIT" || status === "OUT") { out.push({ c: s < done ? C.blue : C.grey }); continue; }
+      if (s >= done) { out.push({ c: C.grey }); continue; }
+      const seed = (i * 7 + s * 13) % 11;
+      if (i < 3 && seed > 8) out.push({ c: C.purple });
+      else if (seed > 6) out.push({ c: C.green });
+      else if (seed > 2) out.push({ c: C.yellow });
+      else out.push({ c: C.green });
+    }
+    return out;
+  }
+
+  renderVals() {
+    const p = this.props;
+    const banner = p.trackState ?? "yellow";
+    const gapMode = p.gapMode ?? "gap";
+    const palette = (p.teamPalette ?? "current") === "awkward" ? TEAMS_AWKWARD : TEAMS_REAL;
+    const delay = p.delaySeconds ?? 30;
+    const view = this.state.view;
+    const selTla = this.state.sel;
+    const dismissed = this.state.dismissed;
+
+    const sc = (k) => k === "p" ? C.purple : k === "g" ? C.green : k === "y" ? C.yellow : C.faint;
+
+    const drivers = ROWS.map((r, i) => {
+      const [tla, num, team, pos, gap, intv, s1, s2, s3, last, best, tyre, age, stops, status, retired, fav] = r;
+      const color = palette[team] || FALLBACK;
+      const lapped = String(gap).indexOf("L") > -1;
+      const t = TYRE[tyre];
+      const drsOn = i < 4 && !retired && status === "";
+      const shown = gapMode === "interval" ? intv : gap;
+      const stMap = {
+        "": { l: lapped ? "LAPPED" : "RACING", bg: lapped ? "#0d1c2b" : "#121720", fg: lapped ? "#4aa8e8" : "#6c7480" },
+        PIT: { l: "IN PIT", bg: "#0d1c2b", fg: "#4aa8e8" },
+        OUT: { l: "OUT LAP", bg: "#201a08", fg: "#ffd12e" },
+        STOP: { l: "RETIRED", bg: "#24100e", fg: "#ff6b5e" }
+      };
+      const st = stMap[status] || stMap[""];
+      return {
+        pos, tla, num, color, stops, team: TEAM_NAME[team],
+        favBar: fav ? "#f7f8fa" : "transparent",
+        rowBg: tla === selTla ? "rgba(45,212,191,.07)" : i % 2 ? "#0d1014" : "#0f1216",
+        rowOpacity: retired ? 0.45 : status === "PIT" ? 0.68 : 1,
+        posColor: retired ? C.faint : C.text,
+        tlaColor: retired ? C.faint : C.text,
+        drsBg: drsOn ? "#0f2a52" : "#101419",
+        drsFg: drsOn ? "#5f9dff" : "#333a44",
+        drsBd: drsOn ? "#2b7fff" : "#1c2128",
+        gapValue: pos === 1 ? "LEADER" : (shown || "—"),
+        gapColor: pos === 1 ? C.dim : lapped ? "#4aa8e8" : C.text,
+        segs: this.segs(i, r),
+        s1: s1[0] || "—", s1c: sc(s1[1]),
+        s2: s2[0] || "—", s2c: sc(s2[1]),
+        s3: s3[0] || "—", s3c: sc(s3[1]),
+        s3flash: s3[1] === "p" ? "rgba(177,108,234,.14)" : "transparent",
+        last, lastc: retired ? C.faint : C.text,
+        best, bestc: i === 0 ? C.purple : C.green,
+        tyre, age: age + "L",
+        ageColor: age > 20 ? "#ff6b5e" : age > 14 ? C.yellow : C.dim,
+        tyreBg: t.bg, tyreFg: t.fg, tyreRing: t.ring,
+        stLabel: st.l, stBg: st.bg, stFg: st.fg
+      };
+    });
+
+    const statusMap = {
+      "none": ["Track clear", "GREEN FLAG", "#5fd142", "#0d1a12", "#1d3a26"],
+      "yellow": ["Yellow flag", "SECTOR 9", "#ffd12e", "#1d1806", "#5c460f"],
+      "safety-car": ["Safety car", "LAP 34", "#ffd12e", "#1d1806", "#5c460f"],
+      "vsc": ["Virtual safety car", "DELTA +12%", "#ffd12e", "#1d1806", "#5c460f"],
+      "red-flag": ["Red flag", "SESSION STOPPED", "#ff6b5e", "#24100e", "#5c1a14"],
+      "chequered": ["Chequered flag", "FINISHED", "#f7f8fa", "#1a1d22", "#3a4149"]
+    };
+    const stt = statusMap[banner] || statusMap["none"];
+
+    const toastDefs = {
+      "yellow": { id: "state", icon: "⚑", title: "Yellow flag", meta: "SECTOR 9", body: "Debris on the racing line in sector 9. Marshals are working — no overtaking in the flagged zone.", fg: "#ffd12e", bg: "#241d06", bd: "#6b5310", iconBg: "rgba(255,209,46,.14)", bodyFg: "#e2d9b4" },
+      "safety-car": { id: "state", icon: "SC", title: "Safety car deployed", meta: "LAP 34", body: "Field neutralised behind the safety car. Pit lane open — expect a wave of stops this lap.", fg: "#ffd12e", bg: "#241d06", bd: "#6b5310", iconBg: "rgba(255,209,46,.14)", bodyFg: "#e2d9b4" },
+      "vsc": { id: "state", icon: "V", title: "Virtual safety car", meta: "DELTA +12%", body: "No physical safety car. Every driver must stay above the VSC delta or take a penalty.", fg: "#ffd12e", bg: "#241d06", bd: "#6b5310", iconBg: "rgba(255,209,46,.14)", bodyFg: "#e2d9b4" },
+      "red-flag": { id: "state", icon: "■", title: "Red flag", meta: "SESSION STOPPED", body: "Session stopped. All cars must return to the pit lane immediately.", fg: "#ff6b5e", bg: "#2b0f0c", bd: "#7a2219", iconBg: "rgba(255,107,94,.16)", bodyFg: "#f0c2bd" },
+      "chequered": { id: "state", icon: "▣", title: "Chequered flag", meta: "FINISHED", body: "Session finished. Provisional classification is now shown in the timing tower.", fg: "#f7f8fa", bg: "#1a1d22", bd: "#3a4149", iconBg: "rgba(255,255,255,.08)", bodyFg: "#c3c9d1" },
+      "none": { id: "state", icon: "✓", title: "Track clear", meta: "GREEN FLAG", body: "All flagged zones cleared. Racing resumes at full speed.", fg: "#5fd142", bg: "#0e1c12", bd: "#245c31", iconBg: "rgba(95,209,66,.14)", bodyFg: "#bcdcbf" }
+    };
+    const penaltyToast = { id: "penalty", icon: "P", title: "Penalty · PER 11", meta: "+5.0s", body: "5 second time penalty for causing a collision with car 31 (OCO) at turn 4.", fg: "#ff6b5e", bg: "#2b0f0c", bd: "#7a2219", iconBg: "rgba(255,107,94,.16)", bodyFg: "#f0c2bd" };
+
+    const toasts = [toastDefs[banner] || toastDefs["none"], penaltyToast]
+      .filter(t => dismissed.indexOf(t.id) === -1)
+      .map(t => Object.assign({}, t, {
+        dismiss: () => this.setState(s => ({ dismissed: s.dismissed.concat([t.id]) }))
+      }));
+
+    const carPos = [
+      [180, 470, "VER", 1], [180, 560, "NOR", 0], [180, 640, "LEC", 1], [180, 700, "PIA", 0],
+      [268, 786, "SAI", 0], [420, 786, "RUS", 0], [560, 786, "HAM", 1], [700, 786, "PER", 0],
+      [790, 786, "ALO", 0], [902, 600, "GAS", 0], [902, 460, "HUL", 0], [796, 340, "STR", 0],
+      [640, 486, "OCO", 0], [520, 486, "ALB", 0], [420, 214, "MAG", 0], [300, 214, "RIC", 0],
+      [214, 520, "TSU", 0], [606, 330, "BOT", 0], [902, 340, "ZHO", 0]
+    ];
+    const cars = carPos.map(([x, y, tla, fav], i) => {
+      const row = ROWS.find(r => r[0] === tla);
+      const color = palette[row[2]] || FALLBACK;
+      const clustered = i > 13;
+      return {
+        x, y, r: 9, color,
+        ring: tla === selTla ? "#2dd4bf" : fav ? "#f7f8fa" : "#08090c",
+        op: row[14] === "PIT" ? 0.35 : 1,
+        lxp: (x / 10 + 1.7).toFixed(2) + "%",
+        lyp: (y / 8.2 - 1.6).toFixed(2) + "%",
+        tla,
+        labelFill: fav ? "#ffffff" : "#e6e9ed",
+        labelOp: clustered ? 0 : (fav ? 1 : 0.9)
+      };
+    });
+
+    const msg = (cat, icon, accent, iconBg, iconBd, lap, time, text, hot) => ({
+      cat, icon, accent, iconBg, iconBd, lap, time, text, rowBg: hot ? "rgba(255,209,46,.05)" : "transparent"
+    });
+    const messages = [
+      msg("Yellow flag", "⚑", "#ffd12e", "#1d1806", "#5c460f", 34, "14:48:02", "YELLOW FLAG IN TRACK SECTOR 9 — DEBRIS ON THE RACING LINE, MARSHALS WORKING", true),
+      msg("Penalty", "P", "#ff6b5e", "#24100e", "#5c1a14", 34, "14:47:55", "CAR 11 (PER) — 5 SECOND TIME PENALTY FOR CAUSING A COLLISION WITH CAR 31 (OCO) AT TURN 4", true),
+      msg("Lap deleted", "✕", "#9aa3af", "#141821", "#242a33", 34, "14:47:41", "CAR 22 (TSU) LAP TIME 1:36.712 DELETED — TRACK LIMITS AT TURN 4, LAP 33", false),
+      msg("Investigation", "?", "#ffd12e", "#1d1806", "#5c460f", 33, "14:46:12", "CAR 18 (STR) — UNSAFE RELEASE IN THE PIT LANE UNDER INVESTIGATION AFTER THE SESSION", false),
+      msg("Car event", "!", "#ff6b5e", "#24100e", "#5c1a14", 32, "14:45:19", "CAR 2 (SAR) STOPPED ON TRACK AT TURN 11 — RECOVERY VEHICLE ON STANDBY", false),
+      msg("Penalty", "P", "#ff6b5e", "#24100e", "#5c1a14", 31, "14:44:02", "CAR 23 (ALB) — 10 SECOND TIME PENALTY FOR SPEEDING IN THE PIT LANE, SERVED AT LAP 31 STOP", false),
+      msg("DRS", "≡", "#5f9dff", "#0a1526", "#1a2b4d", 28, "14:41:07", "DRS ENABLED IN ALL THREE ZONES", false),
+      msg("Blue flag", "⚑", "#4aa8e8", "#0d1c2b", "#194463", 26, "14:38:44", "CAR 24 (ZHO) BEING LAPPED — BLUE FLAG SHOWN AT TURN 1", false),
+      msg("Other", "i", "#9aa3af", "#141821", "#242a33", 24, "14:36:20", "TRACK TEMPERATURE 40.2 C — RISING", false),
+      msg("VSC", "V", "#ffd12e", "#1d1806", "#5c460f", 21, "14:33:51", "VIRTUAL SAFETY CAR ENDING — RACING RESUMES AT THE START/FINISH LINE", false),
+      msg("Safety car", "SC", "#ffd12e", "#1d1806", "#5c460f", 19, "14:32:14", "SAFETY CAR IN THIS LAP — RESTART EXPECTED ON LAP 21", false),
+      msg("Green flag", "✓", "#5fd142", "#0d1a12", "#1d3a26", 6, "14:18:02", "TRACK CLEAR — ALL FLAGGED ZONES RELEASED", false)
+    ];
+
+    const pen = (tla, num, team, lap, penalty, reason, state, stateBg, stateFg, penaltyFg) => ({
+      tla, num, team: TEAM_NAME[team], lap, penalty, reason, state, stateBg, stateFg, penaltyFg,
+      color: palette[team] || FALLBACK
+    });
+    const penalties = [
+      pen("PER", 11, "RBR", 34, "+5.0s", "Causing a collision with car 31 (OCO) · turn 4", "PENDING", "#201a08", "#ffd12e", "#ff6b5e"),
+      pen("STR", 18, "AST", 33, "UNDER INVESTIGATION", "Unsafe release in the pit lane", "NOTED", "#1d1806", "#ffd12e", "#ffd12e"),
+      pen("TSU", 22, "RB", 33, "LAP DELETED", "Track limits · turn 4 · 1:36.712", "APPLIED", "#141821", "#9aa3af", "#9aa3af"),
+      pen("ALB", 23, "WIL", 31, "+10.0s", "Speeding in the pit lane · 62.4 km/h", "SERVED", "#0d1a12", "#5fd142", "#9aa3af"),
+      pen("MAG", 20, "HAA", 22, "+5.0s", "Leaving the track and gaining an advantage", "SERVED", "#0d1a12", "#5fd142", "#9aa3af"),
+      pen("OCO", 31, "ALP", 14, "REPRIMAND", "Failing to follow race director's instructions", "APPLIED", "#141821", "#9aa3af", "#9aa3af")
+    ];
+
+    const timeline = [
+      { from: 1, to: 5, label: "Green", c: "#43b02a", op: .8, fg: "#5fd142" },
+      { from: 6, to: 18, label: "Green", c: "#43b02a", op: .8, fg: "#5fd142" },
+      { from: 19, to: 21, label: "Safety car", c: "#ffd12e", op: .85, fg: "#ffd12e" },
+      { from: 22, to: 33, label: "Green", c: "#43b02a", op: .8, fg: "#5fd142" },
+      { from: 34, to: 34, label: stt[0], c: stt[2], op: .9, fg: stt[2] }
+    ];
+
+    const bar = (c, w, ring) => ({ c, w, ring: ring || "transparent" });
+    const stints = [
+      { tla: "VER", stops: 1, bars: [bar(TYRE.M.bg, 22), bar(TYRE.H.bg, 12, "#8a8a8a")] },
+      { tla: "NOR", stops: 1, bars: [bar(TYRE.M.bg, 24), bar(TYRE.H.bg, 10, "#8a8a8a")] },
+      { tla: "LEC", stops: 1, bars: [bar(TYRE.S.bg, 26), bar(TYRE.M.bg, 8)] },
+      { tla: "HAM", stops: 2, bars: [bar(TYRE.M.bg, 12), bar(TYRE.H.bg, 17, "#8a8a8a"), bar(TYRE.M.bg, 5)] },
+      { tla: "SAI", stops: 1, bars: [bar(TYRE.S.bg, 13), bar(TYRE.H.bg, 21, "#8a8a8a")] }
+    ];
+
+    const gapBars = ROWS.slice(1, 7).map(r => {
+      const secs = parseFloat(String(r[4]).replace("+", "")) || 0;
+      return {
+        tla: r[0], gap: r[4],
+        w: Math.min(100, (secs / 22) * 100).toFixed(0) + "%",
+        c: palette[r[2]] || FALLBACK
+      };
+    });
+
+    const driverChips = ROWS.slice(0, 10).map(r => {
+      const active = r[0] === selTla;
+      return {
+        tla: r[0], pos: r[3], color: palette[r[2]] || FALLBACK,
+        bg: active ? "#122320" : "#0d1014",
+        bd: active ? "#2dd4bf" : "#1c2128",
+        fg: active ? "#2dd4bf" : "#c3c9d1",
+        select: () => this.setState({ sel: r[0] })
+      };
+    });
+
+    const selRow = ROWS.find(r => r[0] === selTla) || ROWS[0];
+
+    const mk = (seed, amp, w, h, base) => {
+      const pts = [];
+      for (let i = 0; i <= 40; i++) {
+        const v = base + Math.sin(i / 3.1 + seed) * amp + Math.sin(i / 1.3 + seed) * (amp / 4);
+        pts.push((i * (w / 40)).toFixed(1) + "," + Math.max(4, Math.min(h - 4, v)).toFixed(1));
+      }
+      return pts.join(" ");
+    };
+    const square = (seed, w, h, hi, lo) => {
+      const pts = [];
+      for (let i = 0; i <= 40; i++) {
+        const on = Math.sin(i / 2.4 + seed) > -0.1;
+        pts.push((i * (w / 40)).toFixed(1) + "," + (on ? hi : lo));
+      }
+      return pts.join(" ");
+    };
+    const stair = (w, h) => {
+      const pts = [];
+      for (let i = 0; i <= 40; i++) {
+        const g = 3 + Math.round(2.5 + 2.5 * Math.sin(i / 3.4));
+        pts.push((i * (w / 40)).toFixed(1) + "," + (h - g * (h / 9)).toFixed(1));
+      }
+      return pts.join(" ");
+    };
+
+    const deltaRow = (corner, val) => {
+      const v = parseFloat(val);
+      const w = Math.min(48, Math.abs(v) * 220);
+      return {
+        corner, val: (v > 0 ? "+" : "") + v.toFixed(3),
+        c: v > 0 ? "#ff6b5e" : "#5fd142",
+        left: v > 0 ? "50%" : (50 - w) + "%",
+        w: w.toFixed(1) + "%"
+      };
+    };
+    const deltas = [
+      deltaRow("T1", -0.042), deltaRow("T4", 0.031), deltaRow("T8", -0.118),
+      deltaRow("T10", 0.006), deltaRow("T11", -0.074), deltaRow("T13", 0.052)
+    ];
+
+    return {
+      drivers, cars, messages, penalties, timeline, stints, gapBars, driverChips, toasts,
+      notifCount: messages.length,
+      penaltyCount: penalties.length,
+      viewTiming: view === "timing",
+      viewTelemetry: view === "telemetry",
+      viewNotifications: view === "notifications",
+      goTiming: () => this.setState({ view: "timing" }),
+      goTelemetry: () => this.setState({ view: "telemetry" }),
+      goNotifications: () => this.setState({ view: "notifications" }),
+      tabTimingBg: view === "timing" ? "#182027" : "transparent",
+      tabTimingFg: view === "timing" ? "#f7f8fa" : "#79818d",
+      tabTeleBg: view === "telemetry" ? "#182027" : "transparent",
+      tabTeleFg: view === "telemetry" ? "#f7f8fa" : "#79818d",
+      tabNotifBg: view === "notifications" ? "#182027" : "transparent",
+      tabNotifFg: view === "notifications" ? "#f7f8fa" : "#79818d",
+      statusLabel: stt[0], statusMeta: stt[1], statusFg: stt[2], statusBg: stt[3], statusBd: stt[4],
+      delayLabel: delay + "s",
+      gapHeader: gapMode === "interval" ? "INTERVAL" : "GAP",
+      gapTabBg: gapMode === "gap" ? "#2dd4bf" : "transparent",
+      gapTabFg: gapMode === "gap" ? "#04231f" : "#79818d",
+      intTabBg: gapMode === "interval" ? "#2dd4bf" : "transparent",
+      intTabFg: gapMode === "interval" ? "#04231f" : "#79818d",
+      marshalStroke: (banner === "yellow" || banner === "safety-car" || banner === "vsc") ? "rgba(255,209,46,.5)" : (banner === "red-flag" ? "rgba(218,41,28,.5)" : "rgba(255,255,255,0)"),
+      selTla,
+      selName: FULL_NAME[selTla] || selTla,
+      selTeam: TEAM_NAME[selRow[2]],
+      selNum: selRow[1],
+      selPos: selRow[3],
+      selColor: palette[selRow[2]] || FALLBACK,
+      tracePointsBig: mk(0.4, 46, 1000, 150, 76),
+      traceRivalBig: mk(1.7, 40, 1000, 150, 78),
+      throttleTrace: square(0.6, 480, 96, 14, 82),
+      brakeTrace: square(3.6, 480, 96, 82, 14),
+      gearTrace: stair(480, 96)
+    };
+  }
+}
+
+</script>
+</body>
+</html>

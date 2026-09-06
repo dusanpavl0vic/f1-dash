@@ -1,0 +1,47 @@
+# --- data & archives (never commit recorded sessions) ---
+data/
+*.jsonl
+!shared-fixtures/**/*.jsonl
+
+# --- design handoff: keep extracted sources, ignore the zip ---
+design/*.zip
+
+# --- node ---
+node_modules/
+dist/
+.vite/
+*.local
+.eslintcache
+
+# --- .NET ---
+bin/
+obj/
+*.user
+*.suo
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+
+# --- python (precompute worker) ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.fastf1-cache/
+
+# --- env ---
+.env
+.env.local
+*.env.local
+
+# --- os / editor ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# --- logs ---
+*.log
+npm-debug.log*
+pnpm-debug.log*

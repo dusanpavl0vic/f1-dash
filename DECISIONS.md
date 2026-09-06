@@ -1,0 +1,131 @@
+# DECISIONS
+
+`docs/00-START-HERE.md` requires that any deviation from the specified stack is recorded here, with
+its reasoning. Newest first.
+
+---
+
+## D-005 · Docker-first, including development
+
+**Date** 2026-09-06 · **Status** accepted
+
+Everything runs in containers, development included. The only host requirements are Docker and an
+editor.
+
+**Why.** Four services in two languages plus a Node build is a lot of host toolchain to install and
+keep in sync, and the developer machine currently has neither the .NET SDK nor Go installed.
+Containerising development removes the "works on my machine" gap entirely and makes the CI
+environment and the dev environment the same thing.
+
+**Cost.** Slightly slower inner loop than running natively, and file-watching across a bind mount
+needs care on macOS.
+
+See `docs/19-docker.md`.
+
+---
+
+## D-004 · Live F1 state lives outside Redux
+
+**Date** 2026-09-06 · **Status** accepted
+**Deviates from** `docs/11` (Zustand) and `REACT-APP-TEMPLATE.md` §9 (three state categories)
+
+RTK Query holds all server state and Redux Toolkit holds settings and UI state, exactly as the
+template says. The live `F1State` is the exception: a module-level object outside React, read
+through `useSyncExternalStore`, with deltas coalesced and flushed once per animation frame.
+
+**Why.** Roughly ten deltas per second against a deeply nested object. A Redux dispatch per delta
+forces a top-down re-render and drops frames on mid-range hardware. This is a frequency problem,
+not a criticism of Redux — at the frequency of every other piece of state in the app, Redux is the
+right tool and is used.
+
+**Scope.** One documented exception. Every other template rule — folder tree, decision table,
+import direction, component folders, naming, lint enforcement — applies unchanged.
+
+See `docs/17-frontend-architecture.md` §3.
+
+---
+
+## D-003 · Vite SPA instead of Next.js
+
+**Date** 2026-09-06 · **Status** accepted · **Deviates from** `docs/00`, `docs/11`
+
+**Why.** This is a wholly client-side realtime application. First meaningful paint depends on a
+WebSocket snapshot, so server rendering contributes nothing to the metric that matters. The App
+Router adds a layer that fights the socket lifecycle and the animation-frame render loop. The
+landing and schedule pages are the only SSR candidates and do not justify the cost.
+
+Also: the project already has a written frontend template (`REACT-APP-TEMPLATE.md`) built around
+Vite. Using it keeps one convention instead of two.
+
+**Cost.** No SSR for the landing page, so slightly weaker SEO on a page nobody searches for.
+
+---
+
+## D-002 · Python retained, but confined to FastF1 precompute
+
+**Date** 2026-09-06 · **Status** accepted
+
+A single Python worker builds replay bundles, lap tables and per-lap telemetry with FastF1. It is a
+batch job writing files to disk and never sits in a request path.
+
+**Why.** FastF1 has no equivalent in .NET or Go, and reimplementing its lap and telemetry parsing
+would cost roughly a week for no user-visible gain. Confining it to an offline path means its
+performance is irrelevant and its failure does not affect the live dashboard.
+
+**Cost.** Two language toolchains in the repository. Contained by the fact that the Python surface
+is one directory with one entry point.
+
+---
+
+## D-001 · .NET 9 instead of Python/FastAPI for ingest, realtime and api
+
+**Date** 2026-09-06 · **Status** accepted · **Deviates from** `docs/00`, `docs/02`, `docs/06`, `docs/07`, `docs/09`
+
+**Why.** Throughput was not the deciding factor — 50–200 KB/s and ~10 deltas/s is modest for any
+modern runtime, and .NET, Go and Python would all be fast enough for the feed itself. The reasons
+that actually decided it:
+
+1. `System.Threading.Channels` maps 1:1 onto the bounded per-client queue design in `docs/07`, and
+   the concurrency model holds up under one replay engine per client.
+2. Typed records plus source-generated `System.Text.Json` for the ~30 models in `docs/05`, and the
+   TypeScript types are generated from them.
+3. A single toolchain across three services.
+
+**Known cost, accepted.** `Microsoft.AspNetCore.SignalR.Client` speaks SignalR **Core** and cannot
+connect to F1's *legacy* SignalR 1.5 feed. The client is therefore a raw `ClientWebSocket` plus a
+hand-written negotiate and framing layer — about 200 lines, and the same work in any language.
+**This is spiked first, in Phase 4, before the rest of the backend commits.**
+
+**Second known cost.** `StackExchange.Redis` multiplexes and does not support blocking reads, so
+`XREAD BLOCK` as written in `docs/07` will stall the multiplexer. Mitigated by the pub/sub
+`f1:notify` wake-up already in the design, plus a non-blocking `XRANGE` and a 250 ms fallback poll.
+
+**What did not change.** The F1 wire protocol, field names, the data model, the merge rules, the
+delay and replay semantics, and the track-map mathematics. `docs/03`–`docs/05`, `docs/08` and
+`docs/10` remain authoritative.
+
+See `docs/16-dotnet-architecture.md`.
+
+---
+
+## Design deviations from the naive reading of the spec
+
+Recorded here because they change behaviour described in `docs/06` and `docs/07`.
+
+### D-006 · Snapshot checkpointing at 1 Hz instead of a snapshot write per delta
+
+`docs/06` §Publisher writes the full accumulated state to `f1:state` on every delta. With a 1–2 MB
+state at 10 deltas/s that is 10–20 MB/s to Redis — the largest single cost in the naive design, and
+pure waste.
+
+Instead the snapshot and its stream cursor are written atomically to one hash **once per second**.
+A connecting client receives that snapshot plus every delta from its cursor to now. State is
+byte-identical because merging a repeated value is idempotent, at roughly a tenth of the traffic.
+
+### D-007 · The snapshot is compressed once and shared; deltas are never compressed
+
+The snapshot is megabytes and sent once per connect; deltas are hundreds of bytes and sent ten
+times a second. The snapshot is serialised and gzipped once per checkpoint and the identical buffer
+is handed to every connecting client. Deltas are sent uncompressed, because per-message deflate
+would give each client its own compression context and destroy the "serialise once, send the same
+bytes to everyone" property that makes fanout nearly free.
