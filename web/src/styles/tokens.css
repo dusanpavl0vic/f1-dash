@@ -1,0 +1,138 @@
+/*
+ * Design tokens — extracted verbatim from
+ * design/handoff/application-design-combination/project/F1 Live Dashboard v3.dc.html
+ *
+ * Rule: no hex literal appears anywhere else in the application. If a colour is
+ * needed and is not here, it does not exist in the design and must be added
+ * here first, deliberately.
+ *
+ * The delivered design is dark only. Tokens are namespaced so a light theme can
+ * be added under [data-theme="light"] without touching a single component.
+ */
+
+:root {
+  /* ---------- surfaces ---------- */
+  --bg: #0a0709;
+  --surface: #0d0809;          /* panels, odd timing rows */
+  --surface-alt: #100b0d;      /* even timing rows */
+  --surface-2: #191214;        /* inset wells, progress tracks */
+  --surface-3: #20181a;        /* pressed / active chip */
+  --surface-4: #241c1e;        /* gauge tracks, bordered insets */
+  --surface-raised: #140e10;   /* toasts */
+  --surface-header-from: #1b0e10;
+  --surface-header-to: #0d0809;
+
+  /* ---------- borders ---------- */
+  --border: #2a1f22;           /* panel and section dividers */
+  --border-subtle: #20181a;    /* rules inside a panel header */
+  --border-row: #191214;       /* between table rows */
+  --border-inset: #241c1e;     /* bordered boxes inside panels */
+  --border-strong: #3a3134;
+  --border-chart: #1d1618;     /* chart gridlines */
+
+  /* ---------- text ---------- */
+  --text: #f2efec;
+  --text-dim: #a39b98;
+  --text-muted: #8a827f;
+  --text-faint: #7a716e;
+  --text-fainter: #6d6462;
+  --text-faintest: #5f5654;
+  --text-disabled: #4f4745;
+  --text-ghost: rgb(242 239 236 / 4%); /* oversized watermark numerals */
+
+  /* ---------- brand ---------- */
+  --accent: #e2201a;           /* section markers, active tab rule, primary toggle */
+  --accent-hover: #ff5a4d;
+
+  /* ---------- semantic: fixed meaning, never repurposed ---------- */
+  --purple: #a15fd8;           /* overall session fastest */
+  --green: #4c9c3a;            /* personal best, track clear */
+  --yellow: #e8b52b;           /* caution, slower than personal best */
+  --red: #c1332a;              /* stopped, danger */
+  --red-bright: #ff6b5e;       /* retired, critical alert */
+  --blue: #2f7cb8;             /* pit lane sectors, DRS zones on the map */
+  --blue-light: #4a9fe0;       /* DRS active */
+  --blue-lighter: #4aa8e8;     /* lapped, blue flag */
+  --teal: #2fd4c4;             /* telemetry-view section markers */
+  --orange: #e8863b;           /* warning tier between yellow and red */
+  --neutral: #6d6462;          /* team-colour fallback */
+
+  /* semantic backgrounds and borders for chips and banners */
+  --green-bg: #0e1a0d;
+  --green-bd: #2a5c24;
+  --yellow-bg: #1c1406;
+  --yellow-bd: #5c4610;
+  --red-bg: #220d0b;
+  --red-bd: #6b1e17;
+  --red-badge-bg: #2b0f0c;
+  --neutral-bg: #1a1517;
+  --neutral-bd: #3d3335;
+
+  /* translucent washes — must stay rgb() so they composite over any surface */
+  --wash-accent: rgb(226 32 26 / 9%);   /* selected timing row */
+  --wash-accent-soft: rgb(226 32 26 / 7%); /* selected focus card */
+  --wash-purple: rgb(161 95 216 / 14%); /* overall-fastest sector flash */
+  --wash-yellow: rgb(232 181 43 / 5%);  /* highlighted race-control row */
+  --wash-red: rgb(193 51 42 / 8%);
+  --wash-marshal-yellow: rgb(232 181 43 / 50%);
+  --wash-marshal-red: rgb(193 51 42 / 50%);
+  --wash-marshal-none: rgb(255 255 255 / 0%);
+
+  /* ---------- track map ---------- */
+  --track-surface: #4a3f42;
+  --track-startfinish: #f2efec;
+
+  /* ---------- car silhouette ---------- */
+  --car-body: #3a3134;
+  --car-body-2: #332b2e;
+  --car-wing: #2c2427;
+  --car-inset: #241c1e;
+
+  /* ---------- tyre compounds: brand colours, never adjusted ---------- */
+  --tyre-soft: #c1332a;        --tyre-soft-fg: #ffffff;
+  --tyre-medium: #e8b52b;      --tyre-medium-fg: #241d00;
+  --tyre-hard: #efece6;        --tyre-hard-fg: #141414;
+  --tyre-inter: #4c9c3a;       --tyre-inter-fg: #04180a;
+  --tyre-wet: #2f7cb8;         --tyre-wet-fg: #ffffff;
+
+  /* ---------- typography ---------- */
+  --font-display: "Barlow Condensed", system-ui, sans-serif; /* headings, TLA, positions */
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace; /* every changing number */
+  --font-body: "Barlow", system-ui, sans-serif;
+
+  /* type scale, in the sizes the design actually uses */
+  --fs-9: 9px;    --fs-10: 10px;  --fs-11: 11px;  --fs-12: 12px;
+  --fs-13: 13px;  --fs-14: 14px;  --fs-15: 15px;  --fs-16: 16px;
+  --fs-17: 17px;  --fs-19: 19px;  --fs-20: 20px;  --fs-21: 21px;
+  --fs-22: 22px;  --fs-24: 24px;  --fs-26: 26px;  --fs-32: 32px;
+  --fs-36: 36px;  --fs-38: 38px;  --fs-74: 74px;
+
+  /* letter-spacing steps — the design leans heavily on tracked uppercase */
+  --ls-tight: -0.04em;
+  --ls-snug: -0.02em;
+  --ls-none: 0;
+  --ls-wide: 0.06em;
+  --ls-wider: 0.1em;
+  --ls-widest: 0.14em;
+  --ls-mega: 0.2em;
+  --ls-ultra: 0.28em;
+  --ls-max: 0.3em;
+  --ls-brand: 0.4em;
+
+  /* ---------- layout ---------- */
+  --app-width: 1440px;
+  --row-height: 37px;
+  --header-pad-y: 13px;
+  --panel-pad: 14px 20px 16px 20px;
+
+  /* ---------- motion ---------- */
+  --flash-duration: 1.5s;
+  --toast-in: 0.22s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --flash-duration: 0s;
+    --toast-in: 0s;
+  }
+}
