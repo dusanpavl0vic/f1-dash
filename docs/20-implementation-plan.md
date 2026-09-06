@@ -52,6 +52,15 @@ See `DECISIONS.md` D-008.
 | **IMPL-04** | Web app scaffold | `pnpm dev` serves a blank themed shell; TypeScript strict, ESLint, Vitest and the feature-sliced folder structure from `docs/17` all in place | — |
 | **IMPL-05** | Mock session fixture | The design's own dataset (20 drivers, car positions, messages, penalties, stints) ported to typed fixtures, so every component is developable before the backend exists | — |
 
+> **Order changed 2026-09-06.** The backend (Phase F) is now built to a working
+> state *before* the remaining UI. The risk in this project is concentrated in the
+> backend — the legacy SignalR handshake, the merge algorithm and the
+> classification test — and building the UI against fixtures first would defer
+> that risk rather than retire it. IMPL-06 (header) was completed before the
+> change and stays. Phases B–E resume once Phase F reaches IMPL-33.
+>
+> **Working order:** A → IMPL-06 → **F** → B → C → D → E → G.
+
 ## Phase B — Application shell
 
 | # | Use case | Definition of done | Product UC |
