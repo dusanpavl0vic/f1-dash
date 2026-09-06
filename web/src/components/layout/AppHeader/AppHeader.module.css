@@ -1,0 +1,142 @@
+.header {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--surface-header-from) 0%, var(--surface-header-to) 100%);
+}
+
+/* The 5px rule is the design's one piece of brand furniture. */
+.accentRule {
+  width: 5px;
+  background: var(--accent);
+}
+
+.inner {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--header-pad-y) 20px;
+}
+
+.left { display: flex; align-items: center; gap: 22px; }
+
+.brandName {
+  font-family: var(--font-display);
+  font-size: var(--fs-12);
+  font-weight: 700;
+  letter-spacing: var(--ls-brand);
+  text-transform: uppercase;
+  color: var(--accent);
+  line-height: 1;
+}
+.brandSub {
+  font-family: var(--font-display);
+  font-size: var(--fs-10);
+  font-weight: 500;
+  letter-spacing: var(--ls-max);
+  text-transform: uppercase;
+  color: var(--text-faint);
+  line-height: 1.7;
+}
+
+.divider { width: 1px; background: var(--border); }
+.dividerTall { height: 36px; }
+.dividerShort { height: 26px; }
+
+.session { display: flex; align-items: center; gap: 12px; }
+
+.liveGroup { display: flex; align-items: center; gap: 7px; }
+.liveDot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+.liveDotStale { background: var(--text-faintest); }
+.liveLabel {
+  font-family: var(--font-mono);
+  font-size: var(--fs-11);
+  font-weight: 600;
+  letter-spacing: var(--ls-widest);
+  color: var(--text);
+}
+
+.meetingName {
+  font-family: var(--font-body);
+  font-size: var(--fs-16);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  line-height: 1.2;
+}
+.meetingSub {
+  font-family: var(--font-mono);
+  font-size: var(--fs-10);
+  letter-spacing: var(--ls-wider);
+  color: var(--text-faint);
+}
+
+.lapBlock { display: flex; align-items: center; gap: 10px; }
+.lapValue {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-36);
+  font-weight: 500;
+  letter-spacing: var(--ls-tight);
+  line-height: 1;
+}
+.lapTotal { font-size: var(--fs-19); color: var(--text-faintest); }
+.lapLabel {
+  font-family: var(--font-display);
+  font-size: var(--fs-10);
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  padding-bottom: 3px;
+}
+
+.right { display: flex; align-items: center; gap: 20px; }
+
+.temps {
+  font-family: var(--font-mono);
+  font-size: var(--fs-11);
+  letter-spacing: var(--ls-wide);
+  color: var(--text-dim);
+}
+.tempsKey { color: var(--text-faint); }
+
+/* Delay badge. The design brief calls this the single most important
+   indicator in the app: a user who forgets they set a delay and thinks the
+   app is broken is the most common support issue. */
+.delayBadge {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 11px;
+  border: 1px solid var(--yellow-bd);
+  background: var(--yellow-bg);
+}
+.delayDot { width: 6px; height: 6px; border-radius: 50%; background: var(--yellow); }
+.delayLabel {
+  font-family: var(--font-mono);
+  font-size: var(--fs-11);
+  font-weight: 600;
+  letter-spacing: var(--ls-wider);
+  color: var(--yellow);
+}
+/* Above a minute the delay is large enough to be genuinely disorienting. */
+.delayBadgeHigh { border-color: var(--red-bd); background: var(--red-bg); }
+.delayBadgeHigh .delayDot { background: var(--red-bright); }
+.delayBadgeHigh .delayLabel { color: var(--red-bright); }
+
+.statusChip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border: 1px solid;
+}
+.statusMark { width: 8px; height: 8px; }
+.statusLabel {
+  font-family: var(--font-mono);
+  font-size: var(--fs-11);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
