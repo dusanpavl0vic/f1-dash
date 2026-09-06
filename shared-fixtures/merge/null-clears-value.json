@@ -1,0 +1,7 @@
+{
+  "name": "an explicit null overwrites rather than being ignored",
+  "why": "The feed uses null to clear a value, for example a driver's interval when they take the lead.",
+  "initial": { "Lines": { "44": { "IntervalToPositionAhead": { "Value": "+1.234" } } } },
+  "patch":   { "Lines": { "44": { "IntervalToPositionAhead": null } } },
+  "expected":{ "Lines": { "44": { "IntervalToPositionAhead": null } } }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "the _kf keyframe marker is stripped",
+  "why": "_kf is protocol, not data. Leaving it in state leaks it to the browser and into every snapshot.",
+  "initial": {},
+  "patch":   { "Status": "1", "_kf": true },
+  "expected":{ "Status": "1" }
+}

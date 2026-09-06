@@ -1,0 +1,7 @@
+{
+  "name": "a key absent from the target is created",
+  "why": "A driver can appear mid-session — a replacement driver, or a car that had not yet left the garage.",
+  "initial": { "Lines": { "1": { "Position": "1" } } },
+  "patch":   { "Lines": { "81": { "Position": "2", "RacingNumber": "81" } } },
+  "expected":{ "Lines": { "1": { "Position": "1" }, "81": { "Position": "2", "RacingNumber": "81" } } }
+}

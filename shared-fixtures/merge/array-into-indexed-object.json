@@ -1,0 +1,7 @@
+{
+  "name": "an array merges by index into an index-keyed object",
+  "why": "RaceControlMessages.Messages arrives as an array at some moments and as an index-keyed object at others. Downstream code must only ever see one shape.",
+  "initial": { "Messages": { "0": { "Message": "GREEN", "Lap": 1 }, "1": { "Message": "YELLOW", "Lap": 4 } } },
+  "patch":   { "Messages": [ { "Lap": 2 } ] },
+  "expected":{ "Messages": { "0": { "Message": "GREEN", "Lap": 2 }, "1": { "Message": "YELLOW", "Lap": 4 } } }
+}

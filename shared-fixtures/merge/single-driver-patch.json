@@ -1,0 +1,7 @@
+{
+  "name": "patching one driver does not wipe the others",
+  "why": "Lines is keyed by car number. A patch for car 44 must not remove car 1.",
+  "initial": { "Lines": { "1": { "Position": "1" }, "44": { "Position": "2" } } },
+  "patch":   { "Lines": { "44": { "Position": "1" } } },
+  "expected":{ "Lines": { "1": { "Position": "1" }, "44": { "Position": "1" } } }
+}

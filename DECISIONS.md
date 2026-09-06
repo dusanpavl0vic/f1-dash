@@ -154,3 +154,50 @@ make the dashboard untrustworthy in exactly the way `docs/16` §6 sets out to pr
 cannot tell that it is wrong.
 
 See `docs/20-implementation-plan.md`.
+
+---
+
+## D-009 · One backend application; Redis deferred
+
+**Date** 2026-09-06 · **Status** accepted
+**Supersedes** the three-service split in `docs/02` and `docs/16` §2
+
+The user asked for two applications: `web` and `backend`. The backend is
+therefore one process that owns the feed connection, the accumulated state, the
+WebSocket fanout and the REST surface.
+
+**Why this is not a compromise.** Redis existed in the original design to bridge
+two incompatible requirements: ingest must be a singleton (two SignalR
+connections double every delta) while realtime must be replicable (hundreds of
+browser sockets). In one process that tension does not exist, and in-process
+fanout is strictly faster — no serialisation to Redis, no network hop, no
+`XREAD` polling workaround for `StackExchange.Redis` not supporting blocking
+reads (`docs/16` §1.1, trap 2).
+
+**What it costs.** Horizontal scaling of the socket layer. For a self-hosted
+dashboard serving one household that is not a real constraint, and the seam is
+preserved: `LiveSessionState` is the only file that would change.
+
+**When to revisit.** If a single instance is genuinely serving hundreds of
+concurrent viewers. The load test in IMPL-40 is what should trigger that
+conversation, not a guess.
+
+---
+
+## D-010 · Bounded channels use `Wait`, never `DropWrite`
+
+**Date** 2026-09-06 · **Status** accepted
+
+A subtle one, caught by a test rather than by reading.
+
+`BoundedChannelFullMode.DropWrite` silently discards the incoming item and
+returns **true** from `TryWrite`. A slow client would therefore keep its
+connection open while quietly losing deltas — its state would drift out of sync
+with the server and neither side would know. That is the exact failure the
+backpressure design exists to prevent: the dashboard would show plausible,
+wrong data, and the user could not tell.
+
+`BoundedChannelFullMode.Wait` makes `TryWrite` return **false** when the queue
+is full, which is what lets the broadcaster drop the client and force a clean
+resync. The write never actually blocks, because the code only ever calls
+`TryWrite`.

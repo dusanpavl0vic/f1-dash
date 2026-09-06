@@ -1,0 +1,7 @@
+{
+  "name": "a sparse sector patch leaves the other sectors untouched",
+  "why": "The feed sends only the sector that changed. Treating the object as a replacement wipes the other two and the tower loses times it already had.",
+  "initial": { "Lines": { "44": { "Sectors": { "0": { "Value": "28.1" }, "1": { "Value": "31.2" }, "2": { "Value": "24.0" } } } } },
+  "patch":   { "Lines": { "44": { "Sectors": { "1": { "Value": "30.9" } } } } },
+  "expected":{ "Lines": { "44": { "Sectors": { "0": { "Value": "28.1" }, "1": { "Value": "30.9" }, "2": { "Value": "24.0" } } } } }
+}

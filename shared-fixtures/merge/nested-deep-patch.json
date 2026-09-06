@@ -1,0 +1,7 @@
+{
+  "name": "a deeply nested patch touches only its own leaf",
+  "why": "A mini-sector update is four levels down. Every ancestor must survive.",
+  "initial": { "Lines": { "44": { "Sectors": { "1": { "Value": "31.2", "Segments": { "0": { "Status": 2049 }, "1": { "Status": 2049 } } } }, "Position": "2" } } },
+  "patch":   { "Lines": { "44": { "Sectors": { "1": { "Segments": { "1": { "Status": 2051 } } } } } } },
+  "expected":{ "Lines": { "44": { "Sectors": { "1": { "Value": "31.2", "Segments": { "0": { "Status": 2049 }, "1": { "Status": 2051 } } } }, "Position": "2" } } }
+}
