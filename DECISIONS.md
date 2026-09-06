@@ -129,3 +129,28 @@ times a second. The snapshot is serialised and gzipped once per checkpoint and t
 is handed to every connecting client. Deltas are sent uncompressed, because per-message deflate
 would give each client its own compression context and destroy the "serialise once, send the same
 bytes to everyone" property that makes fanout nearly free.
+
+---
+
+## D-008 · Team-internal telemetry in the design cannot be built
+
+**Date** 2026-09-06 · **Status** accepted
+
+The v3 design's *Car systems* panel shows per-corner tyre temperature and pressure, brake
+temperatures, engine temperature and fuel percentage. **None of these are in the public F1 feed** —
+they are team-internal channels that never leave the garage.
+
+**Decision.** Keep the panel's exact layout, typography and gauge treatment, but drive it with
+channels we genuinely receive: speed, gear, throttle, brake, DRS state and RPM.
+
+**Related.** Tyre wear percentage, condition, estimated remaining laps, the pit-window estimate and
+the undercut monitor's cliff and degradation figures are also absent from the feed, but unlike
+temperatures they are *derivable* from tyre age, compound and lap-time trend. Those are built as
+**estimates and labelled as such in the UI** — a number presented as measured when it is inferred is
+worse than no number at all.
+
+**Why this matters enough to record.** The alternative — quietly rendering plausible values — would
+make the dashboard untrustworthy in exactly the way `docs/16` §6 sets out to prevent: the user
+cannot tell that it is wrong.
+
+See `docs/20-implementation-plan.md`.
