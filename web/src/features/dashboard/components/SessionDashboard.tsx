@@ -1,19 +1,14 @@
-import { useCallback, useEffect, useState } from "react";
-import { TyreLoader } from "./components/atoms/TyreLoader";
-import { AppFooter } from "./components/layout/AppFooter/AppFooter";
-import { AppHeader } from "./components/layout/AppHeader/AppHeader";
-import { TabBar } from "./components/layout/TabBar/TabBar";
-import { useConnectionStatus, useLiveSession } from "./features/live/hooks/useLive";
-import { liveStore } from "./features/live/store/liveStore";
-import type { AppView, GapMode } from "./features/live/model/types";
-import { RaceControlFeed } from "./features/race-control/components/RaceControlFeed";
-import { TimingTower } from "./features/timing/components/TimingTower";
-import { SessionPicker, type CurrentSession } from "./features/session-picker/components/SessionPicker";
-import { TrackMap } from "./features/track-map/components/TrackMap";
-import s from "./App.module.css";
-
-const LIVE_URL = import.meta.env["VITE_LIVE_URL"] ?? "ws://localhost:4000/ws";
-const API_URL = import.meta.env["VITE_API_URL"] ?? "http://localhost:4000";
+import { useState } from "react";
+import { TyreLoader } from "@/components/atoms/TyreLoader";
+import { AppHeader } from "@/components/layout/AppHeader/AppHeader";
+import { TabBar } from "@/components/layout/TabBar/TabBar";
+import { useConnectionStatus, useLiveSession } from "@/features/live/hooks/useLive";
+import type { AppView, GapMode } from "@/features/live/model/types";
+import { RaceControlFeed } from "@/features/race-control/components/RaceControlFeed";
+import { TimingTower } from "@/features/timing/components/TimingTower";
+import { TrackMap } from "@/features/track-map/components/TrackMap";
+import { WeatherPanel } from "@/features/weather/components/WeatherPanel";
+import s from "./SessionDashboard.module.css";
 
 const STATUS_TEXT: Record<string, { label: string; color: string }> = {
   connecting: { label: "CONNECTING TO THE SESSION FEED", color: "var(--text-faint)" },
@@ -21,43 +16,42 @@ const STATUS_TEXT: Record<string, { label: string; color: string }> = {
   closed: { label: "DISCONNECTED", color: "var(--red-bright)" },
 };
 
-export function App() {
+export interface SessionDashboardProps {
+  /** Shown in the header so a replay is never mistakable for live. */
+  mode: "replay" | "live" | "none";
+  /** Rendered in the header's right-hand slot — the picker, or nothing. */
+  headerControl?: React.ReactNode;
+  /** What to show before any data has arrived. */
+  emptyState?: React.ReactNode;
+}
+
+export function SessionDashboard({ mode, headerControl, emptyState }: SessionDashboardProps) {
   const session = useLiveSession();
   const status = useConnectionStatus();
 
   const [view, setView] = useState<AppView>("timing");
   const [gapMode, setGapMode] = useState<GapMode>("gap");
   const [selected, setSelected] = useState<string | null>(null);
-  const [current, setCurrent] = useState<CurrentSession | null>(null);
-
-  useEffect(() => {
-    liveStore.connect(LIVE_URL);
-    return () => liveStore.disconnect();
-  }, []);
-
-  const refreshCurrent = useCallback(() => {
-    void fetch(`${API_URL}/api/session`)
-      .then((r) => r.json() as Promise<CurrentSession>)
-      .then(setCurrent)
-      .catch(() => undefined);
-  }, []);
-
-  useEffect(refreshCurrent, [refreshCurrent]);
 
   const connected = status === "open";
   const banner = connected ? null : STATUS_TEXT[status];
+  const hasData = session.timing.length > 0;
+
+  if (!hasData && emptyState) {
+    return <>{emptyState}</>;
+  }
 
   return (
-    <div className={s.app}>
+    <>
       <AppHeader
         session={session.session}
-        mode={current?.mode === 2 ? "live" : current?.mode === 1 ? "replay" : "none"}
+        mode={mode}
         weather={session.weather}
         trackState={session.trackState}
         delaySeconds={0}
         connected={connected}
       >
-        <SessionPicker current={current} onSwitched={refreshCurrent} />
+        {headerControl}
       </AppHeader>
 
       <TabBar
@@ -67,9 +61,9 @@ export function App() {
         onChange={setView}
       />
 
-      {/* Connection state is stated in words, never by colour alone, and it says
-          explicitly that the data below is stale — a frozen dashboard that looks
-          live is the failure the user cannot detect. */}
+      {/* Connection state is stated in words and says explicitly that the data
+          below is stale — a frozen dashboard that still looks live is the
+          failure a user cannot detect. */}
       {banner && (
         <div className={s.banner} style={{ color: banner.color }} role="status">
           {banner.label}
@@ -78,15 +72,20 @@ export function App() {
 
       {view === "timing" && (
         <>
-          <TimingTower
-            timing={session.timing}
-            drivers={session.drivers}
-            overtakeAid={session.overtakeAid}
-            gapMode={gapMode}
-            selected={selected}
-            onGapModeChange={setGapMode}
-            onSelect={setSelected}
-          />
+          {hasData ? (
+            <TimingTower
+              timing={session.timing}
+              drivers={session.drivers}
+              overtakeAid={session.overtakeAid}
+              gapMode={gapMode}
+              selected={selected}
+              onGapModeChange={setGapMode}
+              onSelect={setSelected}
+            />
+          ) : (
+            <TyreLoader block size="lg" label="Waiting for timing data" />
+          )}
+
           <div className={s.lower}>
             <TrackMap
               circuitKey={session.session.circuitKey}
@@ -98,9 +97,7 @@ export function App() {
               trackState={session.trackState}
               selected={selected}
             />
-            <div className={s.side}>
-              <div className={s.placeholder}>PACE CHART — IMPL-16</div>
-            </div>
+            <WeatherPanel weather={session.weather} />
             <div className={s.side}>
               <div className={s.placeholder}>STINTS — IMPL-17</div>
             </div>
@@ -122,8 +119,6 @@ export function App() {
       {view === "telemetry" && (
         <div className={s.placeholder}>TELEMETRY WALL — IMPL-18 TO IMPL-22</div>
       )}
-
-      <AppFooter />
-    </div>
+    </>
   );
 }

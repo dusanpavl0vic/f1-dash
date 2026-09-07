@@ -45,7 +45,7 @@ export type TrackState =
 
 export type GapMode = "gap" | "interval";
 
-export type AppView = "timing" | "telemetry" | "notifications";
+export type AppView = "timing" | "telemetry" | "notifications" | "analysis";
 
 /** One timed sector. `value` is empty until the driver has set it this lap. */
 export interface SectorTime {
@@ -146,6 +146,8 @@ export interface Weather {
   trackTemp: number;
   airTemp: number;
   windSpeed: number;
+  /** Degrees the wind blows FROM — the meteorological convention. */
+  windDirection: number;
   humidity: number;
   pressure: number;
   rainfall: boolean;

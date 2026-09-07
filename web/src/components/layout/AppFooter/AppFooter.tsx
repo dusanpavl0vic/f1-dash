@@ -22,11 +22,22 @@ export function AppFooter() {
            target="_blank" rel="noreferrer noopener">CC BY-SA 4.0</a>.
       </p>
       </div>
-      <div className={s.links}>
-        <span>Schedule</span>
-        <span>Replay</span>
-        <span>Standings</span>
-        <span>Settings</span>
+      <div className={s.right}>
+        <a
+          className={s.owner}
+          href="https://cloudsheep.dev"
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          <span className={s.ownerLabel}>Built by</span>
+          <span className={s.ownerName}>CloudSheep</span>
+        </a>
+        <div className={s.links}>
+          <a href="/schedule">Schedule</a>
+          <a href="/replay">Replay</a>
+          <a href="/standings">Standings</a>
+          <a href="/live">Live</a>
+        </div>
       </div>
     </footer>
   );

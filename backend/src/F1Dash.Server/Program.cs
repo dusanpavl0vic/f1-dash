@@ -1,4 +1,5 @@
 using F1Dash.Core.Projections;
+using F1Dash.Core.Analysis;
 using F1Dash.Core.Archive;
 using F1Dash.Core.Track;
 using F1Dash.Server.Catalog;
@@ -78,6 +79,16 @@ builder.Services.AddSingleton(_ => new ArchiveClient(ArchiveClient.CreateHttpCli
 builder.Services.AddSingleton(sp => new SessionCatalog(
     sp.GetRequiredService<ArchiveClient>(), archiveRoot));
 
+builder.Services.AddSingleton(sp => new AnalysisPrecomputer(
+    sp.GetRequiredService<ArchiveClient>(), archiveRoot,
+    sp.GetRequiredService<ILogger<AnalysisPrecomputer>>()));
+
+builder.Services.AddSingleton(sp => new ScheduleService(
+    ArchiveClient.CreateHttpClient(), sp.GetRequiredService<ILogger<ScheduleService>>()));
+
+builder.Services.AddSingleton(sp => new StandingsService(
+    ArchiveClient.CreateHttpClient(), sp.GetRequiredService<ILogger<StandingsService>>()));
+
 // Replay and live are the same feature behind one manager, switchable at
 // runtime, so the dashboard can move between a 2018 race and a session running
 // right now without a restart.
@@ -137,6 +148,178 @@ app.MapPost("/api/session",
         return current.Error is null ? Results.Ok(current) : Results.BadRequest(current);
     });
 
+// --- session analysis -------------------------------------------------------
+
+// The whole analysis for whatever is playing: per-lap times, sectors,
+// positions, compounds and derived stints.
+app.MapGet("/api/analysis", (SessionManager sessions, HttpContext http) =>
+{
+    var analysis = sessions.Analysis;
+    if (analysis is null) return Results.NotFound(new { error = "No session is running." });
+
+    // A live session's analysis grows continuously, so it must not be cached.
+    http.Response.Headers.CacheControl = "no-store";
+    return Results.Ok(analysis);
+});
+
+// Strategy alone — two orders of magnitude smaller than the lap table.
+app.MapGet("/api/analysis/stints", (SessionManager sessions, HttpContext http) =>
+{
+    var analysis = sessions.Analysis;
+    if (analysis is null) return Results.NotFound(new { error = "No session is running." });
+
+    http.Response.Headers.CacheControl = "no-store";
+    return Results.Ok(analysis.Drivers.Select(d => new
+    {
+        d.RacingNumber, d.Tla, d.TeamName, d.TeamColour, d.Stints,
+    }));
+});
+
+// Who is faster in which sector, over each driver's BEST sector rather than the
+// sectors of one lap — a driver's quickest S1 and S3 often come from different
+// laps, and the question is where each is quicker.
+app.MapGet("/api/analysis/compare", (string a, string b, SessionManager sessions, HttpContext http) =>
+{
+    var analysis = sessions.Analysis;
+    if (analysis is null) return Results.NotFound(new { error = "No session is running." });
+
+    var driverA = analysis.Drivers.FirstOrDefault(d => d.Tla.Equals(a, StringComparison.OrdinalIgnoreCase));
+    var driverB = analysis.Drivers.FirstOrDefault(d => d.Tla.Equals(b, StringComparison.OrdinalIgnoreCase));
+
+    if (driverA is null || driverB is null)
+    {
+        return Results.BadRequest(new { error = $"Unknown driver: {(driverA is null ? a : b)}" });
+    }
+
+    http.Response.Headers.CacheControl = "no-store";
+    return Results.Ok(AnalysisStore.Compare(driverA, driverB));
+});
+
+// Which laps have a telemetry trace. Absent for pre-2026 sessions by design.
+app.MapGet("/api/analysis/telemetry/{number}", (string number, SessionManager sessions) =>
+{
+    if (sessions.Store is not { } store || !sessions.TelemetryEnabled)
+    {
+        return Results.Ok(new { enabled = false, laps = Array.Empty<int>() });
+    }
+
+    return Results.Ok(new
+    {
+        enabled = true,
+        laps = TelemetryRecorder.AvailableLaps(store.TelemetryDirectory, number),
+    });
+});
+
+// One lap's trace: speed, throttle, brake, gear and RPM as parallel arrays.
+app.MapGet("/api/analysis/telemetry/{number}/{lap:int}",
+    (string number, int lap, SessionManager sessions, HttpContext http) =>
+{
+    if (sessions.Store is not { } store || !sessions.TelemetryEnabled)
+    {
+        return Results.NotFound(new { error = "Telemetry is recorded for 2026 sessions onward." });
+    }
+
+    var trace = TelemetryRecorder.Read(store.TelemetryDirectory, number, lap).FirstOrDefault();
+    if (trace is null) return Results.NotFound(new { error = $"No telemetry for car {number} lap {lap}." });
+
+    // A completed lap's trace never changes.
+    http.Response.Headers.CacheControl = "public, max-age=86400";
+    return Results.Ok(trace);
+});
+
+// --- analysis for a FINISHED session, with no replay ------------------------
+
+// Reads the stream at full speed and writes the analysis. A second request
+// serves the stored documents instead of recomputing.
+app.MapPost("/api/analysis/precompute",
+    async (PrecomputeRequest request, AnalysisPrecomputer precomputer, CancellationToken ct) =>
+    {
+        var result = await precomputer.PrecomputeAsync(
+            request.Year, request.Meeting, request.Session, request.Force, ct);
+
+        return result.Ok ? Results.Ok(result) : Results.BadRequest(result);
+    });
+
+// A stored analysis, readable without the session being loaded into the
+// dashboard at all.
+app.MapGet("/api/analysis/{year:int}/{meeting}/{session}",
+    async (int year, string meeting, string session,
+           AnalysisPrecomputer precomputer, HttpContext http, CancellationToken ct) =>
+    {
+        var analysis = await precomputer.LoadAsync(year, meeting, session, ct);
+        if (analysis is null)
+        {
+            return Results.NotFound(new { error = "Not computed yet. POST /api/analysis/precompute first." });
+        }
+
+        // A finished session's analysis never changes.
+        http.Response.Headers.CacheControl = "public, max-age=86400";
+        return Results.Ok(analysis);
+    });
+
+// Stored telemetry for a finished session.
+app.MapGet("/api/analysis/{year:int}/{meeting}/{session}/telemetry/{number}/{lap:int}",
+    (int year, string meeting, string session, string number, int lap,
+     AnalysisPrecomputer precomputer, HttpContext http) =>
+    {
+        var directory = Path.Combine(
+            precomputer.SessionDirectory(year, meeting, session), "analysis", "telemetry");
+
+        var trace = TelemetryRecorder.Read(directory, number, lap).FirstOrDefault();
+        if (trace is null) return Results.NotFound(new { error = $"No telemetry for car {number} lap {lap}." });
+
+        http.Response.Headers.CacheControl = "public, max-age=86400";
+        return Results.Ok(trace);
+    });
+
+// --- season schedule --------------------------------------------------------
+
+// The archive index only lists sessions that already ran, so it cannot answer
+// "what is next". Jolpica publishes the full calendar including future rounds.
+app.MapGet("/api/schedule/{year:int}",
+    async (int year, ScheduleService schedule, HttpContext http, CancellationToken ct) =>
+    {
+        // Five minutes, not an hour. Round status is derived at read time, so a
+        // long client cache would keep showing a race as "upcoming" for an hour
+        // after it finished — and it also pinned the response SHAPE, which
+        // crashed the page when the podium field was added.
+        // The server-side cache is still a day; this only bounds the browser.
+        http.Response.Headers.CacheControl = "public, max-age=300";
+        return Results.Ok(await schedule.SeasonAsync(year, ct));
+    });
+
+app.MapGet("/api/schedule/{year:int}/next",
+    async (int year, ScheduleService schedule, HttpContext http, CancellationToken ct) =>
+    {
+        // Short, because a countdown goes stale quickly.
+        http.Response.Headers.CacheControl = "public, max-age=60";
+        return Results.Ok(await schedule.NextAsync(year, ct));
+    });
+
+// --- championship standings -------------------------------------------------
+
+// The table as it stood after any round. round=0 (or omitted) gives the latest.
+app.MapGet("/api/standings/{year:int}",
+    async (int year, int? round, StandingsService standings, HttpContext http, CancellationToken ct) =>
+    {
+        var table = await standings.GetAsync(year, round ?? 0, ct);
+        if (table is null) return Results.NotFound(new { error = $"No standings for {year}." });
+
+        // A completed round's table never changes; the latest one keeps moving.
+        http.Response.Headers.CacheControl = round is > 0
+            ? "public, max-age=86400"
+            : "public, max-age=300";
+
+        return Results.Ok(table);
+    });
+
+// Forces a write without waiting for the session to end — the button behind
+// "export" in the UI.
+app.MapPost("/api/analysis/save", async (SessionManager sessions, CancellationToken ct) =>
+    await sessions.SaveAnalysisAsync(ct)
+        ? Results.Ok(new { saved = true, path = sessions.Store?.Directory })
+        : Results.BadRequest(new { error = "No session is running." }));
+
 app.MapGet("/api/track/{circuitKey:int}/{year:int}",
     async (int circuitKey, int year, TrackService tracks, HttpContext http, CancellationToken ct) =>
     {
@@ -153,3 +336,6 @@ app.MapLiveSocket();
 
 await app.RunAsync(cts.Token);
 return 0;
+
+/// <summary>Body of POST /api/analysis/precompute.</summary>
+internal sealed record PrecomputeRequest(int Year, string Meeting, string Session, bool Force = false);

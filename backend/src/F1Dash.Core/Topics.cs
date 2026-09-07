@@ -25,6 +25,16 @@ public static class Topics
     public const string CarData = "CarData";
     public const string Heartbeat = "Heartbeat";
 
+    /// <summary>
+    /// The authoritative current compound and new/used flag per driver.
+    ///
+    /// Needed because TimingAppData.Stints frequently never publishes Compound
+    /// for the STARTING stint — it sends the tyre age but leaves the compound
+    /// null until the first pit stop, which loses the opening stint of every
+    /// strategy. CurrentTyres carries it, including before the race starts.
+    /// </summary>
+    public const string CurrentTyres = "CurrentTyres";
+
     // --- new in 2026 (docs/21) -------------------------------------------
     /// <summary>Per-driver overtake counter. Fills the column DRS vacated.</summary>
     public const string OvertakeSeries = "OvertakeSeries";
@@ -40,7 +50,7 @@ public static class Topics
         TopThree, TeamRadio, PitLaneTimeCollection,
         // Absent before 2026; the archive simply does not list them for older
         // seasons and the downloader skips what a session did not publish.
-        OvertakeSeries, PitStop,
+        CurrentTyres, OvertakeSeries, PitStop,
         "Position.z", "CarData.z",
     ];
 

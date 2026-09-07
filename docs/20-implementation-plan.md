@@ -128,8 +128,114 @@ See `DECISIONS.md` D-008.
 | **IMPL-39** | Reconnection | Backoff, `?since=` resumption, cursor-expired store reset, ping/pong heartbeat | UC-061 |
 | **IMPL-40** | Docker compose | `docker compose up` runs both applications; `--profile dev` adds the simulator | — |
 
+## Phase H — Session analysis
+
+> The dashboard shows what is happening *now*. This phase records what happened across a whole
+> session and lets it be read afterwards: strategy, lap-by-lap pace, position changes, sector
+> comparisons and telemetry.
+>
+> Branch: `feat/analysis`.
+
+### What has to be recorded, and why it cannot be reconstructed later
+
+The live feed is ephemeral. `TimingData` carries only a driver's *current* lap time and
+`CarData` only the *latest* telemetry batch — neither keeps history, and nothing is republished.
+A lap that is not captured as it passes is gone. For an archived session the stream can simply be
+replayed, but for a live session there is exactly one chance.
+
+So the recorder consumes the same `TopicUpdate` stream the dashboard does and accumulates a
+session history alongside it. It runs for replay too, because a code path exercised only during
+the ~24 live weekends a year is a code path that breaks on race day.
+
+### Storage shape
+
+| File | Contents | Size |
+|---|---|---|
+| `analysis/meta.json` | Session identity, drivers, lap count | KB |
+| `analysis/laps.json` | Per driver, per lap: lap time, S1/S2/S3, position, compound, tyre age, pit flags | ~200 KB |
+| `analysis/stints.json` | Per driver: compound, first and last lap, laps on the set, new or used | KB |
+| `analysis/telemetry/{driver}.json` | Per lap, parallel channel arrays: speed, throttle, brake, gear, RPM | ~1–3 MB per driver |
+
+Telemetry is stored **per driver in its own file** and loaded on demand. Storing it as one
+document would be a 40 MB response for a chart that needs one lap, and parallel arrays are 3–5×
+smaller than an array of objects (docs/09).
+
+**Telemetry recording is limited to 2026 and later.** Older sessions still get laps, stints,
+positions and sector comparisons — those are cheap. Full telemetry history for every archived
+season back to 2018 is tens of gigabytes for data that is already in the archive and replayable
+on demand.
+
+| # | Use case | Definition of done | Product UC |
+|---|---|---|---|
+| **IMPL-43** | Analysis model and builder | Lap times, sector times, positions and stints accumulate from the topic stream; a replayed race reproduces the official lap count and stop count per driver | UC-012 |
+| **IMPL-44** | Telemetry recorder | Per-lap channel traces captured for 2026+ sessions; memory stays flat across a race; older sessions skip it deliberately | UC-031 |
+| **IMPL-45** | Persistence and REST | Analysis written on session end and on demand; endpoints for laps, stints, positions, telemetry and a two-driver comparison; every response sets `Cache-Control` | UC-032 |
+| **IMPL-46** | Lap-time chart | Bar chart of every lap for one driver, in any session type — practice, qualifying or race. Personal best and outliers distinguishable; pit and safety-car laps marked, since they otherwise read as a collapse in pace | UC-012 |
+| **IMPL-47** | Strategy timeline | Per driver, a bar per stint coloured by compound, showing lap range, laps on the set and whether the set was new | UC-012 |
+| **IMPL-48** | Position progression | Line-and-dot chart of every driver's position across the race, with the selected drivers emphasised | UC-012 |
+| **IMPL-49** | Two-driver sector comparison | Side-by-side S1/S2/S3 with the per-sector delta and a clear statement of who is faster where | UC-033 |
+| **IMPL-50** | Telemetry trace | Speed and brake against distance for one driver and one lap; two drivers overlaid | UC-031, UC-033 |
+| **IMPL-51** | PDF export | A print stylesheet renders the analysis as a paginated report — session identity, classification, strategy, lap chart, position chart. Generated in the browser, so no server-side rendering dependency | — |
+
+## Phase I — Routing, schedule, and analysis without replay
+
+> Branch: `feat/routes`.
+
+### Live and replay are two separate applications
+
+`/live` and `/replay` are not two tabs over one shared session. They answer
+different questions and must not be confusable:
+
+| | `/live` | `/replay` |
+|---|---|---|
+| Source | The live F1 feed only | An archived session, chosen explicitly |
+| On load | Connects, or states that no session is running | Shows the picker; plays nothing until a session is clicked |
+| Never | Falls back to an archived session | Silently becomes live |
+| Analysis | Recorded as it streams | Precomputed from the archive, no replay needed |
+
+The failure this prevents is the one the whole project guards against
+elsewhere: a user cannot tell a replay from live by looking at the numbers, so
+the two must be separated by the URL and by the page, not by a badge alone.
+
+### Why analysis no longer needs a replay
+
+Building a session's analysis by replaying it through the paced ingest loop
+takes minutes even at 50×, and for a session that already finished the pacing
+buys nothing — the stream is on disk and can be read at full speed. Reading the
+whole 2024 Monza race through the accumulator takes **1.5 seconds**.
+
+So the two cases separate cleanly:
+
+| Session | How the analysis is produced |
+|---|---|
+| **Finished** | Read `stream.jsonl` at full speed once, write `analysis/`, never replay again. Subsequent requests load the saved documents. |
+| **Live** | Recorded as it streams, because there is no second chance. |
+
+### On the storage question
+
+MongoDB was offered as an option "if it is easiest". It is not. The analysis is
+a handful of whole documents per session, read in full and written once —
+exactly the shape a file already handles. Mongo would add a container, a
+driver, connection lifecycle and a backup story, for data that is derived and
+can always be rebuilt from the archive in 1.5 seconds. **The on-disk store
+stays.** Revisit this only if analysis needs querying *across* sessions —
+"every driver's Monza stint history since 2018" is a database question; "this
+session's laps" is not.
+
+| # | Use case | Definition of done | Product UC |
+|---|---|---|---|
+| **IMPL-52** | Analysis without replay | `POST /api/analysis/precompute` reads a finished session's stream at full speed and writes the analysis; a second request loads from disk instead of recomputing | UC-042 |
+| **IMPL-53** | Saved-analysis lookup | `GET /api/analysis/{year}/{meeting}/{session}` serves a stored analysis with no session running | UC-041 |
+| **IMPL-54** | Season schedule | `GET /api/schedule/{year}` merges the Jolpica calendar with what the archive holds; `GET /api/schedule/next` gives the next session and a countdown | UC-051, UC-052 |
+| **IMPL-55** | Routing | React Router with distinct pages rather than tabs on one screen | — |
+| **IMPL-56** | Live page | `/live` — bound to the live feed ONLY. Never plays an archived session, and shows the no-session state when nothing is running rather than silently falling back to a replay. | UC-011, UC-065 |
+| **IMPL-57** | Replay page | `/replay` — session picker; `/replay/{year}/{meeting}/{session}` plays one. A replay starts only on an explicit choice, never on page load. | UC-041, UC-043 |
+| **IMPL-60** | Weather panel | Track and air temperature, humidity, pressure, wind speed with a direction arrow, and rainfall — with icons, laid out to be read at a glance rather than as a row of numbers | UC-017 |
+| **IMPL-58** | Schedule page | `/schedule` — the 2026 calendar with rounds completed, running and upcoming, and a countdown to the next | UC-051, UC-052 |
+| **IMPL-59** | Analysis page | `/analysis/{year}/{meeting}/{session}` — readable without the session being loaded into the live dashboard | UC-032 |
+
 ## Not in this plan yet
 
-Replay (UC-04x), schedule and standings pages (UC-05x), and the responsive breakpoints below
-1440 px. The design covers the 1440 px desktop dashboard only; those screens need design before
-they need code.
+Replay transport controls (UC-043, UC-044), schedule and standings pages (UC-05x), and the
+responsive breakpoints below 1440 px. The design covers the 1440 px desktop dashboard only; those
+screens need design before they need code.

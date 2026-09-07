@@ -379,6 +379,7 @@ export function selectWeather(state: JsonObject): Weather {
     trackTemp: num(w?.TrackTemp) ?? 0,
     airTemp: num(w?.AirTemp) ?? 0,
     windSpeed: num(w?.WindSpeed) ?? 0,
+    windDirection: num(w?.WindDirection) ?? 0,
     humidity: num(w?.Humidity) ?? 0,
     pressure: num(w?.Pressure) ?? 0,
     rainfall: (num(w?.Rainfall) ?? 0) > 0,
