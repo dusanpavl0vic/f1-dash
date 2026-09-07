@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink, Outlet } from "react-router";
+import { Link, NavLink, Outlet } from "react-router";
 import { AppFooter } from "@/components/layout/AppFooter/AppFooter";
 import s from "./RootLayout.module.css";
 
@@ -38,7 +38,25 @@ export function RootLayout() {
 
   return (
     <div className={s.app}>
+      <header className={s.masthead}>
+        <div className={s.brandRule} />
+        <Link to="/" className={s.brand}>
+          <div className={s.brandName}>Ap<em>e</em>x</div>
+          <div className={s.brandTag}>F1 live timing &amp; telemetry</div>
+        </Link>
+        <div className={s.mastheadSpacer} />
+        <div className={s.mastheadStatus}>
+          <span className={live?.live ? s.statusDotLive : s.statusDotIdle} />
+          {live?.live
+            ? `${live.meeting} · ${live.session} running now`
+            : live?.meeting
+              ? `No session running · last was ${live.meeting}`
+              : "Checking for a live session"}
+        </div>
+      </header>
+
       <nav className={s.nav}>
+        <NavLink to="/" end className={className}>Home</NavLink>
         <NavLink to="/live" className={className}>
           {live?.live && <span className={s.liveDot} />}
           Live
@@ -46,6 +64,7 @@ export function RootLayout() {
         <NavLink to="/replay" className={className}>Replay</NavLink>
         <NavLink to="/schedule" className={className}>Schedule</NavLink>
         <NavLink to="/standings" className={className}>Standings</NavLink>
+        <NavLink to="/telemetry" className={className}>Telemetry</NavLink>
         <div className={s.spacer} />
         <div className={s.brandStrip}>
           {live?.live

@@ -1,0 +1,60 @@
+.hero {
+  display: flex; align-items: flex-end; gap: 28px;
+  padding: 40px 20px 30px 20px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--surface-header-from) 0%, var(--bg) 100%);
+}
+.heroBody { max-width: 640px; }
+.heroKicker {
+  font-family: var(--font-mono); font-size: var(--fs-10);
+  letter-spacing: var(--ls-mega); text-transform: uppercase; color: var(--accent);
+}
+.heroTitle {
+  font-family: var(--font-display); font-size: var(--fs-38); font-weight: 700;
+  letter-spacing: 0.01em; text-transform: uppercase; line-height: 1.05; margin: 8px 0 10px;
+}
+.heroBlurb {
+  font-size: var(--fs-13); line-height: 1.65; color: var(--text-dim); text-wrap: pretty;
+}
+.heroSide { margin-left: auto; text-align: right; flex: 0 0 auto; }
+.heroStat {
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+  font-size: var(--fs-32); font-weight: 500; line-height: 1;
+}
+.heroStatLabel {
+  font-family: var(--font-display); font-size: var(--fs-10); font-weight: 600;
+  letter-spacing: var(--ls-mega); text-transform: uppercase; color: var(--text-faint);
+  margin-top: 4px;
+}
+
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.card {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 22px 20px 24px 20px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  text-decoration: none; color: inherit;
+  position: relative;
+}
+.card:nth-child(3n) { border-right: none; }
+.card:hover { background: var(--surface); }
+.card:hover .cardName { color: var(--accent); }
+.cardAccent { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+.cardKicker {
+  font-family: var(--font-mono); font-size: var(--fs-9);
+  letter-spacing: var(--ls-mega); text-transform: uppercase; color: var(--text-faintest);
+}
+.cardName {
+  font-family: var(--font-display); font-size: var(--fs-24); font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase; line-height: 1;
+}
+.cardBody { font-size: var(--fs-12); line-height: 1.55; color: var(--text-faint); text-wrap: pretty; }
+.cardBadge {
+  align-self: flex-start; margin-top: 4px;
+  font-family: var(--font-mono); font-size: var(--fs-9); font-weight: 600;
+  letter-spacing: var(--ls-wider); text-transform: uppercase;
+  padding: 2px 7px; border: 1px solid;
+}
+.badgeLive { color: var(--green); border-color: var(--green-bd); background: var(--green-bg); }
+.badgeIdle { color: var(--text-faint); border-color: var(--border); }
+.badgeSoon { color: var(--yellow); border-color: var(--yellow-bd); background: var(--yellow-bg); }

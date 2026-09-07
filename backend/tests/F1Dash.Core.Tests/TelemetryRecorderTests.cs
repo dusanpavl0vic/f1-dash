@@ -67,6 +67,8 @@ public class TelemetryRecorderTests(ITestOutputHelper output)
             Assert.Equal(lap.Speed.Count, lap.OffsetMs.Count);
             Assert.Equal(lap.Speed.Count, lap.Brake.Count);
             Assert.Equal(lap.Speed.Count, lap.Throttle.Count);
+            Assert.Equal(lap.Speed.Count, lap.X.Count);
+            Assert.Equal(lap.Speed.Count, lap.Y.Count);
 
             // Real F1 telemetry, not zeros or noise.
             Assert.True(lap.Speed.Max() > 200, $"Top speed only {lap.Speed.Max()} km/h.");
@@ -80,6 +82,14 @@ public class TelemetryRecorderTests(ITestOutputHelper output)
             }
 
             Assert.Contains(lap.Lap, TelemetryRecorder.AvailableLaps(directory, number));
+
+            // GPS must actually move: a lap traces a circuit, so the coordinates
+            // have to span thousands of native units, not sit at one point.
+            var spanX = lap.X.Max() - lap.X.Min();
+            var spanY = lap.Y.Max() - lap.Y.Min();
+            output.WriteLine($"  racing line spans {spanX} x {spanY} track units");
+            Assert.True(spanX > 1000 && spanY > 1000,
+                $"GPS did not move across the lap: {spanX} x {spanY}.");
 
             // Bounded: without the cap the first "lap" swallowed the whole
             // pre-race period and ran to 12,922 samples.

@@ -77,6 +77,9 @@ export interface TelemetryLap {
   brake: number[];
   gear: number[];
   rpm: number[];
+  /** Track coordinates in native F1 units — the same system as the circuit outline. */
+  x: number[];
+  y: number[];
 }
 
 /**

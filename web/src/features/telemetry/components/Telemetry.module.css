@@ -1,0 +1,59 @@
+.panel { padding: 14px 20px 18px 20px; border-bottom: 1px solid var(--border); }
+.header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.marker {
+  width: 9px; height: 9px; flex: 0 0 auto;
+  border-left: 2px solid var(--teal); border-top: 2px solid var(--teal);
+}
+.title {
+  font-family: var(--font-display); font-size: var(--fs-13); font-weight: 700;
+  letter-spacing: var(--ls-max); text-transform: uppercase; color: var(--text);
+}
+.rule { flex: 1 1 auto; height: 1px; background: var(--surface-3); }
+.meta {
+  font-family: var(--font-mono); font-size: var(--fs-10);
+  letter-spacing: var(--ls-wider); text-transform: uppercase; color: var(--text-faintest);
+}
+
+.selectors { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.fieldLabel {
+  font-family: var(--font-display); font-size: var(--fs-10); font-weight: 600;
+  letter-spacing: var(--ls-mega); text-transform: uppercase; color: var(--text-faint);
+}
+.select {
+  padding: 6px 10px; min-width: 150px;
+  border: 1px solid var(--border); background: var(--surface-3); color: var(--text);
+  font-family: var(--font-mono); font-size: var(--fs-11);
+}
+.select:disabled { color: var(--text-disabled); cursor: not-allowed; }
+.selectA { border-color: var(--teal); }
+.selectB { border-color: var(--orange); }
+
+.svg { width: 100%; height: auto; display: block; }
+.axis { font-family: var(--font-mono); font-size: 9px; fill: var(--text-faintest); }
+.grid { stroke: var(--border-chart); stroke-width: 1; }
+.zeroLine { stroke: var(--text-faint); stroke-width: 1; stroke-dasharray: 3 3; }
+
+.legend {
+  display: flex; align-items: center; gap: 16px; margin-top: 9px; flex-wrap: wrap;
+  font-family: var(--font-mono); font-size: var(--fs-9);
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faintest);
+}
+.legendItem { display: flex; align-items: center; gap: 6px; }
+.swatch { width: 12px; height: 3px; }
+
+.deltaSummary {
+  display: flex; align-items: baseline; gap: 10px;
+  font-family: var(--font-mono);
+}
+.deltaValue { font-size: var(--fs-22); font-weight: 500; font-variant-numeric: tabular-nums; }
+.deltaWho { font-size: var(--fs-11); letter-spacing: var(--ls-wider); text-transform: uppercase; }
+
+.two { display: grid; grid-template-columns: minmax(0, 1fr) 420px; }
+.two > *:first-child { border-right: 1px solid var(--border); }
+
+.empty {
+  padding: 60px 20px; text-align: center;
+  font-family: var(--font-mono); font-size: var(--fs-11);
+  letter-spacing: var(--ls-wider); color: var(--text-faint);
+}

@@ -78,6 +78,18 @@
   --wash-marshal-red: rgb(193 51 42 / 50%);
   --wash-marshal-none: rgb(255 255 255 / 0%);
 
+  /* ---------- telemetry speed ramp ----------
+     Slow to fast, for colouring the racing line. Blue reads as braking and red
+     as flat out without needing a legend lookup. Six steps rather than a
+     continuous gradient: an SVG gradient follows the bounding box, not the
+     path, so it would colour by screen position instead of by speed. */
+  --speed-1: #2f7cb8;
+  --speed-2: #2fd4c4;
+  --speed-3: #4c9c3a;
+  --speed-4: #e8b52b;
+  --speed-5: #e8863b;
+  --speed-6: #c1332a;
+
   /* ---------- track map ---------- */
   --track-surface: #4a3f42;
   --track-startfinish: #f2efec;

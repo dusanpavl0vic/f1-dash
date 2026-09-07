@@ -9,6 +9,46 @@
   position: relative;
 }
 
+/* The application's own identity, above the navigation. Previously the name
+   only appeared inside the session dashboard, so every other page was
+   anonymous. */
+.masthead {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--surface-header-from) 0%, var(--surface) 100%);
+}
+.brandRule { width: 5px; align-self: stretch; background: var(--accent); margin: -14px 0 -14px -20px; }
+.brand { display: flex; flex-direction: column; }
+.brandName {
+  font-family: var(--font-display);
+  font-size: var(--fs-26);
+  font-weight: 700;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--text);
+  line-height: 1;
+}
+.brandName em { font-style: normal; color: var(--accent); }
+.brandTag {
+  font-family: var(--font-mono);
+  font-size: var(--fs-10);
+  letter-spacing: var(--ls-mega);
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-top: 5px;
+}
+.mastheadSpacer { flex: 1 1 auto; }
+.mastheadStatus {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--font-mono); font-size: var(--fs-11);
+  letter-spacing: var(--ls-wider); color: var(--text-dim);
+}
+.statusDotLive { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+.statusDotIdle { width: 8px; height: 8px; border-radius: 50%; background: var(--text-disabled); }
+
 .nav {
   display: flex;
   align-items: stretch;

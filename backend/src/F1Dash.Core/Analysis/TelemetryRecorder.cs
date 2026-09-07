@@ -64,11 +64,35 @@ public sealed class TelemetryRecorder : IDisposable
                 Sample(state);
                 break;
 
+            // Position arrives on its own topic at its own rate, so the latest
+            // known coordinate is held and attached to the next CarData sample.
+            // That is what lets the racing line be drawn and coloured by speed.
+            case Topics.Position:
+                TrackPositions(state);
+                break;
+
             // The lap counter is the only reliable boundary: CarData carries no
             // lap of its own.
             case Topics.TimingData:
                 FlushCompletedLaps(state);
                 break;
+        }
+    }
+
+    private void TrackPositions(StateAccumulator state)
+    {
+        var frames = Ordered(state[Topics.Position]?["Position"]);
+        var latest = frames.Count > 0 ? frames[^1].Item2 : null;
+
+        if (latest?["Entries"] is not JsonObject entries) return;
+
+        foreach (var (number, raw) in entries)
+        {
+            if (raw is not JsonObject entry) continue;
+
+            var buffer = Buffer(number);
+            buffer.LastX = ReadInt(entry["X"]) ?? buffer.LastX;
+            buffer.LastY = ReadInt(entry["Y"]) ?? buffer.LastY;
         }
     }
 
@@ -104,6 +128,8 @@ public sealed class TelemetryRecorder : IDisposable
                 buffer.Brake.Add(Channel(channels, CarDataChannel.Brake));
                 buffer.Gear.Add(Channel(channels, CarDataChannel.Gear));
                 buffer.Rpm.Add(Channel(channels, CarDataChannel.Rpm));
+                buffer.X.Add(buffer.LastX);
+                buffer.Y.Add(buffer.LastY);
 
                 buffer.TrimTo(MaxSamplesPerLap);
             }
@@ -151,6 +177,8 @@ public sealed class TelemetryRecorder : IDisposable
             ["brake"] = ToArray(buffer.Brake),
             ["gear"] = ToArray(buffer.Gear),
             ["rpm"] = ToArray(buffer.Rpm),
+            ["x"] = ToArray(buffer.X),
+            ["y"] = ToArray(buffer.Y),
         };
 
         Writer(number).WriteLine(record.ToJsonString());
@@ -174,7 +202,8 @@ public sealed class TelemetryRecorder : IDisposable
             yield return new TelemetryLap(
                 lapNumber,
                 Ints(o["t"]), Ints(o["speed"]), Ints(o["throttle"]),
-                Ints(o["brake"]), Ints(o["gear"]), Ints(o["rpm"]));
+                Ints(o["brake"]), Ints(o["gear"]), Ints(o["rpm"]),
+                Ints(o["x"]), Ints(o["y"]));
 
             if (lap is not null) yield break;
         }
@@ -287,6 +316,12 @@ public sealed class TelemetryRecorder : IDisposable
         public List<int> Brake { get; } = [];
         public List<int> Gear { get; } = [];
         public List<int> Rpm { get; } = [];
+        public List<int> X { get; } = [];
+        public List<int> Y { get; } = [];
+
+        /// <summary>Latest known coordinate, carried between Position frames.</summary>
+        public int LastX { get; set; }
+        public int LastY { get; set; }
 
         /// <summary>Keeps the newest <paramref name="max"/> samples.</summary>
         public void TrimTo(int max)
@@ -300,6 +335,8 @@ public sealed class TelemetryRecorder : IDisposable
             Brake.RemoveRange(0, excess);
             Gear.RemoveRange(0, excess);
             Rpm.RemoveRange(0, excess);
+            X.RemoveRange(0, excess);
+            Y.RemoveRange(0, excess);
         }
 
         public void Reset(int lap)
@@ -308,6 +345,7 @@ public sealed class TelemetryRecorder : IDisposable
             LapStart = null;
             Offset.Clear(); Speed.Clear(); Throttle.Clear();
             Brake.Clear(); Gear.Clear(); Rpm.Clear();
+            X.Clear(); Y.Clear();
         }
     }
 }

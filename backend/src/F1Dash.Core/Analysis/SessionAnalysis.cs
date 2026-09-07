@@ -68,6 +68,8 @@ public sealed record SessionAnalysis(
 /// (docs/09).
 /// </summary>
 /// <param name="OffsetMs">Milliseconds since the lap started, one per sample.</param>
+/// <param name="X">Track X, native F1 units — same system as the circuit outline.</param>
+/// <param name="Y">Track Y, native F1 units.</param>
 public sealed record TelemetryLap(
     int Lap,
     IReadOnlyList<int> OffsetMs,
@@ -75,7 +77,9 @@ public sealed record TelemetryLap(
     IReadOnlyList<int> Throttle,
     IReadOnlyList<int> Brake,
     IReadOnlyList<int> Gear,
-    IReadOnlyList<int> Rpm);
+    IReadOnlyList<int> Rpm,
+    IReadOnlyList<int> X,
+    IReadOnlyList<int> Y);
 
 /// <summary>Per-sector comparison of two drivers over their best laps.</summary>
 public sealed record SectorComparison(
