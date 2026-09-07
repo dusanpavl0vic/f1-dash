@@ -5,6 +5,7 @@ const TABS: { view: AppView; label: string }[] = [
   { view: "timing", label: "Race dashboard" },
   { view: "telemetry", label: "Telemetry wall" },
   { view: "notifications", label: "Race control" },
+  { view: "analysis", label: "Analysis" },
 ];
 
 interface TabBarProps {

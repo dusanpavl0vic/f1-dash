@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { AnalysisView } from "./features/analysis/components/AnalysisView";
 import { TyreLoader } from "./components/atoms/TyreLoader";
 import { AppFooter } from "./components/layout/AppFooter/AppFooter";
 import { AppHeader } from "./components/layout/AppHeader/AppHeader";
@@ -118,6 +119,8 @@ export function App() {
           </div>
         </div>
       )}
+
+      {view === "analysis" && <AnalysisView active={view === "analysis"} />}
 
       {view === "telemetry" && (
         <div className={s.placeholder}>TELEMETRY WALL — IMPL-18 TO IMPL-22</div>

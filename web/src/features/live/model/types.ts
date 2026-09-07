@@ -45,7 +45,7 @@ export type TrackState =
 
 export type GapMode = "gap" | "interval";
 
-export type AppView = "timing" | "telemetry" | "notifications";
+export type AppView = "timing" | "telemetry" | "notifications" | "analysis";
 
 /** One timed sector. `value` is empty until the driver has set it this lap. */
 export interface SectorTime {

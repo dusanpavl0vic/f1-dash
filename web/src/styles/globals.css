@@ -44,3 +44,61 @@ table { border-collapse: collapse; }
   from { background: var(--wash-purple); }
   to   { background: transparent; }
 }
+
+/* ---------------------------------------------------------------------------
+   Print — the PDF export.
+
+   The browser's own print-to-PDF is used rather than server-side rendering: it
+   adds no dependency, the charts are already SVG so they come out as vectors
+   rather than screenshots, and the user chooses the destination.
+
+   Everything except the analysis report is hidden, and the dark theme is
+   inverted to ink on paper — printing a near-black page wastes toner and reads
+   badly.
+--------------------------------------------------------------------------- */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 12mm;
+  }
+
+  :root {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-alt: #fafafa;
+    --surface-2: #f0f0f0;
+    --surface-3: #e8e8e8;
+    --surface-4: #e0e0e0;
+    --border: #c8c8c8;
+    --border-subtle: #dcdcdc;
+    --border-row: #e8e8e8;
+    --border-chart: #dcdcdc;
+    --text: #101010;
+    --text-dim: #3a3a3a;
+    --text-faint: #5a5a5a;
+    --text-faintest: #6a6a6a;
+    --text-fainter: #5a5a5a;
+    --text-disabled: #8a8a8a;
+  }
+
+  html, body { background: #fff; }
+
+  /* Only the report prints. Chrome and nav are hidden by tag; the analysis
+     view is the only main content while its tab is active, so nothing else
+     needs suppressing. */
+  header, nav, footer { display: none !important; }
+  [data-analysis-report] { width: 100%; }
+
+  /* Each panel is a unit; splitting a chart across a page break makes it
+     unreadable. */
+  [data-analysis-report] section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Controls do not belong in a printed report. */
+  button, select { display: none !important; }
+
+  svg { max-width: 100%; }
+}
