@@ -23,6 +23,7 @@ public sealed class SessionDownloader(ArchiveClient client)
         Topics.DriverList, Topics.TimingData, Topics.TimingAppData, Topics.TimingStats,
         Topics.TrackStatus, Topics.RaceControlMessages, Topics.WeatherData,
         Topics.LapCount, Topics.ExtrapolatedClock, Topics.TopThree,
+        Topics.OvertakeSeries, Topics.PitStop,
         "Position.z", "CarData.z",
     ];
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AppFooter } from "./components/layout/AppFooter/AppFooter";
 import { AppHeader } from "./components/layout/AppHeader/AppHeader";
 import { TabBar } from "./components/layout/TabBar/TabBar";
@@ -7,10 +7,12 @@ import { liveStore } from "./features/live/store/liveStore";
 import type { AppView, GapMode } from "./features/live/model/types";
 import { RaceControlFeed } from "./features/race-control/components/RaceControlFeed";
 import { TimingTower } from "./features/timing/components/TimingTower";
+import { SessionPicker, type CurrentSession } from "./features/session-picker/components/SessionPicker";
 import { TrackMap } from "./features/track-map/components/TrackMap";
 import s from "./App.module.css";
 
 const LIVE_URL = import.meta.env["VITE_LIVE_URL"] ?? "ws://localhost:4000/ws";
+const API_URL = import.meta.env["VITE_API_URL"] ?? "http://localhost:4000";
 
 const STATUS_TEXT: Record<string, { label: string; color: string }> = {
   connecting: { label: "CONNECTING TO THE SESSION FEED", color: "var(--text-faint)" },
@@ -25,11 +27,21 @@ export function App() {
   const [view, setView] = useState<AppView>("timing");
   const [gapMode, setGapMode] = useState<GapMode>("gap");
   const [selected, setSelected] = useState<string | null>(null);
+  const [current, setCurrent] = useState<CurrentSession | null>(null);
 
   useEffect(() => {
     liveStore.connect(LIVE_URL);
     return () => liveStore.disconnect();
   }, []);
+
+  const refreshCurrent = useCallback(() => {
+    void fetch(`${API_URL}/api/session`)
+      .then((r) => r.json() as Promise<CurrentSession>)
+      .then(setCurrent)
+      .catch(() => undefined);
+  }, []);
+
+  useEffect(refreshCurrent, [refreshCurrent]);
 
   const connected = status === "open";
   const banner = connected ? null : STATUS_TEXT[status];
@@ -38,11 +50,14 @@ export function App() {
     <div className={s.app}>
       <AppHeader
         session={session.session}
+        mode={current?.mode === 2 ? "live" : current?.mode === 1 ? "replay" : "none"}
         weather={session.weather}
         trackState={session.trackState}
         delaySeconds={0}
         connected={connected}
-      />
+      >
+        <SessionPicker current={current} onSwitched={refreshCurrent} />
+      </AppHeader>
 
       <TabBar
         view={view}
@@ -65,6 +80,7 @@ export function App() {
           <TimingTower
             timing={session.timing}
             drivers={session.drivers}
+            overtakeAid={session.overtakeAid}
             gapMode={gapMode}
             selected={selected}
             onGapModeChange={setGapMode}

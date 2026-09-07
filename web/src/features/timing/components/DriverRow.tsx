@@ -3,7 +3,7 @@ import {
   DRIVER_STATUS_LABEL, PACE_COLOR, TYRE, TYRE_AGE_CRITICAL, TYRE_AGE_WARN,
 } from "@/features/live/model/constants";
 import { isLapCounter } from "@/features/live/model/selectors";
-import type { Driver, GapMode, TimingRow } from "@/features/live/model/types";
+import type { Driver, GapMode, OvertakeAid, TimingRow } from "@/features/live/model/types";
 import { MiniSectors } from "./MiniSectors";
 import s from "./TimingTower.module.css";
 
@@ -12,6 +12,7 @@ interface DriverRowProps {
   driver: Driver | undefined;
   index: number;
   gapMode: GapMode;
+  overtakeAid: OvertakeAid;
   selected: boolean;
   onSelect(tla: string): void;
 }
@@ -23,7 +24,7 @@ function ageColor(age: number): string {
 }
 
 export const DriverRow = memo(function DriverRow({
-  row, driver, index, gapMode, selected, onSelect,
+  row, driver, index, gapMode, overtakeAid, selected, onSelect,
 }: DriverRowProps) {
   const retired = row.status === "retired";
   const color = driver?.color ?? "var(--neutral)";
@@ -62,11 +63,22 @@ export const DriverRow = memo(function DriverRow({
         <div className={s.team}>{driver?.teamName ?? ""}</div>
       </td>
 
-      <td className={s.cellDrs}>
-        <span className={`${s.drs} ${row.drsActive ? s.drsOn : s.drsOff}`}>
-          {row.drsActive ? "DRS" : "—"}
-        </span>
-      </td>
+      {/* DRS before 2026, overtakes from 2026, nothing when the data supports
+          neither. See docs/21. */}
+      {overtakeAid === "drs" && (
+        <td className={s.cellDrs}>
+          <span className={`${s.drs} ${row.drsActive ? s.drsOn : s.drsOff}`}>
+            {row.drsActive ? "DRS" : "—"}
+          </span>
+        </td>
+      )}
+      {overtakeAid === "overtakes" && (
+        <td className={s.cellDrs}>
+          <span className={`${s.drs} ${row.overtakes > 0 ? s.drsOn : s.drsOff}`}>
+            {row.overtakes > 0 ? row.overtakes : "—"}
+          </span>
+        </td>
+      )}
 
       <td className={s.cellGap}>
         <span className={`${s.gap} ${gapClass}`}>{gapValue}</span>

@@ -136,6 +136,7 @@ export function buildMockSession(
       // The feed exposes DRS via CarData channel 45 (>= 10 is active). The
       // fixture approximates it: the leading group has it available.
       drsActive: i < 4 && status === "",
+      overtakes: 0,
     };
   });
 
@@ -192,6 +193,7 @@ export function buildMockSession(
   ];
 
   return {
+    overtakeAid: "drs",
     session: {
       meetingName: "Bahrain Grand Prix",
       circuitName: "Bahrain International Circuit",
@@ -200,6 +202,8 @@ export function buildMockSession(
       totalLaps: 57,
       circuitKey: 63,   // Bahrain, per the design's mock session
       year: 2024,
+      round: 1,
+      startDate: "2024-03-02T15:00:00",
     },
     weather: { trackTemp: 40.2, airTemp: 23.4, windSpeed: 7.0, humidity: 32, pressure: 1012, rainfall: false },
     trackState,

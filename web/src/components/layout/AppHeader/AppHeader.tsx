@@ -8,6 +8,8 @@ const HIGH_DELAY_SECONDS = 60;
 
 export interface AppHeaderProps {
   session: SessionInfo;
+  /** "Replay" or "Live" — a replay must never be mistakable for a live session. */
+  mode: "replay" | "live" | "none";
   weather: Weather;
   trackState: TrackState;
   /** Client-side broadcast delay in seconds, 0–120. */
@@ -17,8 +19,8 @@ export interface AppHeaderProps {
 }
 
 export const AppHeader = memo(function AppHeader({
-  session, weather, trackState, delaySeconds, connected,
-}: AppHeaderProps) {
+  session, mode, weather, trackState, delaySeconds, connected, children,
+}: AppHeaderProps & { children?: React.ReactNode }) {
   const status = TRACK_STATE[trackState];
   const highDelay = delaySeconds > HIGH_DELAY_SECONDS;
 
@@ -41,9 +43,26 @@ export const AppHeader = memo(function AppHeader({
             </div>
             <div className={`${s.divider} ${s.dividerShort}`} />
             <div>
-              <div className={s.meetingName}>{session.meetingName}</div>
+              <div className={s.meetingName}>
+                {session.meetingName}
+                {session.year !== null && <span className={s.season}>{session.year}</span>}
+              </div>
               <div className={s.meetingSub}>
-                {session.circuitName} · {session.type}
+                {session.round !== null && <span className={s.roundBadge}>R{session.round}</span>}
+                {session.circuitName && <span>{session.circuitName}</span>}
+                {session.circuitName && <span className={s.subDot}>·</span>}
+                <span className={s.sessionType}>{session.type || "—"}</span>
+                {session.startDate && (
+                  <>
+                    <span className={s.subDot}>·</span>
+                    <span>{session.startDate.slice(0, 10)}</span>
+                  </>
+                )}
+                {mode !== "none" && (
+                  <span className={`${s.modeBadge} ${mode === "live" ? s.modeBadgeLive : ""}`}>
+                    {mode === "live" ? "LIVE FEED" : "REPLAY"}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -62,6 +81,7 @@ export const AppHeader = memo(function AppHeader({
         )}
 
         <div className={s.right}>
+          {children}
           <div className={s.temps}>
             <span className={s.tempsKey}>TRACK </span>
             {weather.trackTemp.toFixed(1)}C

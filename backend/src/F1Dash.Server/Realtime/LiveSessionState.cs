@@ -17,7 +17,7 @@ namespace F1Dash.Server.Realtime;
 /// </summary>
 public sealed class LiveSessionState
 {
-    private readonly StateAccumulator _accumulator = new();
+    private StateAccumulator _accumulator = new();
     private readonly ConcurrentDictionary<Guid, ClientConnection> _clients = new();
     private readonly Lock _stateLock = new();
 
@@ -92,6 +92,24 @@ public sealed class LiveSessionState
     public JsonObject Snapshot()
     {
         lock (_stateLock) return _accumulator.Snapshot();
+    }
+
+    /// <summary>
+    /// Discards everything and starts a new session.
+    ///
+    /// State is delta-accumulated, so switching sources without a reset would
+    /// merge one session's drivers, laps and messages into another's. The
+    /// sequence keeps counting up so a connected client sees the change as new
+    /// frames rather than as a rewind.
+    /// </summary>
+    public void Reset()
+    {
+        lock (_stateLock)
+        {
+            _accumulator = new StateAccumulator();
+            _snapshotCache = null;
+            HasData = false;
+        }
     }
 
     public void Add(ClientConnection client) => _clients[client.Id] = client;

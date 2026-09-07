@@ -1,11 +1,12 @@
 import { PACE_COLOR } from "@/features/live/model/constants";
-import type { Driver, GapMode, TimingRow } from "@/features/live/model/types";
+import type { Driver, GapMode, OvertakeAid, TimingRow } from "@/features/live/model/types";
 import { DriverRow } from "./DriverRow";
 import s from "./TimingTower.module.css";
 
 interface TimingTowerProps {
   timing: TimingRow[];
   drivers: Record<string, Driver>;
+  overtakeAid: OvertakeAid;
   gapMode: GapMode;
   selected: string | null;
   onGapModeChange(mode: GapMode): void;
@@ -19,11 +20,28 @@ const LEGEND: { label: string; pace: keyof typeof PACE_COLOR }[] = [
   { label: "Pit", pace: "pit" },
 ];
 
-const COLUMNS: { key: string; label: string; width?: number; align?: "left" | "right" | "center" }[] = [
+type Column = { key: string; label: string; width?: number; align?: "left" | "right" | "center" };
+
+/**
+ * The aid column is DRS before 2026 and overtakes from 2026, and disappears
+ * when the data supports neither. The header label is the honest signal of
+ * which era's data is on screen.
+ */
+function columnsFor(aid: OvertakeAid): Column[] {
+  const aidColumn: Column[] =
+    aid === "drs" ? [{ key: "aid", label: "DRS", width: 44, align: "center" }]
+    : aid === "overtakes" ? [{ key: "aid", label: "OVT", width: 44, align: "center" }]
+    : [];
+  return [...BASE_COLUMNS_LEFT, ...aidColumn, ...BASE_COLUMNS_RIGHT];
+}
+
+const BASE_COLUMNS_LEFT: Column[] = [
   { key: "pos", label: "POS", width: 44, align: "center" },
   { key: "num", label: "NUM", width: 42, align: "center" },
   { key: "driver", label: "DRIVER", width: 158, align: "left" },
-  { key: "drs", label: "DRS", width: 44, align: "center" },
+];
+
+const BASE_COLUMNS_RIGHT: Column[] = [
   { key: "gap", label: "GAP", width: 92, align: "right" },
   { key: "segments", label: "MINI-SECTORS", align: "left" },
   { key: "s1", label: "S1", width: 70, align: "right" },
@@ -37,8 +55,10 @@ const COLUMNS: { key: string; label: string; width?: number; align?: "left" | "r
 ];
 
 export function TimingTower({
-  timing, drivers, gapMode, selected, onGapModeChange, onSelect,
+  timing, drivers, overtakeAid, gapMode, selected, onGapModeChange, onSelect,
 }: TimingTowerProps) {
+  const columns = columnsFor(overtakeAid);
+
   return (
     <section>
       <div className={s.header}>
@@ -78,13 +98,13 @@ export function TimingTower({
       ) : (
         <table className={s.table}>
           <colgroup>
-            {COLUMNS.map((c) => (
+            {columns.map((c) => (
               <col key={c.key} style={c.width ? { width: c.width } : undefined} />
             ))}
           </colgroup>
           <thead>
             <tr>
-              {COLUMNS.map((c) => (
+              {columns.map((c) => (
                 <th
                   key={c.key}
                   scope="col"
@@ -113,6 +133,7 @@ export function TimingTower({
                 driver={drivers[row.tla]}
                 index={i}
                 gapMode={gapMode}
+                overtakeAid={overtakeAid}
                 selected={selected === row.tla}
                 onSelect={onSelect}
               />

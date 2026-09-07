@@ -41,7 +41,7 @@
 }
 
 .divider { width: 1px; background: var(--border); }
-.dividerTall { height: 36px; }
+.dividerTall { height: 52px; }
 .dividerShort { height: 26px; }
 
 .session { display: flex; align-items: center; gap: 12px; }
@@ -57,19 +57,60 @@
   color: var(--text);
 }
 
+/* The session identity is the primary orientation on screen: which race, which
+   year, which session. It was previously the same size as the surrounding
+   chrome, which made it easy to lose track of what you were looking at during a
+   replay of an old race. */
 .meetingName {
-  font-family: var(--font-body);
-  font-size: var(--fs-16);
-  font-weight: 600;
-  letter-spacing: -0.005em;
-  line-height: 1.2;
+  font-family: var(--font-display);
+  font-size: var(--fs-26);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  line-height: 1.05;
+  white-space: nowrap;
+}
+.season {
+  color: var(--accent);
+  margin-left: 8px;
 }
 .meetingSub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-11);
+  letter-spacing: var(--ls-wider);
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+.subDot { color: var(--text-faintest); }
+.sessionType {
+  color: var(--text);
+  font-weight: 600;
+}
+.roundBadge {
   font-family: var(--font-mono);
   font-size: var(--fs-10);
+  font-weight: 600;
   letter-spacing: var(--ls-wider);
   color: var(--text-faint);
+  border: 1px solid var(--border);
+  padding: 1px 6px;
 }
+/* A replay must never be mistakable for a live session. */
+.modeBadge {
+  font-family: var(--font-mono);
+  font-size: var(--fs-10);
+  font-weight: 600;
+  letter-spacing: var(--ls-wider);
+  padding: 2px 7px;
+  border: 1px solid var(--yellow-bd);
+  background: var(--yellow-bg);
+  color: var(--yellow);
+}
+.modeBadgeLive { border-color: var(--green-bd); background: var(--green-bg); color: var(--green); }
 
 .lapBlock { display: flex; align-items: center; gap: 10px; }
 .lapValue {

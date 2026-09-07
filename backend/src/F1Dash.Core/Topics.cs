@@ -25,6 +25,12 @@ public static class Topics
     public const string CarData = "CarData";
     public const string Heartbeat = "Heartbeat";
 
+    // --- new in 2026 (docs/21) -------------------------------------------
+    /// <summary>Per-driver overtake counter. Fills the column DRS vacated.</summary>
+    public const string OvertakeSeries = "OvertakeSeries";
+    /// <summary>Stationary and pit-lane time per stop; not published before 2026.</summary>
+    public const string PitStop = "PitStop";
+
     /// <summary>The exact Subscribe argument list sent to the Streaming hub.</summary>
     public static readonly string[] Subscription =
     [
@@ -32,6 +38,9 @@ public static class Topics
         RaceControlMessages, TrackStatus, WeatherData, LapCount,
         ExtrapolatedClock, SessionInfo, SessionStatus, SessionData,
         TopThree, TeamRadio, PitLaneTimeCollection,
+        // Absent before 2026; the archive simply does not list them for older
+        // seasons and the downloader skips what a session did not publish.
+        OvertakeSeries, PitStop,
         "Position.z", "CarData.z",
     ];
 

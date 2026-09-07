@@ -22,6 +22,19 @@ export type PaceClass =
 
 export type DriverStatus = "racing" | "lapped" | "pit" | "outlap" | "retired";
 
+/**
+ * Which overtaking-aid column the era supports.
+ *
+ * 2026 removed DRS from the regulations AND from the feed: CarData channel 45
+ * is simply absent (docs/21). The replacement aids — active aerodynamics and
+ * the Manual Override boost — are not published at all, so nothing can be shown
+ * for them. What 2026 added instead is an overtake counter.
+ *
+ * Detected from the payload rather than the season, so a mid-season feed change
+ * degrades instead of breaking.
+ */
+export type OvertakeAid = "drs" | "overtakes" | "none";
+
 export type TrackState =
   | "none"        /* green flag */
   | "yellow"
@@ -69,7 +82,10 @@ export interface TimingRow {
   tyreAge: number;
   stops: number;
   status: DriverStatus;
+  /** Pre-2026 only. Always false once the feed stops publishing channel 45. */
   drsActive: boolean;
+  /** 2026+ only. Overtakes completed this session. */
+  overtakes: number;
 }
 
 export interface CarPosition {
@@ -144,11 +160,17 @@ export interface SessionInfo {
   /** MultiViewer circuitKey — the join to track geometry. */
   circuitKey: number | null;
   year: number | null;
+  /** Meeting round within the season, when the feed provides it. */
+  round: number | null;
+  /** Session start, ISO 8601, as the feed sends it. */
+  startDate: string | null;
 }
 
 /** Everything a rendered frame needs. The backend will produce this shape. */
 export interface SessionSnapshot {
   session: SessionInfo;
+  /** Which overtaking-aid column this session's data supports. */
+  overtakeAid: OvertakeAid;
   weather: Weather;
   trackState: TrackState;
   drivers: Record<string, Driver>;

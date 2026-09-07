@@ -11,9 +11,9 @@
 import type { JsonObject, JsonValue } from "../lib/merge";
 import { TEAM_COLOR_FALLBACK } from "./constants";
 import type {
-  CarPosition, Driver, MessageCategory, PaceClass, Penalty, RaceControlMessage,
-  SectorTime, SessionInfo, SessionSnapshot, Stint, TimelineBand, TimingRow,
-  TrackState, TyreCompound, Weather,
+  CarPosition, Driver, MessageCategory, OvertakeAid, PaceClass, Penalty,
+  RaceControlMessage, SectorTime, SessionInfo, SessionSnapshot, Stint,
+  TimelineBand, TimingRow, TrackState, TyreCompound, Weather,
 } from "./types";
 
 /* ------------------------------------------------------------------ utils */
@@ -161,7 +161,11 @@ function stintInfo(appLine: JsonObject | undefined): { tyre: TyreCompound; age: 
   };
 }
 
-export function selectTiming(state: JsonObject, drsByNumber: Record<string, boolean>): TimingRow[] {
+export function selectTiming(
+  state: JsonObject,
+  drsByNumber: Record<string, boolean>,
+  overtakesByNumber: Record<string, number> = {},
+): TimingRow[] {
   const lines = obj(obj(state.TimingData)?.Lines);
   const appLines = obj(obj(state.TimingAppData)?.Lines);
   const driverList = obj(state.DriverList);
@@ -222,6 +226,7 @@ export function selectTiming(state: JsonObject, drsByNumber: Record<string, bool
       stops,
       status,
       drsActive: drsByNumber[number] ?? false,
+      overtakes: overtakesByNumber[number] ?? 0,
     });
   }
 
@@ -242,6 +247,49 @@ export function selectDrs(state: JsonObject): Record<string, boolean> {
   for (const [number, raw] of Object.entries(cars)) {
     const channels = obj(obj(raw)?.Channels);
     out[number] = (num(channels?.["45"]) ?? 0) >= 10;
+  }
+  return out;
+}
+
+/**
+ * Which overtaking-aid column the data supports.
+ *
+ * Detected from the payload, never from the season number: a session replayed
+ * from 2018 and one running live in 2026 then behave identically, and a feed
+ * change degrades to "none" rather than rendering a column of dashes.
+ */
+export function selectOvertakeAid(state: JsonObject): OvertakeAid {
+  const frames = ordered(obj(state.CarData)?.Entries);
+  const cars = obj(frames[frames.length - 1]?.[1]?.Cars);
+
+  if (cars) {
+    for (const raw of Object.values(cars)) {
+      const channels = obj(obj(raw)?.Channels);
+      if (channels && "45" in channels) return "drs";
+    }
+  }
+
+  if (obj(obj(state.OvertakeSeries)?.Overtakes)) return "overtakes";
+
+  // No telemetry yet, or an era we have not seen. Hide the column.
+  return "none";
+}
+
+/**
+ * Overtakes completed, per car number. New in 2026; the feed sends a growing
+ * list of events per driver, each carrying its own count.
+ */
+export function selectOvertakes(state: JsonObject): Record<string, number> {
+  const overtakes = obj(obj(state.OvertakeSeries)?.Overtakes);
+  const out: Record<string, number> = {};
+  if (!overtakes) return out;
+
+  for (const [number, raw] of Object.entries(overtakes)) {
+    let total = 0;
+    for (const [, event] of ordered(raw)) {
+      total += num(event.count) ?? 0;
+    }
+    out[number] = total;
   }
   return out;
 }
@@ -320,6 +368,8 @@ export function selectSession(state: JsonObject): SessionInfo {
     totalLaps: num(lap?.TotalLaps) ?? 0,
     circuitKey: num(obj(meeting?.Circuit)?.Key) ?? null,
     year,
+    round: num(meeting?.Number) ?? null,
+    startDate: str(info?.StartDate) ?? null,
   };
 }
 
@@ -442,11 +492,13 @@ export function selectTimeline(state: JsonObject, currentLap: number): TimelineB
 export function selectSnapshot(state: JsonObject): SessionSnapshot {
   const drivers = selectDrivers(state);
   const drs = selectDrs(state);
-  const timing = selectTiming(state, drs);
+  const overtakes = selectOvertakes(state);
+  const timing = selectTiming(state, drs, overtakes);
   const session = selectSession(state);
 
   return {
     session,
+    overtakeAid: selectOvertakeAid(state),
     weather: selectWeather(state),
     trackState: selectTrackState(state),
     drivers,
