@@ -34,6 +34,18 @@ public sealed class LiveSessionState
 
     private long _sequence;
 
+    /// <summary>
+    /// The most recent deltas, so a client that drops for a few seconds can
+    /// resume instead of re-downloading a 1-2 MB snapshot.
+    ///
+    /// Bounded on purpose. An unbounded backlog would turn a client that never
+    /// comes back into a memory leak, and a client far enough behind is better
+    /// served by a snapshot anyway: at roughly ten deltas a second this holds
+    /// about a minute, which covers a tunnel, a Wi-Fi handover or a laptop lid.
+    /// </summary>
+    private readonly Queue<(long Seq, byte[] Frame)> _recent = new();
+    private const int RecentCapacity = 600;
+
     public int ClientCount => _clients.Count;
     public long Sequence => Interlocked.Read(ref _sequence);
     public bool HasData { get; private set; }
@@ -62,6 +74,9 @@ public sealed class LiveSessionState
                 ["ts"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                 ["data"] = delta,
             });
+
+            _recent.Enqueue((seq, frame));
+            while (_recent.Count > RecentCapacity) _recent.Dequeue();
         }
 
         Broadcast(frame);
@@ -74,20 +89,20 @@ public sealed class LiveSessionState
     /// </summary>
     public byte[] SnapshotFrame()
     {
-        lock (_stateLock)
-        {
-            return _snapshotCache ??= Encode(new JsonObject
-            {
-                ["type"] = "snapshot",
-                ["seq"] = Interlocked.Read(ref _sequence),
-                ["ts"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                // serverTime lets the client estimate clock skew, which the
-                // delay buffer needs (docs/08 §clock skew).
-                ["serverTime"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                ["data"] = _accumulator.Snapshot(),
-            });
-        }
+        lock (_stateLock) return _snapshotCache ??= Encode(SnapshotNode());
     }
+
+    /// <summary>Caller must hold <see cref="_stateLock"/>.</summary>
+    private JsonObject SnapshotNode() => new()
+    {
+        ["type"] = "snapshot",
+        ["seq"] = Interlocked.Read(ref _sequence),
+        ["ts"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+        // serverTime lets the client estimate clock skew, which the delay
+        // buffer needs (docs/08 §clock skew).
+        ["serverTime"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+        ["data"] = _accumulator.Snapshot(),
+    };
 
     /// <summary>
     /// Direct access for the analysis observers. Deliberately not a clone:
@@ -95,6 +110,52 @@ public sealed class LiveSessionState
     /// Callers must only READ.
     /// </summary>
     public StateAccumulator Accumulator => _accumulator;
+
+    /// <summary>
+    /// Brings a new client up to date and registers it for deltas, atomically.
+    ///
+    /// The two halves cannot be separated. A delta broadcast between "work out
+    /// what the client has missed" and "start sending it deltas" is lost, and a
+    /// lost delta is unrecoverable: the client's state is delta-accumulated, so
+    /// it stays silently wrong for the rest of the session. Holding the lock
+    /// across both means the client is registered before any delta it has not
+    /// already been handed can be produced.
+    ///
+    /// Returns true when the client was resumed from the backlog, false when it
+    /// was given a full snapshot — which happens when it is further behind than
+    /// the backlog reaches, or the session was reset under it. Both failures
+    /// have the same correct remedy.
+    /// </summary>
+    public bool AddAndCatchUp(ClientConnection client, long since)
+    {
+        lock (_stateLock)
+        {
+            var resumable =
+                since > 0
+                && since <= Interlocked.Read(ref _sequence)
+                && _recent.Count > 0
+                && _recent.Peek().Seq <= since + 1;
+
+            if (resumable)
+            {
+                foreach (var (seq, frame) in _recent)
+                {
+                    if (seq > since) client.Offer(frame);
+                }
+            }
+            else
+            {
+                // Queued before registration on purpose: registering first would
+                // let a delta reach the client ahead of the state it patches.
+                // This way the worst case is a duplicated delta, and the merge
+                // is idempotent for a repeated value.
+                client.Offer(_snapshotCache ??= Encode(SnapshotNode()));
+            }
+
+            _clients[client.Id] = client;
+            return resumable;
+        }
+    }
 
     public JsonObject Snapshot()
     {
@@ -119,6 +180,11 @@ public sealed class LiveSessionState
             _snapshotCache = null;
             HasData = false;
 
+            // The backlog describes the outgoing session. Replaying any of it
+            // into the new one would reintroduce exactly the cross-session
+            // merge this reset exists to prevent.
+            _recent.Clear();
+
             // Connected clients hold the OUTGOING session's accumulated state.
             // Resetting only the server leaves them merging the new session's
             // deltas on top of the old one's drivers — which showed up as a
@@ -140,8 +206,6 @@ public sealed class LiveSessionState
 
         Broadcast(frame);
     }
-
-    public void Add(ClientConnection client) => _clients[client.Id] = client;
 
     public void Remove(Guid id)
     {

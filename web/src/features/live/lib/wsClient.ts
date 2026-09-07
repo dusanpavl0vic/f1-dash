@@ -17,6 +17,13 @@ export type ConnectionStatus = "connecting" | "open" | "reconnecting" | "closed"
 export interface LiveClientHandlers {
   onMessage(message: ServerMessage): void;
   onStatus(status: ConnectionStatus): void;
+  /**
+   * The last sequence the store has applied, asked for at connect time.
+   *
+   * A function rather than a value: the client reconnects long after it was
+   * constructed, and the sequence it needs is the one from a moment ago.
+   */
+  lastSequence(): number;
 }
 
 const BACKOFF_INITIAL_MS = 1_000;
@@ -60,7 +67,16 @@ export class LiveClient {
   private open(): void {
     this.handlers.onStatus(this.backoffMs === BACKOFF_INITIAL_MS ? "connecting" : "reconnecting");
 
-    const socket = new WebSocket(this.url);
+    // Ask to resume. The server sends the deltas we missed when its backlog
+    // still reaches that far, and a full snapshot when it does not — so this is
+    // an optimisation the client never has to reason about: either way what
+    // arrives is sufficient to be correct.
+    const since = this.handlers.lastSequence();
+    const url = since > 0
+      ? `${this.url}${this.url.includes("?") ? "&" : "?"}since=${since}`
+      : this.url;
+
+    const socket = new WebSocket(url);
     this.socket = socket;
 
     socket.onopen = () => {

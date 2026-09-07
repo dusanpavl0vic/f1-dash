@@ -107,7 +107,7 @@ public class LiveSessionStateTests
         state.Apply(Update("DriverList", """{"44":{"Tla":"HAM"},"1":{"Tla":"VER"}}"""));
 
         var client = new ClientConnection(new DummySocket(), capacity: 8);
-        state.Add(client);
+        state.AddAndCatchUp(client, since: 0);
 
         state.Reset();
 
@@ -139,7 +139,7 @@ public class LiveSessionStateTests
     {
         var state = new LiveSessionState();
         var client = new ClientConnection(new DummySocket(), capacity: 2);
-        state.Add(client);
+        state.AddAndCatchUp(client, since: 0);
 
         for (var i = 0; i < 10; i++) state.Apply(Update("TrackStatus", $$"""{"Status":"{{i}}"}"""));
 

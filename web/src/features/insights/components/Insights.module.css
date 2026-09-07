@@ -1,0 +1,232 @@
+/* ---------------------------------------------------------------- shared */
+.panel {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: var(--panel-pad);
+  min-width: 0;
+}
+.title {
+  font-family: var(--font-mono);
+  font-size: var(--fs-10);
+  letter-spacing: var(--ls-widest);
+  text-transform: uppercase;
+  color: var(--text-faintest);
+  margin-bottom: 10px;
+}
+.empty {
+  font-size: var(--fs-11);
+  color: var(--text-disabled);
+  padding: 14px 0;
+}
+
+/* ----------------------------------------------------------- focus cards */
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  padding: 12px 14px;
+  min-height: 116px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  color: inherit;
+  /* The team colour is a runtime value from the feed, so it arrives as a
+     custom property rather than a class. */
+  border-left: 3px solid var(--team, var(--border-strong));
+}
+.card:hover { background: var(--surface-3); }
+.cardActive { background: var(--surface-3); border-color: var(--accent); }
+
+.ghost {
+  position: absolute;
+  right: 6px; bottom: -14px;
+  font-family: var(--font-display);
+  font-size: var(--fs-74);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--team, var(--text-ghost));
+  opacity: 0.16;
+  pointer-events: none;
+  user-select: none;
+}
+.cardTop { display: flex; align-items: baseline; gap: 8px; }
+.pos {
+  font-family: var(--font-mono);
+  font-size: var(--fs-11);
+  color: var(--text-faintest);
+  min-width: 22px;
+}
+.tla {
+  font-family: var(--font-display);
+  font-size: var(--fs-22);
+  font-weight: 700;
+  letter-spacing: var(--ls-tight);
+}
+.cardGrid {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+  margin-top: 10px;
+}
+.label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-9);
+  letter-spacing: var(--ls-wider);
+  text-transform: uppercase;
+  color: var(--text-disabled);
+}
+.value {
+  font-family: var(--font-mono);
+  font-size: var(--fs-13);
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.tyreChip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px; height: 18px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-10);
+  font-weight: 700;
+  border-radius: 2px;
+}
+
+/* ------------------------------------------------------------ pace chart */
+.chart { width: 100%; height: auto; display: block; }
+.legend {
+  display: flex; flex-wrap: wrap; gap: 12px;
+  margin-top: 8px;
+}
+.legendItem {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-10);
+  color: var(--text-dim);
+}
+.swatch { width: 10px; height: 2px; }
+.axis { font-family: var(--font-mono); font-size: 9px; fill: var(--text-disabled); }
+.gridline { stroke: var(--border-chart); stroke-width: 0.5; }
+
+/* ------------------------------------------------------------ stint bars */
+.stintRow {
+  display: grid;
+  grid-template-columns: 42px 1fr 28px;
+  align-items: center;
+  gap: 8px;
+  height: 22px;
+}
+.stintTla {
+  font-family: var(--font-mono);
+  font-size: var(--fs-11);
+  font-weight: 600;
+  color: var(--text-dim);
+}
+.stintBars { display: flex; height: 12px; gap: 1px; }
+.stintBar {
+  height: 100%;
+  min-width: 2px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  overflow: hidden;
+}
+.stintStops {
+  font-family: var(--font-mono);
+  font-size: var(--fs-10);
+  color: var(--text-faintest);
+  text-align: right;
+}
+
+/* -------------------------------------------------------------- gap bars */
+.gapRow {
+  display: grid;
+  grid-template-columns: 42px 1fr 58px;
+  align-items: center;
+  gap: 8px;
+  height: 20px;
+}
+.gapTrack { height: 8px; background: var(--surface-4); }
+.gapFill { height: 100%; background: var(--team, var(--accent)); }
+.gapValue {
+  font-family: var(--font-mono);
+  font-size: var(--fs-11);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+  text-align: right;
+}
+
+/* -------------------------------------------------------------- timeline */
+.timeline { display: flex; height: 16px; width: 100%; }
+.band { height: 100%; min-width: 2px; }
+.timelineScale {
+  display: flex; justify-content: space-between;
+  margin-top: 5px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-9);
+  color: var(--text-disabled);
+}
+.bandNone { background: var(--green); }
+.bandYellow { background: var(--yellow); }
+.bandSafetyCar { background: var(--orange); }
+.bandVsc { background: var(--yellow-bd); }
+.bandRedFlag { background: var(--red-bright); }
+.bandChequered {
+  background:
+    repeating-conic-gradient(var(--text) 0% 25%, var(--bg) 0% 50%) 50% / 6px 6px;
+}
+
+/* ------------------------------------------------------------- penalties */
+.penalty {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border-row);
+  align-items: start;
+}
+.penalty:last-child { border-bottom: none; }
+.penaltyDriver {
+  font-family: var(--font-mono);
+  font-size: var(--fs-12);
+  font-weight: 700;
+  border-left: 3px solid var(--team, var(--border-strong));
+  padding-left: 6px;
+}
+.penaltyWhat { font-size: var(--fs-12); color: var(--text); }
+.penaltyWhy {
+  font-size: var(--fs-11);
+  color: var(--text-faint);
+  margin-top: 2px;
+  text-wrap: pretty;
+}
+.penaltyLap {
+  font-family: var(--font-mono);
+  font-size: var(--fs-9);
+  color: var(--text-disabled);
+  margin-top: 3px;
+}
+.chip {
+  font-family: var(--font-mono);
+  font-size: var(--fs-9);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border: 1px solid;
+  white-space: nowrap;
+  height: fit-content;
+}
+.chipServed { color: var(--green); border-color: var(--green-bd); background: var(--green-bg); }
+.chipPending { color: var(--yellow); border-color: var(--yellow-bd); background: var(--yellow-bg); }
+.chipInvestigation { color: var(--text-faint); border-color: var(--neutral-bd); background: var(--neutral-bg); }
+.chipDeleted { color: var(--red-bright); border-color: var(--red-bd); background: var(--red-bg); }
+
+@media (max-width: 767px) {
+  .cards { grid-template-columns: 1fr; }
+  .ghost { font-size: var(--fs-38); bottom: -6px; }
+  .card { min-height: 0; }
+}

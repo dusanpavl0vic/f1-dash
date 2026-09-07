@@ -27,14 +27,17 @@ public static class WebSocketEndpoint
             using var socket = await context.WebSockets.AcceptWebSocketAsync();
             var client = new ClientConnection(socket, ClientConnection.DefaultCapacity);
 
-            // Queue the snapshot BEFORE registering for deltas. Registering
-            // first would let a delta reach the client ahead of the state it
-            // patches; queuing first means at worst a delta is duplicated, and
-            // the merge is idempotent for a repeated value.
-            client.Offer(state.SnapshotFrame());
-            state.Add(client);
+            // A reconnecting client sends the last sequence it saw. When the
+            // backlog still reaches that far it gets only the missing deltas —
+            // a few kilobytes instead of a megabyte-plus snapshot. Otherwise it
+            // gets the snapshot, because a gap in a delta stream is
+            // unrecoverable and pretending otherwise corrupts the client state.
+            var since = long.TryParse(context.Request.Query["since"], out var s0) ? s0 : 0;
+            var resumed = state.AddAndCatchUp(client, since);
 
-            logger.LogInformation("Client {Id} connected ({Count} total)", client.Id, state.ClientCount);
+            logger.LogInformation(
+                "Client {Id} connected via {Path} ({Count} total)",
+                client.Id, resumed ? $"resume from {since}" : "snapshot", state.ClientCount);
 
             var writer = client.WriteLoopAsync(context.RequestAborted);
 
