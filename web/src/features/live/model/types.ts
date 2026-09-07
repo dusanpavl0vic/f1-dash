@@ -141,6 +141,9 @@ export interface SessionInfo {
   type: string;
   currentLap: number;
   totalLaps: number;
+  /** MultiViewer circuitKey — the join to track geometry. */
+  circuitKey: number | null;
+  year: number | null;
 }
 
 /** Everything a rendered frame needs. The backend will produce this shape. */

@@ -1,0 +1,36 @@
+name: f1-dash
+
+services:
+  backend:
+    build:
+      context: ./backend
+    environment:
+      ASPNETCORE_URLS: http://0.0.0.0:4000
+      ARCHIVE_PATH: /data/archive
+      ORIGIN: ${ORIGIN:-http://localhost:3000}
+      # Points at a recorded session. This is the development default and the
+      # reason the whole stack runs out of season — F1 runs on roughly 24
+      # weekends a year. IMPL-34 adds the live source behind the same interface.
+      REPLAY_STREAM: ${REPLAY_STREAM:-/data/archive/2024/italian-grand-prix/race/stream.jsonl}
+      REPLAY_SPEED: ${REPLAY_SPEED:-1}
+      REPLAY_START_MS: ${REPLAY_START_MS:-0}
+      REPLAY_LOOP: ${REPLAY_LOOP:-1}
+      F1_HTTP_PROXY: ${F1_HTTP_PROXY:-}
+    volumes:
+      - ./data:/data
+    ports:
+      - "4000:4000"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./web
+      args:
+        VITE_LIVE_URL: ${VITE_LIVE_URL:-ws://localhost:4000/ws}
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:4000}
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped

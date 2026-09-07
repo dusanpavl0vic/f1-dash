@@ -1,0 +1,63 @@
+.panel { border-right: 1px solid var(--border); }
+.header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.marker {
+  width: 9px; height: 9px;
+  border-left: 2px solid var(--accent);
+  border-top: 2px solid var(--accent);
+}
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-13); font-weight: 700;
+  letter-spacing: var(--ls-max); text-transform: uppercase;
+  color: var(--text);
+}
+.count { font-family: var(--font-mono); font-size: var(--fs-10); color: var(--text-faintest); }
+.spacer { flex: 1 1 auto; }
+
+.filters { display: flex; }
+.filter {
+  padding: 4px 11px;
+  border: 1px solid var(--border);
+  font-family: var(--font-mono); font-size: var(--fs-10);
+  letter-spacing: var(--ls-wider);
+  background: transparent; color: var(--text-fainter);
+  cursor: pointer;
+}
+.filter + .filter { border-left: none; }
+.filterActive { background: var(--surface-3); color: var(--text); font-weight: 600; }
+
+.list { max-height: 620px; overflow-y: auto; }
+.entry {
+  display: flex; align-items: stretch;
+  border-bottom: 1px solid var(--border-row);
+}
+.entryHot { background: var(--wash-yellow); }
+.accent { width: 4px; flex: 0 0 auto; }
+.body { flex: 1 1 auto; padding: 11px 16px; min-width: 0; }
+.meta { display: flex; align-items: center; gap: 10px; }
+.category {
+  font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 600;
+  letter-spacing: var(--ls-widest); text-transform: uppercase;
+}
+.lap {
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+  font-size: var(--fs-10); color: var(--text-faintest);
+}
+.time {
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+  font-size: var(--fs-10); color: var(--text-disabled);
+}
+.text {
+  font-size: var(--fs-12); line-height: 1.45;
+  color: var(--text-dim); letter-spacing: 0.01em;
+  text-wrap: pretty; margin-top: 4px;
+}
+.empty {
+  padding: 40px 20px; text-align: center;
+  font-family: var(--font-mono); font-size: var(--fs-11);
+  letter-spacing: var(--ls-wider); color: var(--text-faint);
+}
