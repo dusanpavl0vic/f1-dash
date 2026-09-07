@@ -234,6 +234,45 @@ session's laps" is not.
 | **IMPL-58** | Schedule page | `/schedule` — the 2026 calendar with rounds completed, running and upcoming, and a countdown to the next | UC-051, UC-052 |
 | **IMPL-59** | Analysis page | `/analysis/{year}/{meeting}/{session}` — readable without the session being loaded into the live dashboard | UC-032 |
 
+## Phase J — Results, drivers and teams
+
+> Branch: `feat/results`. Modelled on what `app.formula1dashboard.com` does well:
+> a results page per race with session tabs, and card-based driver and team
+> pages that carry real identity rather than being another table.
+
+### ⚠ Logos and photographs cannot be shipped
+
+The reference site's visual richness comes largely from **team logos** (the
+Mercedes star, the Ferrari shield, the McLaren speedmark) used as large
+background art, and **driver portraits**. Those are trademarked and copyrighted
+assets. This project already refuses the F1 wordmark for the same reason
+(`docs/DESIGN-BRIEF.md` §11), and taking a competitor's approach does not change
+what the marks are.
+
+What can be built instead, carrying most of the same visual weight:
+
+| Their approach | Ours |
+|---|---|
+| Team logo as background art | Oversized team **name** as typographic art, in the team colour |
+| Team-coloured gradient card | Same — colour is not a trademark |
+| Driver portrait | Driver **number** as the graphic element, in the team colour, at card scale |
+| Constructor mark beside each result row | Team colour bar, as the timing tower already does |
+
+**Driver headshots are a separate decision.** `DriverList.HeadshotUrl` arrives
+in the feed itself and points at F1's media server. Hot-linking it is a grey
+area for a self-hosted dashboard and a licensing risk for a public one, so it
+is behind a setting that is **off by default**, and the layout must be complete
+without it.
+
+| # | Use case | Definition of done | Product UC |
+|---|---|---|---|
+| **IMPL-64** | Race results API | Per round: results for every session type, plus pole, fastest lap and the winner | UC-053 |
+| **IMPL-65** | Results page | Season and Grand Prix selectors; winner, pole and fastest-lap cards; session tabs (FP1–3, Qualifying, Grid, Race); a table with position, number, driver, team, time, gap, interval, points and laps | UC-053 |
+| **IMPL-66** | Drivers page | A card per driver in team colours with number, team and season totals — points, wins, podiums, best finish | UC-053 |
+| **IMPL-67** | Teams page | A card per constructor with its drivers, points, wins and season position | UC-053 |
+| **IMPL-68** | Driver detail | One driver's season: results per round, points progression, qualifying against race pace | UC-053 |
+| **IMPL-69** | Headshot setting | Off by default, with the licensing position stated where it is toggled | — |
+
 ## Not in this plan yet
 
 Replay transport controls (UC-043, UC-044), schedule and standings pages (UC-05x), and the
