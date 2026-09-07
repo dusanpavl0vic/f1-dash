@@ -79,6 +79,13 @@ builder.Services.AddSingleton(_ => new ArchiveClient(ArchiveClient.CreateHttpCli
 builder.Services.AddSingleton(sp => new SessionCatalog(
     sp.GetRequiredService<ArchiveClient>(), archiveRoot));
 
+builder.Services.AddSingleton(sp => new AnalysisPrecomputer(
+    sp.GetRequiredService<ArchiveClient>(), archiveRoot,
+    sp.GetRequiredService<ILogger<AnalysisPrecomputer>>()));
+
+builder.Services.AddSingleton(sp => new ScheduleService(
+    ArchiveClient.CreateHttpClient(), sp.GetRequiredService<ILogger<ScheduleService>>()));
+
 // Replay and live are the same feature behind one manager, switchable at
 // runtime, so the dashboard can move between a 2018 race and a session running
 // right now without a restart.
@@ -217,6 +224,70 @@ app.MapGet("/api/analysis/telemetry/{number}/{lap:int}",
     return Results.Ok(trace);
 });
 
+// --- analysis for a FINISHED session, with no replay ------------------------
+
+// Reads the stream at full speed and writes the analysis. A second request
+// serves the stored documents instead of recomputing.
+app.MapPost("/api/analysis/precompute",
+    async (PrecomputeRequest request, AnalysisPrecomputer precomputer, CancellationToken ct) =>
+    {
+        var result = await precomputer.PrecomputeAsync(
+            request.Year, request.Meeting, request.Session, request.Force, ct);
+
+        return result.Ok ? Results.Ok(result) : Results.BadRequest(result);
+    });
+
+// A stored analysis, readable without the session being loaded into the
+// dashboard at all.
+app.MapGet("/api/analysis/{year:int}/{meeting}/{session}",
+    async (int year, string meeting, string session,
+           AnalysisPrecomputer precomputer, HttpContext http, CancellationToken ct) =>
+    {
+        var analysis = await precomputer.LoadAsync(year, meeting, session, ct);
+        if (analysis is null)
+        {
+            return Results.NotFound(new { error = "Not computed yet. POST /api/analysis/precompute first." });
+        }
+
+        // A finished session's analysis never changes.
+        http.Response.Headers.CacheControl = "public, max-age=86400";
+        return Results.Ok(analysis);
+    });
+
+// Stored telemetry for a finished session.
+app.MapGet("/api/analysis/{year:int}/{meeting}/{session}/telemetry/{number}/{lap:int}",
+    (int year, string meeting, string session, string number, int lap,
+     AnalysisPrecomputer precomputer, HttpContext http) =>
+    {
+        var directory = Path.Combine(
+            precomputer.SessionDirectory(year, meeting, session), "analysis", "telemetry");
+
+        var trace = TelemetryRecorder.Read(directory, number, lap).FirstOrDefault();
+        if (trace is null) return Results.NotFound(new { error = $"No telemetry for car {number} lap {lap}." });
+
+        http.Response.Headers.CacheControl = "public, max-age=86400";
+        return Results.Ok(trace);
+    });
+
+// --- season schedule --------------------------------------------------------
+
+// The archive index only lists sessions that already ran, so it cannot answer
+// "what is next". Jolpica publishes the full calendar including future rounds.
+app.MapGet("/api/schedule/{year:int}",
+    async (int year, ScheduleService schedule, HttpContext http, CancellationToken ct) =>
+    {
+        http.Response.Headers.CacheControl = "public, max-age=3600";
+        return Results.Ok(await schedule.SeasonAsync(year, ct));
+    });
+
+app.MapGet("/api/schedule/{year:int}/next",
+    async (int year, ScheduleService schedule, HttpContext http, CancellationToken ct) =>
+    {
+        // Short, because a countdown goes stale quickly.
+        http.Response.Headers.CacheControl = "public, max-age=60";
+        return Results.Ok(await schedule.NextAsync(year, ct));
+    });
+
 // Forces a write without waiting for the session to end — the button behind
 // "export" in the UI.
 app.MapPost("/api/analysis/save", async (SessionManager sessions, CancellationToken ct) =>
@@ -240,3 +311,6 @@ app.MapLiveSocket();
 
 await app.RunAsync(cts.Token);
 return 0;
+
+/// <summary>Body of POST /api/analysis/precompute.</summary>
+internal sealed record PrecomputeRequest(int Year, string Meeting, string Session, bool Force = false);

@@ -177,6 +177,46 @@ on demand.
 | **IMPL-50** | Telemetry trace | Speed and brake against distance for one driver and one lap; two drivers overlaid | UC-031, UC-033 |
 | **IMPL-51** | PDF export | A print stylesheet renders the analysis as a paginated report — session identity, classification, strategy, lap chart, position chart. Generated in the browser, so no server-side rendering dependency | — |
 
+## Phase I — Routing, schedule, and analysis without replay
+
+> Branch: `feat/routes`.
+
+### Why analysis no longer needs a replay
+
+Building a session's analysis by replaying it through the paced ingest loop
+takes minutes even at 50×, and for a session that already finished the pacing
+buys nothing — the stream is on disk and can be read at full speed. Reading the
+whole 2024 Monza race through the accumulator takes **1.5 seconds**.
+
+So the two cases separate cleanly:
+
+| Session | How the analysis is produced |
+|---|---|
+| **Finished** | Read `stream.jsonl` at full speed once, write `analysis/`, never replay again. Subsequent requests load the saved documents. |
+| **Live** | Recorded as it streams, because there is no second chance. |
+
+### On the storage question
+
+MongoDB was offered as an option "if it is easiest". It is not. The analysis is
+a handful of whole documents per session, read in full and written once —
+exactly the shape a file already handles. Mongo would add a container, a
+driver, connection lifecycle and a backup story, for data that is derived and
+can always be rebuilt from the archive in 1.5 seconds. **The on-disk store
+stays.** Revisit this only if analysis needs querying *across* sessions —
+"every driver's Monza stint history since 2018" is a database question; "this
+session's laps" is not.
+
+| # | Use case | Definition of done | Product UC |
+|---|---|---|---|
+| **IMPL-52** | Analysis without replay | `POST /api/analysis/precompute` reads a finished session's stream at full speed and writes the analysis; a second request loads from disk instead of recomputing | UC-042 |
+| **IMPL-53** | Saved-analysis lookup | `GET /api/analysis/{year}/{meeting}/{session}` serves a stored analysis with no session running | UC-041 |
+| **IMPL-54** | Season schedule | `GET /api/schedule/{year}` merges the Jolpica calendar with what the archive holds; `GET /api/schedule/next` gives the next session and a countdown | UC-051, UC-052 |
+| **IMPL-55** | Routing | React Router with distinct pages rather than tabs on one screen | — |
+| **IMPL-56** | Live page | `/live` — the dashboard bound to the live feed, with the no-session state when nothing is running | UC-011, UC-065 |
+| **IMPL-57** | Replay page | `/replay` — session picker and the same dashboard driven by an archived session | UC-041, UC-043 |
+| **IMPL-58** | Schedule page | `/schedule` — the 2026 calendar with rounds completed, running and upcoming, and a countdown to the next | UC-051, UC-052 |
+| **IMPL-59** | Analysis page | `/analysis/{year}/{meeting}/{session}` — readable without the session being loaded into the live dashboard | UC-032 |
+
 ## Not in this plan yet
 
 Replay transport controls (UC-043, UC-044), schedule and standings pages (UC-05x), and the
