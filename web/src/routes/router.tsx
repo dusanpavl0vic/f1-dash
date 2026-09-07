@@ -1,6 +1,8 @@
 import { createBrowserRouter, Navigate } from "react-router";
 import { AnalysisPage } from "@/pages/AnalysisPage";
+import { DriversPage } from "@/pages/DriversPage";
 import { HomePage } from "@/pages/HomePage";
+import { ResultsPage } from "@/pages/ResultsPage";
 import { TelemetryPage } from "@/pages/TelemetryPage";
 import { LivePage } from "@/pages/LivePage";
 import { ReplayPage } from "@/pages/ReplayPage";
@@ -29,6 +31,9 @@ export const router = createBrowserRouter([
       { path: "schedule", element: <SchedulePage /> },
       { path: "standings", element: <StandingsPage /> },
       { path: "telemetry", element: <TelemetryPage /> },
+      { path: "results", element: <ResultsPage /> },
+      { path: "drivers", element: <DriversPage mode="drivers" /> },
+      { path: "teams", element: <DriversPage mode="teams" /> },
       { path: "analysis/:year/:meeting/:session", element: <AnalysisPage /> },
       { path: "*", element: <Navigate to="/" replace /> },
     ],

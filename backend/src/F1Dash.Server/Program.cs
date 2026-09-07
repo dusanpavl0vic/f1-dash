@@ -86,6 +86,9 @@ builder.Services.AddSingleton(sp => new AnalysisPrecomputer(
 builder.Services.AddSingleton(sp => new ScheduleService(
     ArchiveClient.CreateHttpClient(), sp.GetRequiredService<ILogger<ScheduleService>>()));
 
+builder.Services.AddSingleton(sp => new ResultsService(
+    ArchiveClient.CreateHttpClient(), sp.GetRequiredService<ILogger<ResultsService>>()));
+
 builder.Services.AddSingleton(sp => new StandingsService(
     ArchiveClient.CreateHttpClient(), sp.GetRequiredService<ILogger<StandingsService>>()));
 
@@ -294,6 +297,19 @@ app.MapGet("/api/schedule/{year:int}/next",
         // Short, because a countdown goes stale quickly.
         http.Response.Headers.CacheControl = "public, max-age=60";
         return Results.Ok(await schedule.NextAsync(year, ct));
+    });
+
+// --- race results -----------------------------------------------------------
+
+app.MapGet("/api/results/{year:int}/{round:int}",
+    async (int year, int round, ResultsService results, HttpContext http, CancellationToken ct) =>
+    {
+        var race = await results.GetAsync(year, round, ct);
+        if (race is null) return Results.NotFound(new { error = $"No results for {year} round {round}." });
+
+        // A completed race's result is final.
+        http.Response.Headers.CacheControl = "public, max-age=86400";
+        return Results.Ok(race);
     });
 
 // --- championship standings -------------------------------------------------

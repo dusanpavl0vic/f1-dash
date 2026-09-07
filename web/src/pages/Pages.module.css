@@ -210,3 +210,91 @@
   position: absolute; left: 0; bottom: 0; height: 2px; opacity: 0.55;
 }
 .teamStripe { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+
+/* --- results ------------------------------------------------------------ */
+.highlights { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-bottom: 1px solid var(--border); }
+.highlight { padding: 16px 20px; border-right: 1px solid var(--border); position: relative; }
+.highlight:last-child { border-right: none; }
+.highlightLabel {
+  font-family: var(--font-mono); font-size: var(--fs-9);
+  letter-spacing: var(--ls-mega); text-transform: uppercase; color: var(--text-faintest);
+}
+.highlightName {
+  font-family: var(--font-display); font-size: var(--fs-24); font-weight: 700;
+  letter-spacing: 0.04em; text-transform: uppercase; margin: 5px 0 2px;
+}
+.highlightMeta { font-family: var(--font-mono); font-size: var(--fs-11); color: var(--text-dim); }
+.highlightValue {
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+  font-size: var(--fs-15); color: var(--text); margin-top: 4px;
+}
+
+.tabs { display: flex; border-bottom: 1px solid var(--border); }
+.tab {
+  padding: 9px 18px; border: none; border-right: 1px solid var(--border);
+  border-bottom: 2px solid transparent; background: transparent;
+  font-family: var(--font-display); font-size: var(--fs-12); font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-faint);
+  cursor: pointer;
+}
+.tabActive { background: var(--surface-header-from); border-bottom-color: var(--accent); color: var(--text); }
+
+.resultsTable { width: 100%; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.resultsTable th {
+  height: 26px; font-size: var(--fs-10); font-weight: 500;
+  letter-spacing: var(--ls-widest); color: var(--text-faintest);
+  border-bottom: 1px solid var(--surface-3); text-align: right; padding: 0 12px;
+}
+.resultsTable th:nth-child(-n+4) { text-align: left; }
+.resultsTable td {
+  height: 34px; border-bottom: 1px solid var(--border-row);
+  padding: 0 12px; text-align: right; font-size: var(--fs-12);
+}
+.resultsTable td:nth-child(-n+4) { text-align: left; }
+.resPos { font-family: var(--font-display); font-size: var(--fs-17); font-weight: 600; width: 50px; }
+.resNum { color: var(--text-faint); width: 46px; }
+.resDriver { font-family: var(--font-display); font-size: var(--fs-15); font-weight: 600; letter-spacing: 0.04em; }
+.resTeam { display: flex; align-items: center; gap: 8px; color: var(--text-dim); font-size: var(--fs-11); }
+.resTeamBar { width: 3px; height: 15px; flex: 0 0 auto; }
+.resStatus { color: var(--text-faint); }
+
+/* --- driver / team cards ------------------------------------------------ */
+.cardGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.driverCard {
+  position: relative; overflow: hidden;
+  padding: 16px 18px 14px 21px;
+  border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  min-height: 128px;
+  display: flex; flex-direction: column;
+}
+.cardGrid > .driverCard:nth-child(3n) { border-right: none; }
+.driverStripe { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+/* The number IS the graphic. Team logos and driver portraits are trademarked
+   and cannot be shipped, so the identity carried here is the number and the
+   colour — both of which are ours to draw. */
+.driverGhost {
+  position: absolute; right: 10px; top: -14px;
+  font-family: var(--font-display); font-size: 96px; font-weight: 700;
+  line-height: 1; letter-spacing: -0.03em; pointer-events: none;
+}
+.driverName {
+  font-family: var(--font-display); font-size: var(--fs-24); font-weight: 700;
+  letter-spacing: 0.03em; text-transform: uppercase; line-height: 1; position: relative;
+}
+.driverTeam {
+  font-family: var(--font-mono); font-size: var(--fs-11);
+  color: var(--text-faint); margin-top: 4px; position: relative;
+}
+.driverStats {
+  display: flex; gap: 18px; margin-top: auto; padding-top: 12px; position: relative;
+}
+.driverStat { display: flex; flex-direction: column; }
+.driverStatValue {
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+  font-size: var(--fs-19); font-weight: 500; line-height: 1;
+}
+.driverStatLabel {
+  font-family: var(--font-mono); font-size: var(--fs-9);
+  letter-spacing: var(--ls-widest); text-transform: uppercase;
+  color: var(--text-faintest); margin-top: 3px;
+}
