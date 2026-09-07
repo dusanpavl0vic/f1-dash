@@ -128,8 +128,57 @@ See `DECISIONS.md` D-008.
 | **IMPL-39** | Reconnection | Backoff, `?since=` resumption, cursor-expired store reset, ping/pong heartbeat | UC-061 |
 | **IMPL-40** | Docker compose | `docker compose up` runs both applications; `--profile dev` adds the simulator | — |
 
+## Phase H — Session analysis
+
+> The dashboard shows what is happening *now*. This phase records what happened across a whole
+> session and lets it be read afterwards: strategy, lap-by-lap pace, position changes, sector
+> comparisons and telemetry.
+>
+> Branch: `feat/analysis`.
+
+### What has to be recorded, and why it cannot be reconstructed later
+
+The live feed is ephemeral. `TimingData` carries only a driver's *current* lap time and
+`CarData` only the *latest* telemetry batch — neither keeps history, and nothing is republished.
+A lap that is not captured as it passes is gone. For an archived session the stream can simply be
+replayed, but for a live session there is exactly one chance.
+
+So the recorder consumes the same `TopicUpdate` stream the dashboard does and accumulates a
+session history alongside it. It runs for replay too, because a code path exercised only during
+the ~24 live weekends a year is a code path that breaks on race day.
+
+### Storage shape
+
+| File | Contents | Size |
+|---|---|---|
+| `analysis/meta.json` | Session identity, drivers, lap count | KB |
+| `analysis/laps.json` | Per driver, per lap: lap time, S1/S2/S3, position, compound, tyre age, pit flags | ~200 KB |
+| `analysis/stints.json` | Per driver: compound, first and last lap, laps on the set, new or used | KB |
+| `analysis/telemetry/{driver}.json` | Per lap, parallel channel arrays: speed, throttle, brake, gear, RPM | ~1–3 MB per driver |
+
+Telemetry is stored **per driver in its own file** and loaded on demand. Storing it as one
+document would be a 40 MB response for a chart that needs one lap, and parallel arrays are 3–5×
+smaller than an array of objects (docs/09).
+
+**Telemetry recording is limited to 2026 and later.** Older sessions still get laps, stints,
+positions and sector comparisons — those are cheap. Full telemetry history for every archived
+season back to 2018 is tens of gigabytes for data that is already in the archive and replayable
+on demand.
+
+| # | Use case | Definition of done | Product UC |
+|---|---|---|---|
+| **IMPL-43** | Analysis model and builder | Lap times, sector times, positions and stints accumulate from the topic stream; a replayed race reproduces the official lap count and stop count per driver | UC-012 |
+| **IMPL-44** | Telemetry recorder | Per-lap channel traces captured for 2026+ sessions; memory stays flat across a race; older sessions skip it deliberately | UC-031 |
+| **IMPL-45** | Persistence and REST | Analysis written on session end and on demand; endpoints for laps, stints, positions, telemetry and a two-driver comparison; every response sets `Cache-Control` | UC-032 |
+| **IMPL-46** | Lap-time chart | Bar chart of every lap for one driver, in any session type — practice, qualifying or race. Personal best and outliers distinguishable; pit and safety-car laps marked, since they otherwise read as a collapse in pace | UC-012 |
+| **IMPL-47** | Strategy timeline | Per driver, a bar per stint coloured by compound, showing lap range, laps on the set and whether the set was new | UC-012 |
+| **IMPL-48** | Position progression | Line-and-dot chart of every driver's position across the race, with the selected drivers emphasised | UC-012 |
+| **IMPL-49** | Two-driver sector comparison | Side-by-side S1/S2/S3 with the per-sector delta and a clear statement of who is faster where | UC-033 |
+| **IMPL-50** | Telemetry trace | Speed and brake against distance for one driver and one lap; two drivers overlaid | UC-031, UC-033 |
+| **IMPL-51** | PDF export | A print stylesheet renders the analysis as a paginated report — session identity, classification, strategy, lap chart, position chart. Generated in the browser, so no server-side rendering dependency | — |
+
 ## Not in this plan yet
 
-Replay (UC-04x), schedule and standings pages (UC-05x), and the responsive breakpoints below
-1440 px. The design covers the 1440 px desktop dashboard only; those screens need design before
-they need code.
+Replay transport controls (UC-043, UC-044), schedule and standings pages (UC-05x), and the
+responsive breakpoints below 1440 px. The design covers the 1440 px desktop dashboard only; those
+screens need design before they need code.
