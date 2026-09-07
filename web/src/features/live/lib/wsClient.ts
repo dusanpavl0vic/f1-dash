@@ -1,7 +1,15 @@
 import type { JsonObject } from "./merge";
 
 export type ServerMessage =
-  | { type: "snapshot"; seq: number; ts: number; serverTime: number; data: JsonObject }
+  | {
+      type: "snapshot";
+      seq: number;
+      ts: number;
+      serverTime: number;
+      data: JsonObject;
+      /** "session-changed" when the server switched sessions under us. */
+      reason?: string;
+    }
   | { type: "delta"; seq: number; ts: number; data: JsonObject };
 
 export type ConnectionStatus = "connecting" | "open" | "reconnecting" | "closed";

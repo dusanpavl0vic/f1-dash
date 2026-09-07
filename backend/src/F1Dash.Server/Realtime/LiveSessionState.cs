@@ -104,12 +104,34 @@ public sealed class LiveSessionState
     /// </summary>
     public void Reset()
     {
+        byte[] frame;
+
         lock (_stateLock)
         {
             _accumulator = new StateAccumulator();
             _snapshotCache = null;
             HasData = false;
+
+            // Connected clients hold the OUTGOING session's accumulated state.
+            // Resetting only the server leaves them merging the new session's
+            // deltas on top of the old one's drivers — which showed up as a
+            // 26-car field with two cars sharing P1.
+            //
+            // A snapshot carrying an empty state tells them to replace, not
+            // merge. `reason` exists so the client can tell a session change
+            // apart from an ordinary reconnect.
+            frame = Encode(new JsonObject
+            {
+                ["type"] = "snapshot",
+                ["reason"] = "session-changed",
+                ["seq"] = Interlocked.Read(ref _sequence),
+                ["ts"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                ["serverTime"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                ["data"] = new JsonObject(),
+            });
         }
+
+        Broadcast(frame);
     }
 
     public void Add(ClientConnection client) => _clients[client.Id] = client;

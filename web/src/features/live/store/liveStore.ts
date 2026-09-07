@@ -47,6 +47,10 @@ function scheduleFlush(): void {
 
 function handleMessage(message: ServerMessage): void {
   if (message.type === "snapshot") {
+    // A snapshot REPLACES state, never merges into it. That is the whole point
+    // of the message: on a session change the server sends an empty one, and
+    // merging it would leave the previous session's drivers in place — which
+    // rendered a 26-car field with two cars sharing P1.
     rawState = message.data;
     clockSkewMs = message.serverTime - Date.now();
     lastSequence = message.seq;

@@ -98,6 +98,43 @@ public class LiveSessionStateTests
     }
 
     [Fact]
+    public void Reset_ClearsTheStateAndTellsClientsToReplaceTheirs()
+    {
+        // Resetting only the server leaves connected clients merging the new
+        // session's deltas on top of the outgoing session's drivers. That
+        // rendered a 26-car field with two cars sharing P1.
+        var state = new LiveSessionState();
+        state.Apply(Update("DriverList", """{"44":{"Tla":"HAM"},"1":{"Tla":"VER"}}"""));
+
+        var client = new ClientConnection(new DummySocket(), capacity: 8);
+        state.Add(client);
+
+        state.Reset();
+
+        Assert.False(state.HasData);
+        Assert.Empty(state.Snapshot());
+
+        // The client must have been handed a snapshot, not left to infer it.
+        var frame = JsonNode.Parse(Encoding.UTF8.GetString(state.SnapshotFrame()))!;
+        Assert.Equal("snapshot", (string?)frame["type"]);
+        Assert.Empty(frame["data"]!.AsObject());
+    }
+
+    [Fact]
+    public void Reset_LeavesNoDriversFromThePreviousSession()
+    {
+        var state = new LiveSessionState();
+        state.Apply(Update("TimingData", """{"Lines":{"44":{"Position":"1"},"1":{"Position":"2"}}}"""));
+
+        state.Reset();
+        state.Apply(Update("TimingData", """{"Lines":{"81":{"Position":"1"}}}"""));
+
+        var lines = state.Snapshot()["TimingData"]!["Lines"]!.AsObject();
+        Assert.Single(lines);
+        Assert.True(lines.ContainsKey("81"));
+    }
+
+    [Fact]
     public void SlowClient_IsDroppedFromTheBroadcastSet()
     {
         var state = new LiveSessionState();
