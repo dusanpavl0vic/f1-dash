@@ -1,3 +1,5 @@
+using F1Dash.Core;
+using F1Dash.Core.Analysis;
 using F1Dash.Core.Archive;
 using F1Dash.Server.Realtime;
 
@@ -46,7 +48,19 @@ public sealed class SessionManager(
     private CancellationTokenSource? _running;
     private Task? _task;
 
+    private AnalysisBuilder? _analysis;
+    private TelemetryRecorder? _telemetry;
+    private AnalysisStore? _store;
+    private string? _sessionDirectory;
+
     public CurrentSession Current { get; private set; } = new(SessionMode.None, "idle");
+
+    /// <summary>The analysis for whatever is currently playing, built so far.</summary>
+    public SessionAnalysis? Analysis =>
+        _analysis is null ? null : _analysis.Build(state.Accumulator, CurrentMeta());
+
+    public AnalysisStore? Store => _store;
+    public bool TelemetryEnabled => _telemetry?.Enabled ?? false;
 
     public async Task StartAsync(CancellationToken ct)
     {
@@ -89,6 +103,7 @@ public sealed class SessionManager(
 
             if (request.Mode == "live")
             {
+                _sessionDirectory = null;
                 var source = new LiveSignalrSource(
                     Environment.GetEnvironmentVariable("F1_HTTP_PROXY"),
                     loggers.CreateLogger<LiveSignalrSource>());
@@ -138,8 +153,37 @@ public sealed class SessionManager(
         string path, CurrentSession description, double speed, long startMs, bool loop, CancellationToken ct)
     {
         var source = new ReplaySessionSource(path, speed, startMs, loop);
+        _sessionDirectory = Path.GetDirectoryName(path);
         Start(source, description with { Speed = speed, Loop = loop });
         return Task.CompletedTask;
+    }
+
+    private AnalysisMeta CurrentMeta()
+    {
+        var info = state.Accumulator[Topics.SessionInfo];
+        var meeting = info?["Meeting"];
+        var start = (string?)info?["StartDate"];
+
+        return new AnalysisMeta(
+            Year: Current.Year ?? (int.TryParse(start?[..Math.Min(4, start.Length)], out var y) ? y : null),
+            Meeting: (string?)meeting?["Name"] ?? Current.Meeting ?? "",
+            SessionName: (string?)info?["Name"] ?? Current.Session ?? "",
+            SessionType: (string?)info?["Type"] ?? "",
+            Circuit: (string?)meeting?["Circuit"]?["ShortName"] ?? "",
+            CircuitKey: (int?)meeting?["Circuit"]?["Key"],
+            StartDate: start,
+            TotalLaps: 0,
+            HasTelemetry: _telemetry?.Enabled ?? false,
+            RecordedAtUtc: DateTime.UtcNow.ToString("O"));
+    }
+
+    /// <summary>Writes the analysis for the running session to disk.</summary>
+    public async Task<bool> SaveAnalysisAsync(CancellationToken ct)
+    {
+        if (_analysis is null || _store is null) return false;
+
+        await _store.SaveAsync(_analysis.Build(state.Accumulator, CurrentMeta()), ct).ConfigureAwait(false);
+        return true;
     }
 
     private void Start(ISessionSource source, CurrentSession description)
@@ -148,6 +192,15 @@ public sealed class SessionManager(
         // delta-accumulated, so keeping it would merge one session's drivers
         // into another's.
         state.Reset();
+
+        _telemetry?.Dispose();
+        _analysis = new AnalysisBuilder();
+
+        // Analysis is recorded for replay as well as live. A path exercised only
+        // on the ~24 live weekends a year is a path that breaks on race day.
+        var directory = _sessionDirectory ?? Path.Combine(archiveRoot, "live", DateTime.UtcNow.ToString("yyyyMMdd-HHmmss"));
+        _store = new AnalysisStore(directory);
+        _telemetry = new TelemetryRecorder(_store.TelemetryDirectory, description.Year);
 
         _running = new CancellationTokenSource();
         Current = description;
@@ -158,11 +211,25 @@ public sealed class SessionManager(
             try
             {
                 _logger.LogInformation("Session source starting: {Source}", source.Description);
+                var analysis = _analysis;
+                var telemetry = _telemetry;
+
                 await foreach (var update in source.ReadAsync(token).ConfigureAwait(false))
                 {
                     state.Apply(update);
+
+                    // Both read the accumulator directly rather than a snapshot
+                    // clone: cloning 1-2 MB per delta would cost more than
+                    // everything else in the ingest path combined.
+                    analysis?.Observe(state.Accumulator, update.Topic);
+                    telemetry?.Observe(state.Accumulator, update.Topic);
                 }
+
                 _logger.LogInformation("Session source completed");
+
+                // The session ended on its own, so the analysis is final.
+                await SaveAnalysisAsync(CancellationToken.None).ConfigureAwait(false);
+                _logger.LogInformation("Analysis saved to {Directory}", _store?.Directory);
             }
             catch (OperationCanceledException)
             {

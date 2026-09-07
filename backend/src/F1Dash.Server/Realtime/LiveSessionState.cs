@@ -89,6 +89,13 @@ public sealed class LiveSessionState
         }
     }
 
+    /// <summary>
+    /// Direct access for the analysis observers. Deliberately not a clone:
+    /// copying the whole state on every delta would dominate the ingest path.
+    /// Callers must only READ.
+    /// </summary>
+    public StateAccumulator Accumulator => _accumulator;
+
     public JsonObject Snapshot()
     {
         lock (_stateLock) return _accumulator.Snapshot();

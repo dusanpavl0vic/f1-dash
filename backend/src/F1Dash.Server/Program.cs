@@ -1,4 +1,5 @@
 using F1Dash.Core.Projections;
+using F1Dash.Core.Analysis;
 using F1Dash.Core.Archive;
 using F1Dash.Core.Track;
 using F1Dash.Server.Catalog;
@@ -136,6 +137,92 @@ app.MapPost("/api/session",
         var current = await sessions.SwitchAsync(request, ct);
         return current.Error is null ? Results.Ok(current) : Results.BadRequest(current);
     });
+
+// --- session analysis -------------------------------------------------------
+
+// The whole analysis for whatever is playing: per-lap times, sectors,
+// positions, compounds and derived stints.
+app.MapGet("/api/analysis", (SessionManager sessions, HttpContext http) =>
+{
+    var analysis = sessions.Analysis;
+    if (analysis is null) return Results.NotFound(new { error = "No session is running." });
+
+    // A live session's analysis grows continuously, so it must not be cached.
+    http.Response.Headers.CacheControl = "no-store";
+    return Results.Ok(analysis);
+});
+
+// Strategy alone — two orders of magnitude smaller than the lap table.
+app.MapGet("/api/analysis/stints", (SessionManager sessions, HttpContext http) =>
+{
+    var analysis = sessions.Analysis;
+    if (analysis is null) return Results.NotFound(new { error = "No session is running." });
+
+    http.Response.Headers.CacheControl = "no-store";
+    return Results.Ok(analysis.Drivers.Select(d => new
+    {
+        d.RacingNumber, d.Tla, d.TeamName, d.TeamColour, d.Stints,
+    }));
+});
+
+// Who is faster in which sector, over each driver's BEST sector rather than the
+// sectors of one lap — a driver's quickest S1 and S3 often come from different
+// laps, and the question is where each is quicker.
+app.MapGet("/api/analysis/compare", (string a, string b, SessionManager sessions, HttpContext http) =>
+{
+    var analysis = sessions.Analysis;
+    if (analysis is null) return Results.NotFound(new { error = "No session is running." });
+
+    var driverA = analysis.Drivers.FirstOrDefault(d => d.Tla.Equals(a, StringComparison.OrdinalIgnoreCase));
+    var driverB = analysis.Drivers.FirstOrDefault(d => d.Tla.Equals(b, StringComparison.OrdinalIgnoreCase));
+
+    if (driverA is null || driverB is null)
+    {
+        return Results.BadRequest(new { error = $"Unknown driver: {(driverA is null ? a : b)}" });
+    }
+
+    http.Response.Headers.CacheControl = "no-store";
+    return Results.Ok(AnalysisStore.Compare(driverA, driverB));
+});
+
+// Which laps have a telemetry trace. Absent for pre-2026 sessions by design.
+app.MapGet("/api/analysis/telemetry/{number}", (string number, SessionManager sessions) =>
+{
+    if (sessions.Store is not { } store || !sessions.TelemetryEnabled)
+    {
+        return Results.Ok(new { enabled = false, laps = Array.Empty<int>() });
+    }
+
+    return Results.Ok(new
+    {
+        enabled = true,
+        laps = TelemetryRecorder.AvailableLaps(store.TelemetryDirectory, number),
+    });
+});
+
+// One lap's trace: speed, throttle, brake, gear and RPM as parallel arrays.
+app.MapGet("/api/analysis/telemetry/{number}/{lap:int}",
+    (string number, int lap, SessionManager sessions, HttpContext http) =>
+{
+    if (sessions.Store is not { } store || !sessions.TelemetryEnabled)
+    {
+        return Results.NotFound(new { error = "Telemetry is recorded for 2026 sessions onward." });
+    }
+
+    var trace = TelemetryRecorder.Read(store.TelemetryDirectory, number, lap).FirstOrDefault();
+    if (trace is null) return Results.NotFound(new { error = $"No telemetry for car {number} lap {lap}." });
+
+    // A completed lap's trace never changes.
+    http.Response.Headers.CacheControl = "public, max-age=86400";
+    return Results.Ok(trace);
+});
+
+// Forces a write without waiting for the session to end — the button behind
+// "export" in the UI.
+app.MapPost("/api/analysis/save", async (SessionManager sessions, CancellationToken ct) =>
+    await sessions.SaveAnalysisAsync(ct)
+        ? Results.Ok(new { saved = true, path = sessions.Store?.Directory })
+        : Results.BadRequest(new { error = "No session is running." }));
 
 app.MapGet("/api/track/{circuitKey:int}/{year:int}",
     async (int circuitKey, int year, TrackService tracks, HttpContext http, CancellationToken ct) =>
