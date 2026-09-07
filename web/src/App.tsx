@@ -7,6 +7,7 @@ import { liveStore } from "./features/live/store/liveStore";
 import type { AppView, GapMode } from "./features/live/model/types";
 import { RaceControlFeed } from "./features/race-control/components/RaceControlFeed";
 import { TimingTower } from "./features/timing/components/TimingTower";
+import { TrackMap } from "./features/track-map/components/TrackMap";
 import s from "./App.module.css";
 
 const LIVE_URL = import.meta.env["VITE_LIVE_URL"] ?? "ws://localhost:4000/ws";
@@ -60,14 +61,34 @@ export function App() {
       )}
 
       {view === "timing" && (
-        <TimingTower
-          timing={session.timing}
-          drivers={session.drivers}
-          gapMode={gapMode}
-          selected={selected}
-          onGapModeChange={setGapMode}
-          onSelect={setSelected}
-        />
+        <>
+          <TimingTower
+            timing={session.timing}
+            drivers={session.drivers}
+            gapMode={gapMode}
+            selected={selected}
+            onGapModeChange={setGapMode}
+            onSelect={setSelected}
+          />
+          <div className={s.lower}>
+            <TrackMap
+              circuitKey={session.session.circuitKey}
+              year={session.session.year}
+              circuitName={session.session.circuitName}
+              positions={session.positions}
+              drivers={session.drivers}
+              timing={session.timing}
+              trackState={session.trackState}
+              selected={selected}
+            />
+            <div className={s.side}>
+              <div className={s.placeholder}>PACE CHART — IMPL-16</div>
+            </div>
+            <div className={s.side}>
+              <div className={s.placeholder}>STINTS — IMPL-17</div>
+            </div>
+          </div>
+        </>
       )}
 
       {view === "notifications" && (

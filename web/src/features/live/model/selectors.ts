@@ -309,12 +309,17 @@ export function selectSession(state: JsonObject): SessionInfo {
   const meeting = obj(info?.Meeting);
   const lap = obj(state.LapCount);
 
+  // StartDate is "2024-09-01T15:00:00"; the year is the join key for geometry.
+  const year = num(str(info?.StartDate)?.slice(0, 4)) ?? null;
+
   return {
     meetingName: str(meeting?.Name) ?? "No session",
     circuitName: str(obj(meeting?.Circuit)?.ShortName) ?? "",
     type: (str(info?.Type) ?? "").toUpperCase(),
     currentLap: num(lap?.CurrentLap) ?? 0,
     totalLaps: num(lap?.TotalLaps) ?? 0,
+    circuitKey: num(obj(meeting?.Circuit)?.Key) ?? null,
+    year,
   };
 }
 

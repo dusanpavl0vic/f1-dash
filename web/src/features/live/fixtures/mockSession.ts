@@ -198,6 +198,8 @@ export function buildMockSession(
       type: "RACE",
       currentLap: 34,
       totalLaps: 57,
+      circuitKey: 63,   // Bahrain, per the design's mock session
+      year: 2024,
     },
     weather: { trackTemp: 40.2, airTemp: 23.4, windSpeed: 7.0, humidity: 32, pressure: 1012, rainfall: false },
     trackState,

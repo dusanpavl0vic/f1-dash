@@ -1,0 +1,32 @@
+.panel { padding: 14px 20px 16px 20px; border-right: 1px solid var(--border); }
+.header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.marker {
+  width: 9px; height: 9px;
+  border-left: 2px solid var(--accent);
+  border-top: 2px solid var(--accent);
+}
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-13); font-weight: 700;
+  letter-spacing: var(--ls-max); text-transform: uppercase; color: var(--text);
+}
+.rule { flex: 1 1 auto; height: 1px; background: var(--surface-3); }
+.circuit {
+  font-family: var(--font-mono); font-size: var(--fs-10);
+  letter-spacing: var(--ls-wider); color: var(--text-dim);
+  text-transform: uppercase;
+}
+.svg { width: 100%; height: auto; display: block; }
+.legend {
+  display: flex; align-items: center; gap: 14px; margin-top: 11px;
+  font-family: var(--font-mono); font-size: var(--fs-9);
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faintest);
+}
+.legendItem { display: flex; align-items: center; gap: 6px; }
+.legendLine { width: 12px; height: 3px; }
+.legendDot { width: 8px; height: 8px; border-radius: 50%; }
+.empty {
+  padding: 60px 20px; text-align: center;
+  font-family: var(--font-mono); font-size: var(--fs-11);
+  letter-spacing: var(--ls-wider); color: var(--text-faint);
+}

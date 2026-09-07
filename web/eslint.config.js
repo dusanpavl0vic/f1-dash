@@ -29,7 +29,9 @@ export default tseslint.config(
     // Team colours arrive from the F1 feed as raw hex at runtime and change
     // between seasons. They are DATA, not design tokens, so the development
     // stand-in for that feed data is exempt from the hex rule.
-    files: ["src/features/live/model/constants.ts"],
+    // Team colours arrive from the feed as raw hex at runtime, so the fixtures
+    // and the tests that pin real feed values are data, not design tokens.
+    files: ["src/features/live/model/constants.ts", "**/*.test.ts", "**/*.test.tsx"],
     rules: { "no-restricted-syntax": "off" },
   },
 );
