@@ -1,0 +1,42 @@
+.bar {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.tab {
+  padding: 11px 22px;
+  cursor: pointer;
+  border: none;
+  border-right: 1px solid var(--border);
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  display: flex; align-items: center; gap: 9px;
+  font-family: var(--font-display);
+  font-size: var(--fs-14); font-weight: 600;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--text-faint);
+}
+.tabActive {
+  background: var(--surface-header-from);
+  border-bottom-color: var(--accent);
+  color: var(--text);
+}
+.badge {
+  font-family: var(--font-mono);
+  font-size: var(--fs-10); font-weight: 600;
+  padding: 1px 5px;
+  background: var(--red-badge-bg);
+  color: var(--red-bright);
+}
+.spacer { flex: 1 1 auto; }
+.weather {
+  display: flex; align-items: center; gap: 16px;
+  padding: 0 20px;
+  border-left: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: var(--fs-10); letter-spacing: 0.08em;
+  color: var(--text-faint);
+}
+.rainNo { color: var(--green); }
+.rainYes { color: var(--blue-light); }

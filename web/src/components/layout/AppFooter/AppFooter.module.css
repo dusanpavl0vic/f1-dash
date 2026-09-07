@@ -1,0 +1,24 @@
+.footer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 26px;
+  padding: 14px 20px 20px 20px;
+  border-top: 1px solid var(--border);
+}
+.legal {
+  font-size: var(--fs-10);
+  line-height: 1.6;
+  color: var(--text-disabled);
+  max-width: 860px;
+  text-wrap: pretty;
+}
+.links {
+  display: flex; gap: 18px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-10);
+  letter-spacing: var(--ls-widest);
+  text-transform: uppercase;
+  color: var(--text-faintest);
+  flex: 0 0 auto;
+}
