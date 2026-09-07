@@ -22,3 +22,13 @@
   color: var(--text-faintest);
   flex: 0 0 auto;
 }
+
+.legalBlock { max-width: 860px; }
+.credit {
+  font-size: var(--fs-10);
+  line-height: 1.6;
+  color: var(--text-disabled);
+  margin: 6px 0 0 0;
+}
+.credit a { color: var(--text-faintest); text-decoration: underline; }
+.credit a:hover { color: var(--text-dim); }

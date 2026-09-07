@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { TyreLoader } from "@/components/atoms/TyreLoader";
 import s from "./SessionPicker.module.css";
 
 const API_URL = import.meta.env["VITE_API_URL"] ?? "http://localhost:4000";
@@ -144,12 +145,13 @@ export function SessionPicker({ current, onSwitched }: SessionPickerProps) {
           <div className={s.section}>
             <div className={s.sectionTitle}>Live</div>
             <div className={s.liveRow}>
+              {live === null && <TyreLoader inline size="sm" label="Checking" />}
               <div className={s.liveText}>
-                {live?.live
+                {live === null ? "" : live.live
                   ? `${live.meeting} · ${live.session} is running now`
-                  : live?.meeting
+                  : live.meeting
                     ? `No session running. Last: ${live.meeting} · ${live.session}`
-                    : "Checking…"}
+                    : "No session information"}
               </div>
               <button
                 type="button"
@@ -180,9 +182,9 @@ export function SessionPicker({ current, onSwitched }: SessionPickerProps) {
 
           <div className={s.list}>
             {grouped.length === 0 ? (
-              <div className={s.empty}>
-                {year === null ? "Pick a season" : `Loading ${year}…`}
-              </div>
+              year === null
+                ? <div className={s.empty}>Pick a season</div>
+                : <TyreLoader block label={`Loading ${year}`} />
             ) : (
               grouped.map(([meeting, list]) => (
                 <div key={meeting}>
@@ -223,11 +225,20 @@ export function SessionPicker({ current, onSwitched }: SessionPickerProps) {
             )}
           </div>
 
-          {status && (
+          {busy ? (
+            <div className={s.status}>
+              <TyreLoader
+                inline
+                size="sm"
+                label={status ?? "Loading"}
+                detail="Sessions that are not on disk are downloaded first — this can take a minute."
+              />
+            </div>
+          ) : status ? (
             <div className={`${s.status} ${status.startsWith("Could") ? s.statusError : ""}`}>
               {status}
             </div>
-          )}
+          ) : null}
         </div>
       )}
     </div>

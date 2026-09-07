@@ -1,3 +1,4 @@
+import { TyreLoader } from "@/components/atoms/TyreLoader";
 import { PACE_COLOR } from "@/features/live/model/constants";
 import type { Driver, GapMode, OvertakeAid, TimingRow } from "@/features/live/model/types";
 import { DriverRow } from "./DriverRow";
@@ -94,7 +95,7 @@ export function TimingTower({
       </div>
 
       {timing.length === 0 ? (
-        <div className={s.empty}>WAITING FOR TIMING DATA</div>
+        <TyreLoader block size="lg" label="Waiting for timing data" />
       ) : (
         <table className={s.table}>
           <colgroup>

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { TyreLoader } from "@/components/atoms/TyreLoader";
 import { TRACK_STATE } from "@/features/live/model/constants";
 import type { CarPosition, Driver, TimingRow, TrackState } from "@/features/live/model/types";
 import { lerp, STALE_MS, toScreen } from "../lib/toScreen";
@@ -95,9 +96,11 @@ export function TrackMap({
           <h2 className={s.title}>Track map</h2>
           <div className={s.rule} />
         </div>
-        <div className={s.empty}>
-          {circuitKey === null ? "NO SESSION" : "TRACK GEOMETRY UNAVAILABLE"}
-        </div>
+        {circuitKey === null ? (
+          <div className={s.empty}>NO SESSION</div>
+        ) : (
+          <TyreLoader block label="Loading circuit" detail={circuitName || undefined} />
+        )}
       </section>
     );
   }

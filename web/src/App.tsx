@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { TyreLoader } from "./components/atoms/TyreLoader";
 import { AppFooter } from "./components/layout/AppFooter/AppFooter";
 import { AppHeader } from "./components/layout/AppHeader/AppHeader";
 import { TabBar } from "./components/layout/TabBar/TabBar";
@@ -109,7 +110,9 @@ export function App() {
 
       {view === "notifications" && (
         <div className={s.split}>
-          <RaceControlFeed messages={session.messages} />
+          {session.messages.length === 0 && connected
+            ? <div className={s.side}><TyreLoader block label="Waiting for race control" /></div>
+            : <RaceControlFeed messages={session.messages} />}
           <div className={s.side}>
             <div className={s.placeholder}>PENALTIES — IMPL-24</div>
           </div>

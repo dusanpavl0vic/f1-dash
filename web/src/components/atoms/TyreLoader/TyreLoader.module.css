@@ -1,0 +1,61 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.inline {
+  flex-direction: row;
+  gap: 9px;
+}
+
+/* The tyre is rendered through <img> rather than inlined, so the CC BY-SA 4.0
+   asset stays unmodified — spinning it with CSS creates no derivative work.
+   See src/assets/ATTRIBUTION.md. */
+.tyre {
+  display: block;
+  animation: tyre-spin 1.1s linear infinite;
+  /* A real tyre never spins perfectly true. Ten degrees of tilt reads as
+     motion rather than as a rotating icon. */
+  transform-origin: 50% 50%;
+}
+
+@keyframes tyre-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Respect the user's motion preference: the tyre still marks the wait, it just
+   pulses instead of rotating. */
+@media (prefers-reduced-motion: reduce) {
+  .tyre {
+    animation: tyre-pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes tyre-pulse {
+    0%, 100% { opacity: 0.45; }
+    50%      { opacity: 1; }
+  }
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-10);
+  letter-spacing: var(--ls-wider);
+  text-transform: uppercase;
+  color: var(--text-faint);
+  text-align: center;
+}
+.labelInline { text-align: left; }
+
+.detail {
+  font-family: var(--font-mono);
+  font-size: var(--fs-10);
+  letter-spacing: var(--ls-wide);
+  color: var(--text-faintest);
+  text-align: center;
+  max-width: 320px;
+  text-wrap: pretty;
+}
+
+.block { padding: 48px 20px; }
