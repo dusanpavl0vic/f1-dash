@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { TyreLoader } from "@/components/atoms/TyreLoader";
 import type { SessionAnalysis, TelemetryLap } from "@/features/analysis/model/types";
 import { bestLap, driverColor, formatTime } from "@/features/analysis/model/types";
+import { LapChart } from "@/features/analysis/components/LapChart";
 import { ChannelChart } from "@/features/telemetry/components/ChannelChart";
 import { DeltaChart } from "@/features/telemetry/components/DeltaChart";
 import { RacingLine } from "@/features/telemetry/components/RacingLine";
@@ -146,13 +147,22 @@ export function TelemetryPage() {
   ].filter((t): t is NonNullable<typeof t> => t !== null);
 
   return (
-    <>
+    <div data-analysis-report>
       <div className={s.panel}>
         <div className={s.header}>
           <div className={s.marker} />
           <h1 className={s.title}>Telemetry</h1>
           <div className={s.rule} />
-          <div className={s.meta}>Recorded for 2026 sessions onward</div>
+          <div className={s.meta}>
+            {analysis
+              ? `${analysis.meta.meeting} ${analysis.meta.sessionName} ${analysis.meta.year ?? ""}`
+              : "Recorded for 2026 sessions onward"}
+          </div>
+          {analysis && (
+            <button type="button" className={p.button} onClick={() => window.print()}>
+              EXPORT PDF
+            </button>
+          )}
         </div>
 
         <div className={s.selectors}>
@@ -235,6 +245,24 @@ export function TelemetryPage() {
         </div>
       )}
 
+      {analysis && !status && driverA && (
+        <div className={s.panel}>
+          <div className={s.header}>
+            <div className={s.marker} />
+            <h2 className={s.title}>Lap times — {driverA.tla}</h2>
+            <div className={s.rule} />
+            <div className={s.meta}>
+              {driverA.teamName} · {driverA.laps.filter((l) => l.timeSeconds).length} laps ·
+              best {formatTime(bestLap(driverA))}
+            </div>
+          </div>
+          {/* Every lap of the session as a bar. Pit, out, safety-car and
+              stoppage laps are coloured separately rather than hidden — see
+              LapChart. */}
+          <LapChart driver={driverA} />
+        </div>
+      )}
+
       {analysis && !status && (
         <>
           {traces.length > 0 ? (
@@ -301,6 +329,6 @@ export function TelemetryPage() {
           )}
         </>
       )}
-    </>
+    </div>
   );
 }

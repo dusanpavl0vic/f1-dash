@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { TyreLoader } from "@/components/atoms/TyreLoader";
 import { SessionDashboard } from "@/features/dashboard/components/SessionDashboard";
+import { TransportBar } from "@/features/replay/components/TransportBar";
 import { liveStore } from "@/features/live/store/liveStore";
 import s from "./Pages.module.css";
 
@@ -134,11 +135,14 @@ export function ReplayPage() {
     }
 
     return (
-      <SessionDashboard
-        mode="replay"
-        headerControl={<Link to="/replay" className={s.button}>CHANGE SESSION</Link>}
-        emptyState={<TyreLoader block size="lg" label="Rebuilding session state" />}
-      />
+      <>
+        <SessionDashboard
+          mode="replay"
+          headerControl={<Link to="/replay" className={s.button}>CHANGE SESSION</Link>}
+          emptyState={<TyreLoader block size="lg" label="Rebuilding session state" />}
+        />
+        <TransportBar />
+      </>
     );
   }
 

@@ -86,6 +86,9 @@ builder.Services.AddSingleton(sp => new AnalysisPrecomputer(
 builder.Services.AddSingleton(sp => new ScheduleService(
     ArchiveClient.CreateHttpClient(), sp.GetRequiredService<ILogger<ScheduleService>>()));
 
+builder.Services.AddSingleton(sp => new DriverDirectory(
+    sp.GetRequiredService<ArchiveClient>(), sp.GetRequiredService<ILogger<DriverDirectory>>()));
+
 builder.Services.AddSingleton(sp => new ResultsService(
     ArchiveClient.CreateHttpClient(), sp.GetRequiredService<ILogger<ResultsService>>()));
 
@@ -139,7 +142,63 @@ app.MapGet("/api/session/live",
     async (SessionCatalog catalog, CancellationToken ct) =>
         Results.Ok(await catalog.LiveAsync(ct)));
 
-app.MapGet("/api/session", (SessionManager sessions) => Results.Ok(sessions.Current));
+app.MapGet("/api/session", (SessionManager sessions) => Results.Ok(new
+{
+    sessions.Current.Mode,
+    sessions.Current.Description,
+    sessions.Current.Year,
+    sessions.Current.Meeting,
+    sessions.Current.Session,
+    sessions.Current.Loop,
+    sessions.Current.Error,
+    // Transport state, so a scrub bar can render without a second request.
+    positionMs = sessions.Controller?.PositionMs ?? 0,
+    durationMs = sessions.DurationMs,
+    playing = sessions.Controller?.Playing ?? false,
+    // The controller's speed, not the request's: it changes at runtime, and
+    // exposing both under camelCase collides on "speed".
+    speed = sessions.Controller?.Speed ?? sessions.Current.Speed,
+}));
+
+// Transport controls. Play, pause and speed are immediate; seek restarts the
+// source at the new offset, because state is delta-accumulated and cannot be
+// read at an arbitrary point without replaying to it.
+app.MapPost("/api/session/control",
+    async (ControlRequest request, SessionManager sessions, CancellationToken ct) =>
+    {
+        var controller = sessions.Controller;
+
+        switch (request.Action)
+        {
+            case "play":  controller?.Play();  break;
+            case "pause": controller?.Pause(); break;
+
+            case "speed" when request.Value is { } speed:
+                if (controller is null) return Results.BadRequest(new { error = "Nothing is being replayed." });
+                controller.Speed = speed;
+                break;
+
+            case "seek" when request.Value is { } target:
+                var seeked = await sessions.SeekAsync((long)target, ct);
+                if (seeked.Error is not null) return Results.BadRequest(seeked);
+                // Falls through to the shared transport response below: one
+                // response shape for every action means the client does not have
+                // to special-case which button it pressed.
+                controller = sessions.Controller;
+                break;
+
+            default:
+                return Results.BadRequest(new { error = $"Unknown action '{request.Action}'." });
+        }
+
+        return Results.Ok(new
+        {
+            playing = controller?.Playing ?? false,
+            speed = controller?.Speed ?? 1,
+            positionMs = controller?.PositionMs ?? 0,
+            durationMs = sessions.DurationMs,
+        });
+    });
 
 // Switching downloads the session first if it is not already on disk, so a
 // first request for an old race can take a while. It is deliberately
@@ -299,6 +358,17 @@ app.MapGet("/api/schedule/{year:int}/next",
         return Results.Ok(await schedule.NextAsync(year, ct));
     });
 
+// --- driver profiles --------------------------------------------------------
+
+// Names, team colours and headshot URLs come from the F1 feed's own DriverList;
+// Jolpica has none of them.
+app.MapGet("/api/drivers/{year:int}",
+    async (int year, DriverDirectory directory, HttpContext http, CancellationToken ct) =>
+    {
+        http.Response.Headers.CacheControl = "public, max-age=86400";
+        return Results.Ok(await directory.ForSeasonAsync(year, ct));
+    });
+
 // --- race results -----------------------------------------------------------
 
 app.MapGet("/api/results/{year:int}/{round:int}",
@@ -354,4 +424,7 @@ await app.RunAsync(cts.Token);
 return 0;
 
 /// <summary>Body of POST /api/analysis/precompute.</summary>
+/// <summary>Body of POST /api/session/control.</summary>
+internal sealed record ControlRequest(string Action, double? Value = null);
+
 internal sealed record PrecomputeRequest(int Year, string Meeting, string Session, bool Force = false);

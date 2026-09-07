@@ -273,6 +273,30 @@ without it.
 | **IMPL-68** | Driver detail | One driver's season: results per round, points progression, qualifying against race pace | UC-053 |
 | **IMPL-69** | Headshot setting | Off by default, with the licensing position stated where it is toggled | — |
 
+## Phase K · Storage, when the archive stops being enough
+
+The archive is currently a directory tree, and for everything the app does today
+that is the right database (see `DECISIONS.md` D-011 for the measurements —
+11 ms to read a driver's entire race telemetry). This phase exists so the
+migration is designed before it is needed, not during an outage.
+
+**The trigger is a feature, not a size.** Phase K starts when the first screen
+asks a question spanning more than one session.
+
+| # | Use case | Definition of done | Trigger |
+|---|---|---|---|
+| **IMPL-70** | Session index | A single queryable index of every archived session — year, meeting, type, circuit, drivers, whether telemetry exists — rebuildable from the tree in one pass, so it is a cache and never the source of truth | Any cross-session listing slower than a page load |
+| **IMPL-71** | Telemetry in InfluxDB | Per-lap channels written to Influx alongside the JSONL, with the file remaining authoritative; measurement per channel, tags for driver, session and lap | The first query spanning sessions or seasons |
+| **IMPL-72** | Cross-season analysis | Circuit records, a driver's pace across years, sector bests over a season — the screens the index and Influx exist to serve | Follows IMPL-70/71 |
+
+Two rules hold whichever store is chosen. **The archive stays authoritative:**
+every store is a derived index that can be dropped and rebuilt, so a corrupt
+database is an inconvenience rather than data loss. **No database sits in the
+ingest hot path:** live delta merging writes to memory and to `stream.jsonl`,
+and adding a network write per delta would trade the one thing this app cannot
+afford to lose — latency during a live session — for a convenience it does not
+need.
+
 ## Not in this plan yet
 
 Replay transport controls (UC-043, UC-044), schedule and standings pages (UC-05x), and the

@@ -1,0 +1,57 @@
+.bar {
+  position: sticky; bottom: 0; z-index: 30;
+  display: flex; align-items: center; gap: 14px;
+  padding: 10px 20px;
+  border-top: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-header-from) 100%);
+}
+.button {
+  width: 34px; height: 34px; flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); background: var(--surface-3);
+  color: var(--text); cursor: pointer;
+}
+.button:hover { border-color: var(--accent); }
+.buttonPrimary { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+
+.time {
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+  font-size: var(--fs-12); color: var(--text-dim); flex: 0 0 auto; min-width: 66px;
+}
+.timeTotal { color: var(--text-faintest); }
+
+/* The bar is the control: a native range input gives keyboard and touch
+   handling that a div with pointer events has to reimplement badly. */
+.scrub {
+  flex: 1 1 auto; min-width: 0;
+  appearance: none; -webkit-appearance: none;
+  height: 22px; background: transparent; cursor: pointer;
+}
+.scrub::-webkit-slider-runnable-track {
+  height: 6px; background: var(--surface-4); border: 1px solid var(--border);
+}
+.scrub::-moz-range-track { height: 6px; background: var(--surface-4); border: 1px solid var(--border); }
+.scrub::-webkit-slider-thumb {
+  appearance: none; -webkit-appearance: none;
+  width: 4px; height: 18px; margin-top: -7px;
+  background: var(--accent); border: none;
+}
+.scrub::-moz-range-thumb { width: 4px; height: 18px; background: var(--accent); border: none; }
+.scrub:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.speeds { display: flex; flex: 0 0 auto; }
+.speed {
+  padding: 5px 9px; border: 1px solid var(--border); border-right: none;
+  background: transparent; color: var(--text-fainter);
+  font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 600;
+  cursor: pointer;
+}
+.speed:last-child { border-right: 1px solid var(--border); }
+.speedActive { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+
+.seeking {
+  font-family: var(--font-mono); font-size: var(--fs-10);
+  letter-spacing: var(--ls-wider); text-transform: uppercase; color: var(--yellow);
+  flex: 0 0 auto;
+}
+.lapMark { font-family: var(--font-mono); font-size: var(--fs-11); color: var(--text-faint); flex: 0 0 auto; }

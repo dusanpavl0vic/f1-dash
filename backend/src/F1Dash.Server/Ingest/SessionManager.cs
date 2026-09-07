@@ -48,6 +48,8 @@ public sealed class SessionManager(
     private CancellationTokenSource? _running;
     private Task? _task;
 
+    private ReplayController? _controller;
+    private SessionRequest? _lastReplay;
     private AnalysisBuilder? _analysis;
     private TelemetryRecorder? _telemetry;
     private AnalysisStore? _store;
@@ -60,6 +62,12 @@ public sealed class SessionManager(
         _analysis is null ? null : _analysis.Build(state.Accumulator, CurrentMeta());
 
     public AnalysisStore? Store => _store;
+
+    /// <summary>Transport state, when a replay is running.</summary>
+    public ReplayController? Controller => _controller;
+
+    /// <summary>Total length of the loaded stream, so the scrub bar has a scale.</summary>
+    public long DurationMs { get; private set; }
     public bool TelemetryEnabled => _telemetry?.Enabled ?? false;
 
     public async Task StartAsync(CancellationToken ct)
@@ -104,6 +112,8 @@ public sealed class SessionManager(
             if (request.Mode == "live")
             {
                 _sessionDirectory = null;
+                _controller = null;
+                _lastReplay = null;
                 var source = new LiveSignalrSource(
                     Environment.GetEnvironmentVariable("F1_HTTP_PROXY"),
                     loggers.CreateLogger<LiveSignalrSource>());
@@ -135,6 +145,8 @@ public sealed class SessionManager(
                 path = downloaded;
             }
 
+            _lastReplay = request;
+
             await SwitchToStreamAsync(
                 path,
                 new CurrentSession(SessionMode.Replay, $"{request.Meeting} {request.Session} {year}",
@@ -152,10 +164,51 @@ public sealed class SessionManager(
     private Task SwitchToStreamAsync(
         string path, CurrentSession description, double speed, long startMs, bool loop, CancellationToken ct)
     {
-        var source = new ReplaySessionSource(path, speed, startMs, loop);
+        // Scanning the file for its last offset is what gives the scrub bar a
+        // scale. It is a linear read of a large file, so it happens once per
+        // switch rather than per request.
+        DurationMs = LastOffset(path);
+
+        _controller = new ReplayController { Speed = speed, DurationMs = DurationMs };
+        _controller.SetPosition(startMs);
+
+        var source = new ReplaySessionSource(path, speed, startMs, loop, _controller);
         _sessionDirectory = Path.GetDirectoryName(path);
         Start(source, description with { Speed = speed, Loop = loop });
         return Task.CompletedTask;
+    }
+
+    private static long LastOffset(string path)
+    {
+        long last = 0;
+        foreach (var entry in SessionDownloader.ReadJsonl(path)) last = entry.OffsetMs;
+        return last;
+    }
+
+    /// <summary>
+    /// Moves the replay to a new position.
+    ///
+    /// A seek is a restart at the new offset, not a jump: state is
+    /// delta-accumulated, so there is no way to read the state at time t without
+    /// replaying to it. Restarting reuses the rebuild path — entries before the
+    /// offset are applied at full speed — which is already the code that makes
+    /// REPLAY_START_MS correct.
+    /// </summary>
+    public async Task<CurrentSession> SeekAsync(long offsetMs, CancellationToken ct)
+    {
+        if (_lastReplay is null) return Current with { Error = "Nothing is being replayed." };
+
+        // The transport settings are the viewer's, not the original request's.
+        // Seeking at 8x and landing back at 1x would make the speed control feel
+        // like it silently reset itself.
+        var speed = _controller?.Speed ?? _lastReplay.Speed;
+        var wasPlaying = _controller?.Playing ?? true;
+
+        var result = await SwitchAsync(
+            _lastReplay with { StartMs = Math.Max(0, offsetMs), Speed = speed }, ct).ConfigureAwait(false);
+
+        if (!wasPlaying) _controller?.Pause();
+        return result;
     }
 
     private AnalysisMeta CurrentMeta()

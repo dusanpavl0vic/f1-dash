@@ -1,0 +1,33 @@
+.wrap {
+  position: relative;
+  overflow: hidden;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+/* A cut-out keeps its own transparency: no coloured plate behind it, and the
+   frame does not crop it into a disc. */
+.cutout { background: transparent !important; overflow: visible; }
+.cutout .photo { object-fit: contain; object-position: bottom center; }
+/* Until the image resolves, the initials hold the space. Without this the row
+   height jumps as twenty photographs arrive one by one. */
+.fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--bg);
+}
+.hidden { opacity: 0; }

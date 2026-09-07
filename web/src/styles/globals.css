@@ -83,11 +83,19 @@ table { border-collapse: collapse; }
 
   html, body { background: #fff; }
 
-  /* Only the report prints. Chrome and nav are hidden by tag; the analysis
-     view is the only main content while its tab is active, so nothing else
-     needs suppressing. */
+  /* Only the report prints. Chrome and navigation are hidden by tag; whichever
+     report page is open is the only main content. */
   header, nav, footer { display: none !important; }
   [data-analysis-report] { width: 100%; }
+
+  /* A telemetry report is wide: the traces need the full page width, and two
+     side-by-side columns become one so the racing line is not a thumbnail. */
+  [data-analysis-report] > div[class*="two"] {
+    display: block !important;
+  }
+  [data-analysis-report] > div[class*="two"] > * {
+    border-right: none !important;
+  }
 
   /* Each panel is a unit; splitting a chart across a page break makes it
      unreadable. */

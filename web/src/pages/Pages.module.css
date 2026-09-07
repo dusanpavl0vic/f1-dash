@@ -264,8 +264,12 @@
   position: relative; overflow: hidden;
   padding: 16px 18px 14px 21px;
   border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);
-  min-height: 128px;
+  min-height: 168px;
   display: flex; flex-direction: column;
+  /* A wash of the team colour from the bottom-right, behind the portrait. */
+  background:
+    radial-gradient(120% 90% at 88% 108%, var(--card-wash) 0%, transparent 62%),
+    var(--surface);
 }
 .cardGrid > .driverCard:nth-child(3n) { border-right: none; }
 .driverStripe { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
@@ -273,9 +277,9 @@
    and cannot be shipped, so the identity carried here is the number and the
    colour — both of which are ours to draw. */
 .driverGhost {
-  position: absolute; right: 10px; top: -14px;
-  font-family: var(--font-display); font-size: 96px; font-weight: 700;
-  line-height: 1; letter-spacing: -0.03em; pointer-events: none;
+  position: absolute; right: 14px; top: -10px;
+  font-family: var(--font-display); font-size: 108px; font-weight: 700;
+  line-height: 1; letter-spacing: -0.04em; pointer-events: none;
 }
 .driverName {
   font-family: var(--font-display); font-size: var(--fs-24); font-weight: 700;
@@ -286,7 +290,8 @@
   color: var(--text-faint); margin-top: 4px; position: relative;
 }
 .driverStats {
-  display: flex; gap: 18px; margin-top: auto; padding-top: 12px; position: relative;
+  display: flex; gap: 18px; margin-top: auto; padding-top: 12px;
+  position: relative; z-index: 2;
 }
 .driverStat { display: flex; flex-direction: column; }
 .driverStatValue {
@@ -298,3 +303,18 @@
   letter-spacing: var(--ls-widest); text-transform: uppercase;
   color: var(--text-faintest); margin-top: 3px;
 }
+
+.resDriverCell { display: flex; align-items: center; gap: 9px; }
+
+/* The portrait is the card's focal point: cut out, bottom-right, sitting OVER
+   the number so the two read as one graphic rather than two layers. */
+.driverPortrait {
+  position: absolute; right: 4px; bottom: 0;
+  pointer-events: none; z-index: 1;
+  filter: drop-shadow(0 6px 18px rgb(0 0 0 / 55%));
+}
+/* The photographs are square crops with the driver centred; cropping to the
+   upper portion removes the empty shoulders-down area and makes them read as
+   cut-outs rather than avatars. */
+.driverPortrait img { object-fit: cover; object-position: top center; }
+.teamLineup { display: flex; gap: 7px; position: absolute; right: 14px; bottom: 14px; z-index: 1; }

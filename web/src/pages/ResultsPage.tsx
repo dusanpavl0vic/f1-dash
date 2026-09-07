@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { DriverPhoto } from "@/components/atoms/DriverPhoto/DriverPhoto";
 import { TyreLoader } from "@/components/atoms/TyreLoader";
+import { useDrivers } from "@/features/drivers/lib/useDrivers";
 import { flag } from "@/lib/countries";
 import { teamColour } from "@/lib/teams";
 import s from "./Pages.module.css";
@@ -54,6 +56,8 @@ export function ResultsPage() {
   const [results, setResults] = useState<RaceResults | null>(null);
   const [session, setSession] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+
+  const profiles = useDrivers(year);
 
   useEffect(() => {
     let cancelled = false;
@@ -163,9 +167,19 @@ export function ResultsPage() {
                   <td className={s.resPos}>{row.position}</td>
                   <td className={s.resNum}>{row.number}</td>
                   <td>
-                    <span className={s.resDriver}>{row.code || row.driver}</span>{" "}
-                    <span className={s.resStatus} style={{ fontSize: "var(--fs-10)" }}>
-                      {flag(row.nationality)} {row.driver}
+                    <span className={s.resDriverCell}>
+                      <DriverPhoto
+                        url={profiles.get(row.code)?.headshotUrl}
+                        tla={row.code}
+                        colour={teamColour(row.constructor)}
+                        size={28}
+                      />
+                      <span>
+                        <span className={s.resDriver}>{row.code || row.driver}</span>{" "}
+                        <span className={s.resStatus} style={{ fontSize: "var(--fs-10)" }}>
+                          {flag(row.nationality)} {row.driver}
+                        </span>
+                      </span>
                     </span>
                   </td>
                   <td>

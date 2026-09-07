@@ -201,3 +201,46 @@ wrong data, and the user could not tell.
 is full, which is what lets the broadcaster drop the client and force a clean
 resync. The write never actually blocks, because the code only ever calls
 `TryWrite`.
+
+## D-011 · InfluxDB and MongoDB: measured, and not adopted yet
+
+Both were offered as free choices — "use them if they make the app faster or the
+data easier to get". So they were measured against the data the app actually
+holds rather than against the shape they are usually recommended for.
+
+**What the data looks like on disk, 2026 Monza race:**
+
+| | Size | Read cost |
+|---|---|---|
+| `stream.jsonl` (the raw feed) | 80 MB | streamed, never held whole |
+| `analysis.json` (derived) | 1.4 MB | one read, whole document |
+| `telemetry/*.jsonl` (21 drivers) | 10 MB | 11 ms for one driver's whole race |
+
+**InfluxDB** is a real fit for the *shape* of telemetry — 20,920 samples per
+channel per driver is a time series by any definition. It is not a fit for the
+*access pattern*. Every telemetry screen in this app asks for one driver, one
+session, one lap. That query is a file read of a few hundred kilobytes, and it
+already completes in 11 ms for an entire race. Influx would replace an 11 ms
+file read with a network round-trip to a container that has to be running,
+backed up and version-matched, and would win nothing.
+
+**MongoDB** is a worse fit still. The analysis documents are written once when
+a session ends and read whole. That is what a file is. Mongo would add a
+container, a driver, connection lifecycle and a backup story for data that is
+derived and can be rebuilt from the archive in about a second and a half.
+
+**What would change this.** Both answers are about *per-session* access. The
+moment a screen asks a question that spans sessions — "every lap VER exceeded
+330 km/h this season", "Monza sector 2 across 2024–2026", "all two-stop races in
+2026" — the file layout stops working, because answering means opening every
+file in the archive. A season is roughly 120 sessions; at 10 MB of telemetry
+each that is over a gigabyte to scan for one question.
+
+So the trigger is written down rather than the technology: **when the first
+cross-session query ships, InfluxDB goes in for telemetry and the analysis
+documents get indexed** — Mongo if the query is document-shaped, Postgres if it
+turns out to be relational. Until then the archive on disk *is* the database,
+and it is the faster one.
+
+Recorded because "we considered it" is worth less than "we measured it and here
+are the numbers".

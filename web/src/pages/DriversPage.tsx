@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { DriverPhoto } from "@/components/atoms/DriverPhoto/DriverPhoto";
 import { TyreLoader } from "@/components/atoms/TyreLoader";
+import { useDrivers } from "@/features/drivers/lib/useDrivers";
 import { flag } from "@/lib/countries";
 import { teamColour } from "@/lib/teams";
 import s from "./Pages.module.css";
@@ -34,6 +36,10 @@ export function DriversPage({ mode }: { mode: "drivers" | "teams" }) {
   const [podiums, setPodiums] = useState<Record<string, number>>({});
   const [numbers, setNumbers] = useState<Record<string, string>>({});
   const [failed, setFailed] = useState(false);
+
+  // Photographs, team colours and car numbers all come from the F1 feed's own
+  // driver list; Jolpica has none of them.
+  const profiles = useDrivers(year);
 
   useEffect(() => {
     let cancelled = false;
@@ -118,13 +124,22 @@ export function DriversPage({ mode }: { mode: "drivers" | "teams" }) {
       ) : mode === "drivers" ? (
         <div className={s.cardGrid}>
           {standings.drivers.map((d) => {
-            const colour = teamColour(d.constructor);
+            const profile = profiles.get(d.code);
+            // The feed's colour is authoritative when we have it; the lookup is
+            // only for seasons with no archived driver list.
+            const colour = profile?.teamColour ? `#${profile.teamColour}` : teamColour(d.constructor);
+
             return (
-              <article key={d.code + d.driver} className={s.driverCard}>
+              <article key={d.code + d.driver} className={s.driverCard}
+                       style={{ ["--card-wash" as string]: `${colour}22` }}>
                 <span className={s.driverStripe} style={{ background: colour }} />
                 <span className={s.driverGhost} style={{ color: colour, opacity: 0.14 }}>
-                  {numbers[d.code] ?? d.position}
+                  {profile?.racingNumber ?? numbers[d.code] ?? d.position}
                 </span>
+                <div className={s.driverPortrait}>
+                  <DriverPhoto url={profile?.headshotUrl} tla={d.code} colour={colour}
+                               size={132} cutout />
+                </div>
                 <div className={s.driverName} style={{ color: colour }}>
                   {d.driver.split(" ").at(-1)}
                 </div>
@@ -160,7 +175,8 @@ export function DriversPage({ mode }: { mode: "drivers" | "teams" }) {
             const drivers = standings.drivers.filter((d) => d.constructor === c.constructor);
 
             return (
-              <article key={c.constructor} className={s.driverCard}>
+              <article key={c.constructor} className={s.driverCard}
+                       style={{ ["--card-wash" as string]: `${colour}22` }}>
                 <span className={s.driverStripe} style={{ background: colour }} />
                 <span className={s.driverGhost} style={{ color: colour, opacity: 0.14 }}>
                   {c.position}
@@ -168,6 +184,17 @@ export function DriversPage({ mode }: { mode: "drivers" | "teams" }) {
                 <div className={s.driverName} style={{ color: colour }}>{c.constructor}</div>
                 <div className={s.driverTeam}>
                   {flag(c.nationality)} {drivers.map((d) => d.code).join(" · ") || "—"}
+                </div>
+                {/* A constructor has no portrait of its own, so its drivers
+                    stand in for it. */}
+                <div className={s.teamLineup}>
+                  {drivers.map((d) => {
+                    const profile = profiles.get(d.code);
+                    return (
+                      <DriverPhoto key={d.code} url={profile?.headshotUrl} tla={d.code}
+                                   colour={colour} size={42} />
+                    );
+                  })}
                 </div>
                 <div className={s.driverStats}>
                   <div className={s.driverStat}>
