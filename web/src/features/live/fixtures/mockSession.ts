@@ -205,7 +205,7 @@ export function buildMockSession(
       round: 1,
       startDate: "2024-03-02T15:00:00",
     },
-    weather: { trackTemp: 40.2, airTemp: 23.4, windSpeed: 7.0, humidity: 32, pressure: 1012, rainfall: false },
+    weather: { trackTemp: 40.2, airTemp: 23.4, windSpeed: 7.0, windDirection: 183, humidity: 32, pressure: 1012, rainfall: false },
     trackState,
     drivers,
     timing,

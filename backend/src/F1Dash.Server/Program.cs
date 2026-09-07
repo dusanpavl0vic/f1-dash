@@ -86,6 +86,9 @@ builder.Services.AddSingleton(sp => new AnalysisPrecomputer(
 builder.Services.AddSingleton(sp => new ScheduleService(
     ArchiveClient.CreateHttpClient(), sp.GetRequiredService<ILogger<ScheduleService>>()));
 
+builder.Services.AddSingleton(sp => new StandingsService(
+    ArchiveClient.CreateHttpClient(), sp.GetRequiredService<ILogger<StandingsService>>()));
+
 // Replay and live are the same feature behind one manager, switchable at
 // runtime, so the dashboard can move between a 2018 race and a session running
 // right now without a restart.
@@ -276,7 +279,12 @@ app.MapGet("/api/analysis/{year:int}/{meeting}/{session}/telemetry/{number}/{lap
 app.MapGet("/api/schedule/{year:int}",
     async (int year, ScheduleService schedule, HttpContext http, CancellationToken ct) =>
     {
-        http.Response.Headers.CacheControl = "public, max-age=3600";
+        // Five minutes, not an hour. Round status is derived at read time, so a
+        // long client cache would keep showing a race as "upcoming" for an hour
+        // after it finished — and it also pinned the response SHAPE, which
+        // crashed the page when the podium field was added.
+        // The server-side cache is still a day; this only bounds the browser.
+        http.Response.Headers.CacheControl = "public, max-age=300";
         return Results.Ok(await schedule.SeasonAsync(year, ct));
     });
 
@@ -286,6 +294,23 @@ app.MapGet("/api/schedule/{year:int}/next",
         // Short, because a countdown goes stale quickly.
         http.Response.Headers.CacheControl = "public, max-age=60";
         return Results.Ok(await schedule.NextAsync(year, ct));
+    });
+
+// --- championship standings -------------------------------------------------
+
+// The table as it stood after any round. round=0 (or omitted) gives the latest.
+app.MapGet("/api/standings/{year:int}",
+    async (int year, int? round, StandingsService standings, HttpContext http, CancellationToken ct) =>
+    {
+        var table = await standings.GetAsync(year, round ?? 0, ct);
+        if (table is null) return Results.NotFound(new { error = $"No standings for {year}." });
+
+        // A completed round's table never changes; the latest one keeps moving.
+        http.Response.Headers.CacheControl = round is > 0
+            ? "public, max-age=86400"
+            : "public, max-age=300";
+
+        return Results.Ok(table);
     });
 
 // Forces a write without waiting for the session to end — the button behind

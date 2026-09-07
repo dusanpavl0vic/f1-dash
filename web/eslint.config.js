@@ -31,7 +31,16 @@ export default tseslint.config(
     // stand-in for that feed data is exempt from the hex rule.
     // Team colours arrive from the feed as raw hex at runtime, so the fixtures
     // and the tests that pin real feed values are data, not design tokens.
-    files: ["src/features/live/model/constants.ts", "**/*.test.ts", "**/*.test.tsx"],
+    files: [
+      "src/features/live/model/constants.ts",
+      // Schedule and standings come from Jolpica, which supplies a constructor
+      // NAME and nothing else — there is no feed to take a colour from on those
+      // pages, so a lookup table is the only option. Team colours are brand
+      // data, not design tokens.
+      "src/lib/teams.ts",
+      "**/*.test.ts",
+      "**/*.test.tsx",
+    ],
     rules: { "no-restricted-syntax": "off" },
   },
 );

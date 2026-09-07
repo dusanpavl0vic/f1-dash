@@ -181,6 +181,22 @@ on demand.
 
 > Branch: `feat/routes`.
 
+### Live and replay are two separate applications
+
+`/live` and `/replay` are not two tabs over one shared session. They answer
+different questions and must not be confusable:
+
+| | `/live` | `/replay` |
+|---|---|---|
+| Source | The live F1 feed only | An archived session, chosen explicitly |
+| On load | Connects, or states that no session is running | Shows the picker; plays nothing until a session is clicked |
+| Never | Falls back to an archived session | Silently becomes live |
+| Analysis | Recorded as it streams | Precomputed from the archive, no replay needed |
+
+The failure this prevents is the one the whole project guards against
+elsewhere: a user cannot tell a replay from live by looking at the numbers, so
+the two must be separated by the URL and by the page, not by a badge alone.
+
 ### Why analysis no longer needs a replay
 
 Building a session's analysis by replaying it through the paced ingest loop
@@ -212,8 +228,9 @@ session's laps" is not.
 | **IMPL-53** | Saved-analysis lookup | `GET /api/analysis/{year}/{meeting}/{session}` serves a stored analysis with no session running | UC-041 |
 | **IMPL-54** | Season schedule | `GET /api/schedule/{year}` merges the Jolpica calendar with what the archive holds; `GET /api/schedule/next` gives the next session and a countdown | UC-051, UC-052 |
 | **IMPL-55** | Routing | React Router with distinct pages rather than tabs on one screen | — |
-| **IMPL-56** | Live page | `/live` — the dashboard bound to the live feed, with the no-session state when nothing is running | UC-011, UC-065 |
-| **IMPL-57** | Replay page | `/replay` — session picker and the same dashboard driven by an archived session | UC-041, UC-043 |
+| **IMPL-56** | Live page | `/live` — bound to the live feed ONLY. Never plays an archived session, and shows the no-session state when nothing is running rather than silently falling back to a replay. | UC-011, UC-065 |
+| **IMPL-57** | Replay page | `/replay` — session picker; `/replay/{year}/{meeting}/{session}` plays one. A replay starts only on an explicit choice, never on page load. | UC-041, UC-043 |
+| **IMPL-60** | Weather panel | Track and air temperature, humidity, pressure, wind speed with a direction arrow, and rainfall — with icons, laid out to be read at a glance rather than as a row of numbers | UC-017 |
 | **IMPL-58** | Schedule page | `/schedule` — the 2026 calendar with rounds completed, running and upcoming, and a countdown to the next | UC-051, UC-052 |
 | **IMPL-59** | Analysis page | `/analysis/{year}/{meeting}/{session}` — readable without the session being loaded into the live dashboard | UC-032 |
 

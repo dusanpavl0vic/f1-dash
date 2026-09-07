@@ -2,6 +2,8 @@ using System.Text.Json.Nodes;
 
 namespace F1Dash.Server.Catalog;
 
+public sealed record PodiumEntry(int Position, string Code, string Driver, string Constructor);
+
 public sealed record ScheduledRound(
     int Round,
     string Name,
@@ -10,7 +12,9 @@ public sealed record ScheduledRound(
     string Locality,
     /// <summary>Race start, ISO 8601 UTC.</summary>
     string? StartUtc,
-    string Status);
+    string Status,
+    /// <summary>Top three, for rounds that have run. Empty otherwise.</summary>
+    IReadOnlyList<PodiumEntry> Podium);
 
 public sealed record NextSession(ScheduledRound? Round, double? HoursUntil);
 
@@ -69,11 +73,17 @@ public sealed class ScheduleService(HttpClient http, ILogger<ScheduleService> lo
                     Country: (string?)location?["country"] ?? "",
                     Locality: (string?)location?["locality"] ?? "",
                     StartUtc: start,
-                    Status: ""));
+                    Status: "",
+                    Podium: []));
             }
 
-            _cache[year] = (DateTime.UtcNow, rounds);
-            return Restatus(rounds);
+            var podiums = await PodiumsAsync(year, ct).ConfigureAwait(false);
+            var withPodiums = rounds
+                .Select(r => podiums.TryGetValue(r.Round, out var p) ? r with { Podium = p } : r)
+                .ToList();
+
+            _cache[year] = (DateTime.UtcNow, withPodiums);
+            return Restatus(withPodiums);
         }
         catch (Exception e) when (e is HttpRequestException or TaskCanceledException or System.Text.Json.JsonException)
         {
@@ -84,6 +94,60 @@ public sealed class ScheduleService(HttpClient http, ILogger<ScheduleService> lo
         {
             _lock.Release();
         }
+    }
+
+    /// <summary>
+    /// Podiums for every round that has run.
+    ///
+    /// Three requests for the whole season rather than one per round: Ergast
+    /// exposes results filtered by finishing position, so /results/1, /2 and /3
+    /// give every winner, runner-up and third place in three calls. Jolpica
+    /// rate-limits to roughly 4 requests a second, so 23 calls for a calendar
+    /// page would be rude and slow.
+    /// </summary>
+    private async Task<Dictionary<int, List<PodiumEntry>>> PodiumsAsync(int year, CancellationToken ct)
+    {
+        var byRound = new Dictionary<int, List<PodiumEntry>>();
+
+        for (var position = 1; position <= 3; position++)
+        {
+            try
+            {
+                var text = await http
+                    .GetStringAsync($"{BaseUrl}/{year}/results/{position}.json?limit=40", ct)
+                    .ConfigureAwait(false);
+
+                var races = JsonNode.Parse(text)?["MRData"]?["RaceTable"]?["Races"] as JsonArray;
+
+                foreach (var race in (races ?? []).OfType<JsonObject>())
+                {
+                    if (!int.TryParse((string?)race["round"], out var round)) continue;
+                    if (race["Results"] is not JsonArray results || results.FirstOrDefault() is not JsonObject result) continue;
+
+                    var driver = result["Driver"] as JsonObject;
+
+                    if (!byRound.TryGetValue(round, out var list))
+                    {
+                        list = [];
+                        byRound[round] = list;
+                    }
+
+                    list.Add(new PodiumEntry(
+                        position,
+                        (string?)driver?["code"] ?? "",
+                        $"{(string?)driver?["givenName"]} {(string?)driver?["familyName"]}".Trim(),
+                        (string?)result["Constructor"]?["name"] ?? ""));
+                }
+            }
+            catch (Exception e) when (e is HttpRequestException or TaskCanceledException or System.Text.Json.JsonException)
+            {
+                // A missing podium is not worth failing the calendar over.
+                logger.LogWarning(e, "Could not fetch {Year} results for position {Position}", year, position);
+            }
+        }
+
+        foreach (var list in byRound.Values) list.Sort((a, b) => a.Position.CompareTo(b.Position));
+        return byRound;
     }
 
     /// <summary>The next round that has not finished, and how far away it is.</summary>

@@ -146,6 +146,8 @@ export interface Weather {
   trackTemp: number;
   airTemp: number;
   windSpeed: number;
+  /** Degrees the wind blows FROM — the meteorological convention. */
+  windDirection: number;
   humidity: number;
   pressure: number;
   rainfall: boolean;

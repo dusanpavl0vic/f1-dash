@@ -1,0 +1,65 @@
+.panel { padding: 14px 20px 16px 20px; }
+.header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.marker {
+  width: 9px; height: 9px; flex: 0 0 auto;
+  border-left: 2px solid var(--accent);
+  border-top: 2px solid var(--accent);
+}
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-13); font-weight: 700;
+  letter-spacing: var(--ls-max); text-transform: uppercase; color: var(--text);
+}
+.rule { flex: 1 1 auto; height: 1px; background: var(--surface-3); }
+.condition {
+  font-family: var(--font-mono); font-size: var(--fs-10);
+  letter-spacing: var(--ls-wider); text-transform: uppercase;
+}
+
+/* Track and air temperature lead, because they are what a strategist looks at
+   first. The rest is a secondary row. */
+.primary { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.tempCard {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 13px;
+  border: 1px solid var(--border-inset);
+  background: var(--surface-2);
+}
+.tempIcon { flex: 0 0 auto; }
+.tempBody { min-width: 0; }
+.tempLabel {
+  font-family: var(--font-mono); font-size: var(--fs-9);
+  letter-spacing: var(--ls-widest); text-transform: uppercase; color: var(--text-faint);
+}
+.tempValue {
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+  font-size: var(--fs-26); font-weight: 500; letter-spacing: var(--ls-snug);
+  line-height: 1.1;
+}
+.tempUnit { font-size: var(--fs-13); color: var(--text-faintest); }
+/* A thin bar makes "hot or cold" readable before the number is. */
+.tempBar { height: 3px; background: var(--surface-4); margin-top: 6px; }
+.tempFill { height: 100%; }
+
+.secondary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.stat { display: flex; align-items: center; gap: 9px; }
+.statBody { min-width: 0; }
+.statLabel {
+  font-family: var(--font-mono); font-size: var(--fs-9);
+  letter-spacing: var(--ls-widest); text-transform: uppercase; color: var(--text-faint);
+}
+.statValue {
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+  font-size: var(--fs-15); line-height: 1.2;
+}
+.statUnit { font-size: var(--fs-10); color: var(--text-faintest); }
+
+.rainRow {
+  display: flex; align-items: center; gap: 9px;
+  margin-top: 12px; padding-top: 11px;
+  border-top: 1px solid var(--surface-3);
+  font-family: var(--font-mono); font-size: var(--fs-11);
+  letter-spacing: var(--ls-wide);
+}
+.rainDry { color: var(--green); }
+.rainWet { color: var(--blue-light); }
