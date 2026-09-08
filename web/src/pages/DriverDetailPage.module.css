@@ -1,0 +1,141 @@
+.page { max-width: var(--app-width); margin: 0 auto; padding: 26px 20px 48px 20px; }
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  gap: 22px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--team, var(--accent));
+  background:
+    radial-gradient(120% 140% at 88% 110%, var(--team-wash, transparent) 0%, transparent 62%),
+    var(--surface);
+  padding: 22px 24px 0 24px;
+  min-height: 190px;
+}
+.heroText { flex: 1 1 auto; min-width: 0; padding-bottom: 22px; }
+.back {
+  font-family: var(--font-mono);
+  font-size: var(--fs-10);
+  letter-spacing: var(--ls-wider);
+  text-transform: uppercase;
+  color: var(--text-disabled);
+  text-decoration: none;
+}
+.back:hover { color: var(--accent); }
+.name {
+  font-family: var(--font-display);
+  font-size: var(--fs-36);
+  font-weight: 800;
+  letter-spacing: var(--ls-tight);
+  line-height: 1.05;
+  margin: 10px 0 0 0;
+}
+.name span { color: var(--text-faint); font-weight: 400; display: block; font-size: var(--fs-19); }
+.team {
+  font-family: var(--font-mono);
+  font-size: var(--fs-12);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--team, var(--text-dim));
+  margin-top: 10px;
+}
+.heroGhost {
+  position: absolute;
+  right: 18px; bottom: -22px;
+  font-family: var(--font-display);
+  font-size: var(--fs-74);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--team, var(--text-ghost));
+  opacity: 0.15;
+  user-select: none;
+  pointer-events: none;
+}
+.portrait { position: relative; z-index: 1; flex: 0 0 auto; align-self: flex-end; }
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-top: none;
+}
+.stat { background: var(--surface); padding: 14px 16px; }
+.statValue {
+  font-family: var(--font-mono);
+  font-size: var(--fs-24);
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.statLabel {
+  font-family: var(--font-mono);
+  font-size: var(--fs-9);
+  letter-spacing: var(--ls-wider);
+  text-transform: uppercase;
+  color: var(--text-disabled);
+  margin-top: 4px;
+}
+
+.section { margin-top: 30px; }
+.sectionTitle {
+  font-family: var(--font-mono);
+  font-size: var(--fs-10);
+  letter-spacing: var(--ls-widest);
+  text-transform: uppercase;
+  color: var(--text-faintest);
+  margin-bottom: 12px;
+}
+.panel { border: 1px solid var(--border); background: var(--surface); padding: var(--panel-pad); }
+.chart { width: 100%; height: auto; display: block; }
+.axis { font-family: var(--font-mono); font-size: 9px; fill: var(--text-disabled); }
+.gridline { stroke: var(--border-chart); stroke-width: 0.5; }
+
+.table { width: 100%; border-collapse: collapse; }
+.table th {
+  font-family: var(--font-mono);
+  font-size: var(--fs-9);
+  letter-spacing: var(--ls-wider);
+  text-transform: uppercase;
+  color: var(--text-disabled);
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 400;
+}
+.table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--border-row);
+  font-size: var(--fs-12);
+}
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; }
+.gain { color: var(--green); }
+.loss { color: var(--red-bright); }
+.dnf { color: var(--text-disabled); font-family: var(--font-mono); font-size: var(--fs-10); }
+
+.years { display: flex; flex-wrap: wrap; gap: 0; margin-bottom: 18px; }
+.year {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-right: none;
+  background: transparent;
+  color: var(--text-fainter);
+  font-family: var(--font-mono);
+  font-size: var(--fs-11);
+  cursor: pointer;
+}
+.year:last-child { border-right: 1px solid var(--border); }
+.yearActive { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+
+@media (max-width: 1023px) { .stats { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 767px) {
+  .page { padding: 16px 12px 34px 12px; }
+  .hero { flex-direction: column; align-items: flex-start; padding: 16px 16px 0 16px; min-height: 0; }
+  .name { font-size: var(--fs-24); }
+  .heroGhost { font-size: var(--fs-38); bottom: -8px; }
+  .portrait { align-self: flex-end; }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .table th:nth-child(4), .table td:nth-child(4) { display: none; }
+}

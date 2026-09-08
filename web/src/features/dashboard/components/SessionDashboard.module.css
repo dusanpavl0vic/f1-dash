@@ -31,3 +31,27 @@
 }
 .lower > * { border-right: 1px solid var(--border); }
 .lower > *:last-child { border-right: none; }
+
+/* ------------------------------------------------------------ responsive */
+/*
+ * Three layouts, matching useBreakpoint exactly so the hook and the stylesheet
+ * can never disagree about which one is active.
+ *
+ * The ordering rule below 1280px: what the user came for goes first. On a
+ * phone that is the timing tower, then the map, then everything else — a
+ * three-column dashboard reflowed into one column would otherwise put the
+ * weather above the race.
+ */
+.insights { display: grid; gap: 10px; padding: 14px 20px 16px 20px; }
+
+@media (max-width: 1279px) {
+  .lower { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .lower > * { border-right: none; border-bottom: 1px solid var(--border); }
+  .split { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 767px) {
+  .lower { grid-template-columns: minmax(0, 1fr); }
+  .side, .insights { padding: 12px 12px 14px 12px; }
+  .banner { padding: 8px 12px; font-size: var(--fs-10); }
+}

@@ -95,6 +95,9 @@ builder.Services.AddSingleton(sp => new ResultsService(
 builder.Services.AddSingleton(sp => new StandingsService(
     ArchiveClient.CreateHttpClient(), sp.GetRequiredService<ILogger<StandingsService>>()));
 
+builder.Services.AddSingleton(sp => new DriverSeasonService(
+    ArchiveClient.CreateHttpClient(), sp.GetRequiredService<ILogger<DriverSeasonService>>()));
+
 // Replay and live are the same feature behind one manager, switchable at
 // runtime, so the dashboard can move between a 2018 race and a session running
 // right now without a restart.
@@ -380,6 +383,22 @@ app.MapGet("/api/results/{year:int}/{round:int}",
         // A completed race's result is final.
         http.Response.Headers.CacheControl = "public, max-age=86400";
         return Results.Ok(race);
+    });
+
+// One driver's whole season: every round, points progression, and qualifying
+// against race result.
+app.MapGet("/api/drivers/{year:int}/{driverId}/season",
+    async (int year, string driverId, DriverSeasonService seasons, HttpContext http, CancellationToken ct) =>
+    {
+        var season = await seasons.GetAsync(year, driverId, ct);
+        if (season is null) return Results.NotFound(new { error = $"No {year} season for '{driverId}'." });
+
+        // A finished season is immutable; the current one keeps moving.
+        http.Response.Headers.CacheControl = year < DateTime.UtcNow.Year
+            ? "public, max-age=86400"
+            : "public, max-age=300";
+
+        return Results.Ok(season);
     });
 
 // --- championship standings -------------------------------------------------

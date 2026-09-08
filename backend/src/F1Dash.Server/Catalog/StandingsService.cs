@@ -4,7 +4,9 @@ namespace F1Dash.Server.Catalog;
 
 public sealed record DriverStanding(
     int Position, string Code, string Driver, string Nationality,
-    string Constructor, double Points, int Wins);
+    string Constructor, double Points, int Wins,
+    /// <summary>Jolpica's own id ("max_verstappen"), the key for a driver's season.</summary>
+    string DriverId);
 
 public sealed record ConstructorStanding(
     int Position, string Constructor, string Nationality, double Points, int Wins);
@@ -108,7 +110,8 @@ public sealed class StandingsService(HttpClient http, ILogger<StandingsService> 
                 // is the current one.
                 Constructor: (string?)(constructors?.LastOrDefault() as JsonObject)?["name"] ?? "",
                 Points: ReadDouble(entry["points"]) ?? 0,
-                Wins: ReadInt(entry["wins"]) ?? 0));
+                Wins: ReadInt(entry["wins"]) ?? 0,
+                DriverId: (string?)driver?["driverId"] ?? ""));
         }
 
         return result;

@@ -1,0 +1,111 @@
+.page {
+  max-width: var(--app-width);
+  margin: 0 auto;
+  padding: 40px 20px 56px 20px;
+}
+
+.hero { max-width: 62ch; }
+.kicker {
+  font-family: var(--font-mono);
+  font-size: var(--fs-10);
+  letter-spacing: var(--ls-mega);
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-38);
+  font-weight: 800;
+  letter-spacing: var(--ls-tight);
+  line-height: 1.05;
+  margin: 12px 0 0 0;
+}
+.lead {
+  font-size: var(--fs-15);
+  line-height: 1.7;
+  color: var(--text-faint);
+  margin-top: 16px;
+  text-wrap: pretty;
+}
+.lead strong {
+  color: var(--text);
+  font-weight: 600;
+  border-bottom: 1px solid var(--accent);
+}
+
+.rule { height: 1px; background: var(--border); margin: 34px 0; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.card {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 18px;
+}
+.cardTitle {
+  font-family: var(--font-mono);
+  font-size: var(--fs-10);
+  letter-spacing: var(--ls-wider);
+  text-transform: uppercase;
+  color: var(--text-faintest);
+}
+.cardBody {
+  font-size: var(--fs-12);
+  line-height: 1.7;
+  color: var(--text-faint);
+  margin-top: 10px;
+  text-wrap: pretty;
+}
+
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+.primary, .secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 20px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-11);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 1px solid var(--accent);
+}
+.primary { background: var(--accent); color: var(--bg); }
+.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.secondary { color: var(--text-dim); border-color: var(--border-strong); }
+.secondary:hover { color: var(--accent); border-color: var(--accent); }
+
+/* The link is not live yet. A button that goes nowhere is worse than one that
+   says so, so the disabled state is explicit rather than a dead anchor. */
+.pending {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 20px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-11);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  border: 1px dashed var(--border-strong);
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+.note {
+  font-size: var(--fs-11);
+  color: var(--text-disabled);
+  margin-top: 14px;
+  max-width: 56ch;
+  text-wrap: pretty;
+}
+
+@media (max-width: 1023px) { .grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 767px) {
+  .page { padding: 26px 14px 40px 14px; }
+  .title { font-size: var(--fs-26); }
+  .grid { grid-template-columns: 1fr; }
+  .actions { flex-direction: column; align-items: stretch; }
+  .primary, .secondary, .pending { justify-content: center; }
+}

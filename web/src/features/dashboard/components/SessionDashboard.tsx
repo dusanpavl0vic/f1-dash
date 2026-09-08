@@ -1,8 +1,17 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { TyreLoader } from "@/components/atoms/TyreLoader";
 import { AppHeader } from "@/components/layout/AppHeader/AppHeader";
 import { TabBar } from "@/components/layout/TabBar/TabBar";
-import { useConnectionStatus, useLiveSession } from "@/features/live/hooks/useLive";
+import { DelayControl } from "@/features/delay/components/DelayControl";
+import { FocusCards } from "@/features/insights/components/FocusCards";
+import { PaceChart } from "@/features/insights/components/PaceChart";
+import { PenaltyList } from "@/features/insights/components/PenaltyList";
+import { SessionTimeline } from "@/features/insights/components/SessionTimeline";
+import { GapBars, StintBars } from "@/features/insights/components/StintBars";
+import { useConnectionStatus, useLiveSession, useSessionHistory } from "@/features/live/hooks/useLive";
+import { ToastStack } from "@/features/toasts/components/ToastStack";
+import { useToasts } from "@/features/toasts/lib/useToasts";
+import { useIsCompact } from "@/hooks/useBreakpoint";
 import type { AppView, GapMode } from "@/features/live/model/types";
 import { RaceControlFeed } from "@/features/race-control/components/RaceControlFeed";
 import { TimingTower } from "@/features/timing/components/TimingTower";
@@ -32,6 +41,18 @@ export function SessionDashboard({ mode, headerControl, emptyState }: SessionDas
   const [view, setView] = useState<AppView>("timing");
   const [gapMode, setGapMode] = useState<GapMode>("gap");
   const [selected, setSelected] = useState<string | null>(null);
+
+  const compact = useIsCompact();
+  const { toasts, dismiss } = useToasts(session);
+
+  // The pace chart follows the focus cards rather than the whole field: twenty
+  // overlapping lines is not a chart, it is a texture.
+  const focus = useMemo(() => {
+    const top = session.timing.slice(0, 3).map((r) => r.tla);
+    return selected && !top.includes(selected) ? [selected, ...top.slice(0, 2)] : top;
+  }, [session.timing, selected]);
+
+  const { pace, paceLaps, timeline } = useSessionHistory(focus);
 
   const connected = status === "open";
   const banner = connected ? null : STATUS_TEXT[status];
@@ -99,8 +120,23 @@ export function SessionDashboard({ mode, headerControl, emptyState }: SessionDas
             />
             <WeatherPanel weather={session.weather} />
             <div className={s.side}>
-              <div className={s.placeholder}>STINTS — IMPL-17</div>
+              <StintBars stints={session.stints} />
             </div>
+          </div>
+
+          <div className={s.insights}>
+            <FocusCards
+              timing={session.timing}
+              drivers={session.drivers}
+              selected={selected}
+              onSelect={setSelected}
+            />
+            {/* The pace chart is the widest element here and the first thing
+                worth dropping on a phone, where ten laps of three lines is
+                thinner than the axis labels. */}
+            {!compact && <PaceChart lines={pace} laps={paceLaps} />}
+            <SessionTimeline bands={timeline} currentLap={session.session.currentLap} />
+            <GapBars timing={session.timing} drivers={session.drivers} />
           </div>
         </>
       )}
@@ -111,7 +147,7 @@ export function SessionDashboard({ mode, headerControl, emptyState }: SessionDas
             ? <div className={s.side}><TyreLoader block label="Waiting for race control" /></div>
             : <RaceControlFeed messages={session.messages} />}
           <div className={s.side}>
-            <div className={s.placeholder}>PENALTIES — IMPL-24</div>
+            <PenaltyList penalties={session.penalties} drivers={session.drivers} />
           </div>
         </div>
       )}
@@ -119,6 +155,16 @@ export function SessionDashboard({ mode, headerControl, emptyState }: SessionDas
       {view === "telemetry" && (
         <div className={s.placeholder}>TELEMETRY WALL — IMPL-18 TO IMPL-22</div>
       )}
+
+      {/* Only live sessions can be behind a broadcast; a replay is already
+          wherever the transport bar put it. */}
+      {mode === "live" && (
+        <div className={s.side}>
+          <DelayControl />
+        </div>
+      )}
+
+      <ToastStack toasts={toasts} onDismiss={dismiss} />
     </>
   );
 }

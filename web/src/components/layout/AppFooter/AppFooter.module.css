@@ -1,52 +1,118 @@
 .footer {
+  border-top: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-alt) 100%);
+  margin-top: auto;
+}
+
+/* ------------------------------------------------------------------ top */
+.columns {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  gap: 32px;
+  max-width: var(--app-width);
+  margin: 0 auto;
+  padding: 34px 20px 26px 20px;
+}
+
+.brandCol { min-width: 0; }
+.brandName {
+  font-family: var(--font-display);
+  font-size: var(--fs-26);
+  font-weight: 800;
+  letter-spacing: var(--ls-brand);
+  text-transform: uppercase;
+  color: var(--text);
+  line-height: 1;
+}
+.brandName em {
+  font-style: normal;
+  color: var(--accent);
+}
+.brandTag {
+  font-size: var(--fs-12);
+  line-height: 1.6;
+  color: var(--text-faint);
+  margin-top: 10px;
+  max-width: 34ch;
+  text-wrap: pretty;
+}
+.brandTag strong {
+  color: var(--text-dim);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.colTitle {
+  font-family: var(--font-mono);
+  font-size: var(--fs-9);
+  letter-spacing: var(--ls-mega);
+  text-transform: uppercase;
+  color: var(--text-disabled);
+  margin-bottom: 12px;
+}
+.col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.col a {
+  font-size: var(--fs-12);
+  color: var(--text-faint);
+  text-decoration: none;
+  width: fit-content;
+}
+.col a:hover { color: var(--accent); }
+
+.support {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 4px;
+  padding: 7px 12px;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: var(--fs-10);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  text-decoration: none;
+  width: fit-content;
+}
+.support:hover { background: var(--accent); color: var(--bg); }
+
+/* --------------------------------------------------------------- bottom */
+.bottom {
+  border-top: 1px solid var(--border);
+}
+.bottomInner {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 26px;
-  padding: 14px 20px 20px 20px;
-  border-top: 1px solid var(--border);
+  max-width: var(--app-width);
+  margin: 0 auto;
+  padding: 16px 20px 22px 20px;
 }
 .legal {
   font-size: var(--fs-10);
-  line-height: 1.6;
+  line-height: 1.65;
   color: var(--text-disabled);
-  max-width: 860px;
+  max-width: 74ch;
   text-wrap: pretty;
+  margin: 0;
 }
-.links {
-  display: flex; gap: 18px;
-  font-family: var(--font-mono);
-  font-size: var(--fs-10);
-  letter-spacing: var(--ls-widest);
-  text-transform: uppercase;
-  color: var(--text-faintest);
-  flex: 0 0 auto;
-}
-
-.legalBlock { max-width: 860px; }
 .credit {
   font-size: var(--fs-10);
-  line-height: 1.6;
+  line-height: 1.65;
   color: var(--text-disabled);
-  margin: 6px 0 0 0;
+  margin: 7px 0 0 0;
 }
-.credit a { color: var(--text-faintest); text-decoration: underline; }
-.credit a:hover { color: var(--text-dim); }
+.credit a, .legal a { color: var(--text-faintest); text-decoration: underline; }
+.credit a:hover, .legal a:hover { color: var(--text-dim); }
 
-.right {
+.owner {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 9px;
-  flex: 0 0 auto;
-}
-/* The studio credit sits above the navigation and is the only element in the
-   footer with any weight — everything else there is legal boilerplate. */
-.owner {
-  display: flex;
-  align-items: baseline;
-  gap: 7px;
+  gap: 2px;
   text-decoration: none;
+  flex: 0 0 auto;
 }
 .ownerLabel {
   font-family: var(--font-mono);
@@ -57,12 +123,21 @@
 }
 .ownerName {
   font-family: var(--font-display);
-  font-size: var(--fs-16);
+  font-size: var(--fs-17);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-dim);
 }
 .owner:hover .ownerName { color: var(--accent); }
-.links a { color: inherit; }
-.links a:hover { color: var(--text-dim); }
+
+@media (max-width: 1023px) {
+  .columns { grid-template-columns: 1fr 1fr; gap: 26px; }
+  .brandCol { grid-column: 1 / -1; }
+}
+
+@media (max-width: 767px) {
+  .columns { grid-template-columns: 1fr; gap: 22px; padding: 26px 14px 20px 14px; }
+  .bottomInner { flex-direction: column; align-items: flex-start; gap: 16px; padding: 14px; }
+  .owner { align-items: flex-start; }
+}

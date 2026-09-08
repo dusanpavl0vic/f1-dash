@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router";
 import { AnalysisPage } from "@/pages/AnalysisPage";
+import { DriverDetailPage } from "@/pages/DriverDetailPage";
 import { DriversPage } from "@/pages/DriversPage";
 import { HomePage } from "@/pages/HomePage";
 import { ResultsPage } from "@/pages/ResultsPage";
@@ -8,6 +9,8 @@ import { LivePage } from "@/pages/LivePage";
 import { ReplayPage } from "@/pages/ReplayPage";
 import { SchedulePage } from "@/pages/SchedulePage";
 import { StandingsPage } from "@/pages/StandingsPage";
+import { SettingsPage } from "@/pages/SettingsPage";
+import { SupportPage } from "@/pages/SupportPage";
 import { RootLayout } from "@/pages/RootLayout";
 
 /**
@@ -33,7 +36,10 @@ export const router = createBrowserRouter([
       { path: "telemetry", element: <TelemetryPage /> },
       { path: "results", element: <ResultsPage /> },
       { path: "drivers", element: <DriversPage mode="drivers" /> },
+      { path: "drivers/:driverId", element: <DriverDetailPage /> },
       { path: "teams", element: <DriversPage mode="teams" /> },
+      { path: "support", element: <SupportPage /> },
+      { path: "settings", element: <SettingsPage /> },
       { path: "analysis/:year/:meeting/:session", element: <AnalysisPage /> },
       { path: "*", element: <Navigate to="/" replace /> },
     ],

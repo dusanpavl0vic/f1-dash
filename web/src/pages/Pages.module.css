@@ -261,6 +261,10 @@
 /* --- driver / team cards ------------------------------------------------ */
 .cardGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .driverCard {
+  /* The card is a link now; it must not look like body text. */
+  text-decoration: none;
+  color: inherit;
+  display: block;
   position: relative; overflow: hidden;
   padding: 16px 18px 14px 21px;
   border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);

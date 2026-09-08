@@ -1,0 +1,29 @@
+.wrap { display: flex; align-items: center; gap: 10px; }
+.label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-9);
+  letter-spacing: var(--ls-wider);
+  text-transform: uppercase;
+  color: var(--text-disabled);
+}
+.steps { display: flex; }
+.step {
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-right: none;
+  background: transparent;
+  color: var(--text-fainter);
+  font-family: var(--font-mono);
+  font-size: var(--fs-10);
+  cursor: pointer;
+}
+.step:last-child { border-right: 1px solid var(--border); }
+.stepActive { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+.catching {
+  font-family: var(--font-mono);
+  font-size: var(--fs-9);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--yellow);
+  white-space: nowrap;
+}

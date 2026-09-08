@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router";
 import { DriverPhoto } from "@/components/atoms/DriverPhoto/DriverPhoto";
 import { TyreLoader } from "@/components/atoms/TyreLoader";
 import { useDrivers } from "@/features/drivers/lib/useDrivers";
@@ -12,6 +13,8 @@ const REVALIDATE: RequestInit = { cache: "no-cache" };
 interface DriverStanding {
   position: number; code: string; driver: string; nationality: string;
   constructor: string; points: number; wins: number;
+  /** Jolpica's own id, the key for the driver detail page. */
+  driverId?: string;
 }
 interface ConstructorStanding {
   position: number; constructor: string; nationality: string; points: number; wins: number;
@@ -130,8 +133,15 @@ export function DriversPage({ mode }: { mode: "drivers" | "teams" }) {
             const colour = profile?.teamColour ? `#${profile.teamColour}` : teamColour(d.constructor);
 
             return (
-              <article key={d.code + d.driver} className={s.driverCard}
-                       style={{ ["--card-wash" as string]: `${colour}22` }}>
+              <Link
+                key={d.code + d.driver}
+                // Older archived standings predate the driverId field, so the
+                // card stays on this page rather than linking somewhere that
+                // cannot resolve.
+                to={d.driverId ? `/drivers/${d.driverId}?year=${year}` : "/drivers"}
+                className={s.driverCard}
+                style={{ ["--card-wash" as string]: `${colour}22` }}
+              >
                 <span className={s.driverStripe} style={{ background: colour }} />
                 <span className={s.driverGhost} style={{ color: colour, opacity: 0.14 }}>
                   {profile?.racingNumber ?? numbers[d.code] ?? d.position}
@@ -164,7 +174,7 @@ export function DriversPage({ mode }: { mode: "drivers" | "teams" }) {
                     <span className={s.driverStatLabel}>Podiums</span>
                   </div>
                 </div>
-              </article>
+              </Link>
             );
           })}
         </div>

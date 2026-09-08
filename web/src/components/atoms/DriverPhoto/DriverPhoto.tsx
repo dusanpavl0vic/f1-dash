@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SETTINGS, useSetting } from "@/hooks/useSetting";
 import s from "./DriverPhoto.module.css";
 
 /**
@@ -43,7 +44,13 @@ export function DriverPhoto({
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
-  const show = Boolean(url) && !failed;
+  // The setting is read HERE rather than at each call site. This component is
+  // the only thing in the app that fetches from F1's media server, so it is the
+  // only thing that has to honour the switch — threading a boolean through
+  // every page would mean one missed prop silently defeats the setting.
+  const [photosEnabled] = useSetting(SETTINGS.driverPhotos, true);
+
+  const show = Boolean(url) && !failed && photosEnabled;
 
   return (
     <div
