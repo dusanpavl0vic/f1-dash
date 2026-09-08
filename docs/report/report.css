@@ -1,0 +1,218 @@
+@page { size: A4; margin: 18mm 16mm 16mm 16mm; }
+
+:root {
+  --ink: #16181d;
+  --ink-soft: #4a5058;
+  --ink-faint: #7b828c;
+  --rule: #d8dce2;
+  --rule-soft: #e9ecf0;
+  --accent: #d81f26;      /* the one strong colour; used sparingly */
+  --blue: #1f5fd8;
+  --green: #157f3f;
+  --amber: #b06f00;
+  --panel: #f6f7f9;
+  --panel-line: #e3e7ec;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: "Charter", "Georgia", "Times New Roman", serif;
+  font-size: 10.2pt;
+  line-height: 1.62;
+  color: var(--ink);
+  background: #fff;
+  margin: 0;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+h1, h2, h3, h4, .mono, code, figcaption, th, .tag, .num {
+  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+}
+
+/* ------------------------------------------------------------ structure */
+section { break-before: page; }
+
+/* The cover is a div, not a section, so it is NOT covered by the rule above —
+   without an explicit break the contents heading lands on the title page. */
+.cover { break-after: page; }
+
+h2 {
+  font-size: 15pt;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 4px 0;
+  color: var(--ink);
+}
+h2 .idx {
+  color: var(--accent);
+  margin-right: 10px;
+}
+.h2rule { height: 2px; background: var(--ink); margin-bottom: 18px; }
+
+h3 {
+  font-size: 10.5pt;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin: 22px 0 8px 0;
+}
+h4 {
+  font-size: 9.5pt;
+  font-weight: 700;
+  color: var(--ink-soft);
+  margin: 16px 0 6px 0;
+}
+
+p { margin: 0 0 10px 0; text-wrap: pretty; }
+ul, ol { margin: 0 0 10px 0; padding-left: 18px; }
+li { margin-bottom: 5px; }
+
+/* Key terms are underlined, as asked — a real underline offset from the text
+   rather than a border, so descenders stay readable. */
+u, .key {
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 1.4px;
+  text-underline-offset: 2.5px;
+  font-weight: 600;
+}
+.key-blue { text-decoration-color: var(--blue); }
+
+strong { font-weight: 700; }
+em { font-style: italic; color: var(--ink-soft); }
+
+code {
+  font-size: 8.6pt;
+  background: var(--panel);
+  border: 1px solid var(--panel-line);
+  padding: 0.5px 4px;
+  border-radius: 2px;
+}
+
+/* ----------------------------------------------------------- title page */
+.cover { height: 244mm; display: flex; flex-direction: column; }
+.coverTop { flex: 1 1 auto; }
+.coverMark {
+  width: 46px; height: 5px; background: var(--accent); margin-bottom: 26px;
+}
+.coverTitle {
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 34pt;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+  margin: 0;
+}
+.coverSub {
+  font-size: 13pt;
+  color: var(--ink-soft);
+  margin-top: 14px;
+  max-width: 118mm;
+  line-height: 1.5;
+}
+.coverMeta {
+  border-top: 1px solid var(--rule);
+  padding-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 7.6pt;
+}
+.coverMeta .l { color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.08em; }
+.coverMeta .v { color: var(--ink); margin-top: 3px; font-size: 8.6pt; }
+
+/* --------------------------------------------------------------- tables */
+table { width: 100%; border-collapse: collapse; margin: 12px 0 14px 0; font-size: 9pt; }
+th {
+  text-align: left;
+  font-size: 7.4pt;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  font-weight: 400;
+  border-bottom: 1.5px solid var(--ink);
+  padding: 5px 8px;
+}
+td { padding: 6px 8px; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr { break-inside: avoid; }
+
+/* --------------------------------------------------------------- panels */
+.note {
+  border-left: 3px solid var(--accent);
+  background: var(--panel);
+  padding: 11px 14px;
+  margin: 14px 0;
+  font-size: 9.2pt;
+  break-inside: avoid;
+}
+.note .lbl {
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 7.2pt;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 5px;
+}
+.note.blue { border-left-color: var(--blue); }
+.note.blue .lbl { color: var(--blue); }
+.note.green { border-left-color: var(--green); }
+.note.green .lbl { color: var(--green); }
+
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 14px 0; }
+.stat { border: 1px solid var(--rule); padding: 10px 12px; break-inside: avoid; }
+.stat .v {
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 16pt; font-weight: 700; letter-spacing: -0.02em;
+}
+.stat .l {
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 7pt; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink-faint); margin-top: 3px;
+}
+
+figure { margin: 16px 0 18px 0; break-inside: avoid; }
+figure svg { width: 100%; height: auto; display: block; }
+figcaption {
+  font-size: 7.6pt;
+  color: var(--ink-faint);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--rule-soft);
+}
+figcaption b { color: var(--ink); font-weight: 700; }
+
+pre {
+  background: var(--panel);
+  border: 1px solid var(--panel-line);
+  border-left: 3px solid var(--ink-faint);
+  padding: 10px 12px;
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 8pt;
+  line-height: 1.5;
+  overflow: visible;
+  white-space: pre-wrap;
+  margin: 12px 0;
+  break-inside: avoid;
+}
+
+.toc { margin-top: 6px; }
+.toc a { color: var(--ink); text-decoration: none; }
+.tocRow {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 7px 0; border-bottom: 1px solid var(--rule-soft);
+  font-size: 9.4pt;
+}
+.tocNum {
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 8pt; color: var(--accent); width: 22px; flex: 0 0 auto;
+}
+.tocName { flex: 1 1 auto; }
+.tocDesc { color: var(--ink-faint); font-size: 8.4pt; flex: 0 0 auto; max-width: 74mm; text-align: right; }
