@@ -10,7 +10,10 @@ public sealed record DriverRound(
     int? Grid,
     int? Finish,
     string Status,
+    /// <summary>Race points only. The round's total is this plus SprintPoints.</summary>
     double Points,
+    int? SprintPosition,
+    double SprintPoints,
     /// <summary>Running championship total after this round.</summary>
     double CumulativePoints,
     int? QualifyingPosition,
@@ -67,6 +70,22 @@ public sealed class DriverSeasonService(HttpClient http, ILogger<DriverSeasonSer
             var qualifying = await RacesAsync(
                 $"{BaseUrl}/{year}/drivers/{driverId}/qualifying.json?limit=100", ct).ConfigureAwait(false);
 
+            // Sprints are a SEPARATE resource. /results.json returns Sunday only,
+            // so a season summed from it alone understates the championship by
+            // exactly the sprint points — 241 against the official 267 for the
+            // 2026 leader, which is how this was caught.
+            var sprints = await RacesAsync(
+                $"{BaseUrl}/{year}/drivers/{driverId}/sprint.json?limit=100", ct).ConfigureAwait(false);
+
+            var sprintByRound = new Dictionary<int, JsonObject>();
+            foreach (var race in sprints)
+            {
+                if (Int(race["round"]) is { } round && race["SprintResults"]?[0] is JsonObject sprint)
+                {
+                    sprintByRound[round] = sprint;
+                }
+            }
+
             // Keyed by round, NOT zipped by index. A driver can have thirteen
             // race results and twelve qualifying entries in the same season —
             // a sprint-only weekend, a session they sat out, a result expunged.
@@ -90,7 +109,11 @@ public sealed class DriverSeasonService(HttpClient http, ILogger<DriverSeasonSer
 
                 var round = Int(race["round"]) ?? 0;
                 var points = Double(result["points"]) ?? 0;
-                running += points;
+
+                sprintByRound.TryGetValue(round, out var sprint);
+                var sprintPoints = sprint is null ? 0 : Double(sprint["points"]) ?? 0;
+
+                running += points + sprintPoints;
 
                 qualiByRound.TryGetValue(round, out var quali);
 
@@ -103,6 +126,8 @@ public sealed class DriverSeasonService(HttpClient http, ILogger<DriverSeasonSer
                     Finish: Int(result["position"]),
                     Status: (string?)result["status"] ?? "",
                     Points: points,
+                    SprintPosition: sprint is null ? null : Int(sprint["position"]),
+                    SprintPoints: sprintPoints,
                     CumulativePoints: running,
                     QualifyingPosition: quali is null ? null : Int(quali["position"]),
                     QualifyingTime: quali is null ? null : BestQualiTime(quali)));
@@ -122,6 +147,7 @@ public sealed class DriverSeasonService(HttpClient http, ILogger<DriverSeasonSer
                 // who changed teams mid-year is described by where they ended.
                 Constructor: (string?)constructor?["name"] ?? "",
                 Points: running,
+                // Sprint wins are not Grand Prix wins and are not counted here.
                 Wins: rounds.Count(r => r.Finish == 1),
                 Podiums: rounds.Count(r => r.Finish is >= 1 and <= 3),
                 BestFinish: rounds.Where(r => r.Finish is > 0).Select(r => r.Finish!.Value).DefaultIfEmpty().Min() is var best && best > 0 ? best : null,

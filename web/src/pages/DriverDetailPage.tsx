@@ -16,6 +16,8 @@ interface DriverRound {
   finish: number | null;
   status: string;
   points: number;
+  sprintPosition: number | null;
+  sprintPoints: number;
   cumulativePoints: number;
   qualifyingPosition: number | null;
   qualifyingTime: string | null;
@@ -159,7 +161,7 @@ export function DriverDetailPage() {
       </div>
 
       <div className={s.section}>
-        <div className={s.sectionTitle}>Points progression</div>
+        <div className={s.sectionTitle}>Points progression · race and sprint</div>
         <div className={s.panel}>
           <PointsChart rounds={progression} colour={colour} />
         </div>
@@ -178,6 +180,7 @@ export function DriverDetailPage() {
                 <th className={s.num}>Grid</th>
                 <th className={s.num}>Finish</th>
                 <th className={s.num}>Gained</th>
+                <th className={s.num}>Sprint</th>
                 <th className={s.num}>Points</th>
               </tr>
             </thead>
@@ -202,7 +205,14 @@ export function DriverDetailPage() {
                     <td className={`${s.num} ${gained === null ? "" : gained > 0 ? s.gain : gained < 0 ? s.loss : ""}`}>
                       {gained === null ? "—" : gained > 0 ? `+${gained}` : gained}
                     </td>
-                    <td className={s.num}>{round.points || "—"}</td>
+                    <td className={s.num}>
+                      {round.sprintPosition
+                        ? `P${round.sprintPosition} · ${round.sprintPoints}`
+                        : "—"}
+                    </td>
+                    {/* Race plus sprint: the number that moves the championship,
+                        and the one the standings table shows. */}
+                    <td className={s.num}>{round.points + round.sprintPoints || "—"}</td>
                   </tr>
                 );
               })}

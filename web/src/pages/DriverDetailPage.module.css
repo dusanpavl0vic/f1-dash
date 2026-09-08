@@ -137,5 +137,7 @@
   .heroGhost { font-size: var(--fs-38); bottom: -8px; }
   .portrait { align-self: flex-end; }
   .stats { grid-template-columns: repeat(2, 1fr); }
-  .table th:nth-child(4), .table td:nth-child(4) { display: none; }
+  /* Best lap and sprint are the first two columns worth losing on a phone. */
+  .table th:nth-child(4), .table td:nth-child(4),
+  .table th:nth-child(7), .table td:nth-child(7) { display: none; }
 }
