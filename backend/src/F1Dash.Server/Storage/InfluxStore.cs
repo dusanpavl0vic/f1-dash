@@ -121,13 +121,31 @@ public sealed class InfluxStore : ITelemetryIndex
     ///
     /// Real session start times are not always in the archive, and two sessions
     /// must not overlap in the time axis or a query for one would return the
-    /// other's samples. Deriving the epoch from the key guarantees separation
-    /// and survives re-indexing.
+    /// other's samples. Deriving the epoch from the key guarantees separation.
+    ///
+    /// The hash is FNV-1a, computed here, and NOT <c>string.GetHashCode()</c>.
+    /// .NET randomises string hashing per process, so the same session indexed
+    /// after a restart landed at a different point on the time axis — every
+    /// re-index appended a duplicate copy instead of overwriting. It showed up
+    /// as a lap with three times its real sample count spread over eight hours.
     /// </summary>
     internal static long EpochForSession(SessionKey key)
     {
-        var hash = Math.Abs(key.ToString().GetHashCode(StringComparison.Ordinal)) % 86_400_000;
-        return new DateTimeOffset(key.Year, 1, 1, 0, 0, 0, TimeSpan.Zero).ToUnixTimeMilliseconds() + hash;
+        var hash = Fnv1a(key.ToString()) % 86_400_000;
+        return new DateTimeOffset(key.Year, 1, 1, 0, 0, 0, TimeSpan.Zero).ToUnixTimeMilliseconds()
+            + (long)hash;
+    }
+
+    /// <summary>FNV-1a, 64-bit. Deterministic across processes and runtimes.</summary>
+    private static ulong Fnv1a(string value)
+    {
+        var hash = 14695981039346656037UL;
+        foreach (var b in Encoding.UTF8.GetBytes(value))
+        {
+            hash ^= b;
+            hash *= 1099511628211UL;
+        }
+        return hash;
     }
 
     private static int? At(IReadOnlyList<int> values, int i) =>
@@ -182,6 +200,101 @@ public sealed class InfluxStore : ITelemetryIndex
             _logger.LogWarning(e, "Influx write failed");
         }
     }
+
+    /// <summary>
+    /// Reads one lap of telemetry back out of the index.
+    ///
+    /// The write side splits a lap into one point per channel per sample; this
+    /// reassembles them into the parallel arrays the charts consume. Pivoting
+    /// happens in Flux rather than here because the alternative is five
+    /// separate queries and a join in C#.
+    ///
+    /// Returns null when the lap is not indexed, so the caller can fall back to
+    /// the file without treating absence as an error.
+    /// </summary>
+    public async Task<TelemetryLap?> ReadLapAsync(
+        SessionKey key, string driver, int lap, CancellationToken ct)
+    {
+        if (!Available) return null;
+
+        var flux = $$"""
+            from(bucket: "{{_bucket}}")
+              |> range(start: 2015-01-01T00:00:00Z, stop: 2035-01-01T00:00:00Z)
+              |> filter(fn: (r) => r.session == "{{key}}" and r.driver == "{{driver}}"
+                                   and r.lap == "{{lap}}")
+              |> pivot(rowKey: ["_time"], columnKey: ["_measurement"], valueColumn: "_value")
+              |> sort(columns: ["_time"])
+              |> keep(columns: ["_time", "speed", "throttle", "brake", "gear", "rpm"])
+            """;
+
+        var csv = await QueryAsync(flux, ct).ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(csv)) return null;
+
+        return ParseLapCsv(lap, csv);
+    }
+
+    /// <summary>
+    /// Rebuilds a lap from Influx's annotated CSV.
+    ///
+    /// Columns are located by header name, never by index: Flux does not
+    /// guarantee an order, and a pivot that returns channels in a different
+    /// sequence would otherwise put brake values in the speed array.
+    /// </summary>
+    internal static TelemetryLap? ParseLapCsv(int lap, string csv)
+    {
+        Dictionary<string, int>? columns = null;
+        var time = new List<int>();
+        var speed = new List<int>();
+        var throttle = new List<int>();
+        var brake = new List<int>();
+        var gear = new List<int>();
+        var rpm = new List<int>();
+        long? firstTicks = null;
+
+        foreach (var raw in csv.Split('\n'))
+        {
+            var line = raw.TrimEnd('\r');
+            if (line.Length == 0 || line.StartsWith('#')) continue;
+
+            var cells = line.Split(',');
+
+            if (columns is null || cells.Contains("_time"))
+            {
+                columns = new Dictionary<string, int>(StringComparer.Ordinal);
+                for (var i = 0; i < cells.Length; i++) columns[cells[i]] = i;
+                continue;
+            }
+
+            if (!columns.TryGetValue("_time", out var timeAt) || timeAt >= cells.Length) continue;
+            if (!DateTimeOffset.TryParse(cells[timeAt], CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.AdjustToUniversal, out var when)) continue;
+
+            firstTicks ??= when.ToUnixTimeMilliseconds();
+
+            // Offsets are rebuilt relative to the lap's own first sample. The
+            // absolute timestamps are a synthetic per-session epoch (see
+            // EpochForSession) and mean nothing outside this store.
+            time.Add((int)(when.ToUnixTimeMilliseconds() - firstTicks.Value));
+            speed.Add(Value(cells, columns, "speed"));
+            throttle.Add(Value(cells, columns, "throttle"));
+            brake.Add(Value(cells, columns, "brake"));
+            gear.Add(Value(cells, columns, "gear"));
+            rpm.Add(Value(cells, columns, "rpm"));
+        }
+
+        if (time.Count == 0) return null;
+
+        // X and Y are not indexed: they are only used to draw a racing line
+        // over a circuit outline, which is a per-session view that already has
+        // the file. Returning empty arrays is honest about that.
+        return new TelemetryLap(lap, time, speed, throttle, brake, gear, rpm, [], []);
+    }
+
+    private static int Value(string[] cells, Dictionary<string, int> columns, string name) =>
+        columns.TryGetValue(name, out var i) && i < cells.Length
+        && int.TryParse(cells[i], CultureInfo.InvariantCulture, out var value)
+            ? value
+            : 0;
 
     /// <summary>
     /// Runs a Flux query and returns the raw CSV.

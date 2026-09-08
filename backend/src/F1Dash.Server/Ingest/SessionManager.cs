@@ -2,6 +2,7 @@ using System.Text;
 using F1Dash.Core;
 using F1Dash.Core.Analysis;
 using F1Dash.Core.Archive;
+using F1Dash.Core.Signalr;
 using F1Dash.Server.Realtime;
 using F1Dash.Server.Storage;
 
@@ -44,6 +45,7 @@ public sealed class SessionManager(
     string archiveRoot,
     RelaySessionSource relay,
     StorageIndexer indexer,
+    SessionStreamStore streams,
     ILoggerFactory loggers) : IHostedService
 {
     private readonly ILogger _logger = loggers.CreateLogger<SessionManager>();
@@ -172,7 +174,25 @@ public sealed class SessionManager(
                 return Current;
             }
 
+            var key = SessionKey.From(year, request.Meeting, request.Session);
             var path = StreamPath(year, request.Meeting, request.Session);
+
+            // The database first, when the session is in it. This is what lets
+            // a host run with an empty disk: nothing is downloaded, nothing is
+            // written, and the replay reads compressed chunks straight from
+            // Postgres.
+            if (await streams.HasAsync(key, ct).ConfigureAwait(false))
+            {
+                _lastReplay = request;
+                _failover = null;
+
+                await SwitchToDatabaseAsync(key, new CurrentSession(
+                    SessionMode.Replay, $"{request.Meeting} {request.Session} {year} (from the database)",
+                    year, request.Meeting, request.Session, request.Speed, request.Loop),
+                    request.Speed, request.StartMs, request.Loop, ct).ConfigureAwait(false);
+
+                return Current;
+            }
 
             if (!File.Exists(path))
             {
@@ -201,6 +221,53 @@ public sealed class SessionManager(
         finally
         {
             _switchLock.Release();
+        }
+    }
+
+    /// <summary>Starts a replay whose frames come from the database.</summary>
+    private async Task SwitchToDatabaseAsync(
+        SessionKey key, CurrentSession description, double speed, long startMs, bool loop,
+        CancellationToken ct)
+    {
+        DurationMs = await streams.DurationAsync(key, ct).ConfigureAwait(false);
+
+        _controller = new ReplayController { Speed = speed, DurationMs = DurationMs };
+        _controller.SetPosition(startMs);
+
+        // The reader is synchronous because the pacing loop is; the store
+        // exposes an async sequence, so it is drained here per chunk rather
+        // than held whole.
+        var source = new ReplaySessionSource(
+            streamPath: "",
+            speed, startMs, loop, _controller,
+            reader: () => ReadFromDatabase(key),
+            description: description.Description);
+
+        // Analysis still writes beside the archive when a directory exists for
+        // it; with the database as the only store there is nowhere on disk to
+        // put it, and Mongo already holds the finished document.
+        _sessionDirectory = Directory.Exists(Path.GetDirectoryName(
+            StreamPath(key.Year, key.MeetingSlug, key.SessionSlug)))
+            ? Path.GetDirectoryName(StreamPath(key.Year, key.MeetingSlug, key.SessionSlug))
+            : null;
+
+        Start(source, description with { Speed = speed, Loop = loop });
+    }
+
+    /// <summary>Bridges the store's async sequence into the synchronous pacing loop.</summary>
+    private IEnumerable<StreamEntry> ReadFromDatabase(SessionKey key)
+    {
+        var enumerator = streams.ReadAsync(key, 0, CancellationToken.None).GetAsyncEnumerator();
+        try
+        {
+            while (enumerator.MoveNextAsync().AsTask().GetAwaiter().GetResult())
+            {
+                yield return enumerator.Current;
+            }
+        }
+        finally
+        {
+            enumerator.DisposeAsync().AsTask().GetAwaiter().GetResult();
         }
     }
 

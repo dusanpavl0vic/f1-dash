@@ -5,6 +5,15 @@ using F1Dash.Core.Signalr;
 namespace F1Dash.Server.Ingest;
 
 /// <summary>
+/// Where a replay's frames come from.
+///
+/// The source is behind a delegate so the session can be read from the database
+/// or from a file without the pacing loop knowing which — and the pacing loop is
+/// the part with all the subtlety in it.
+/// </summary>
+public delegate IEnumerable<StreamEntry> StreamReader();
+
+/// <summary>
 /// Replays a recorded session at its original pace, so the whole stack runs
 /// out of season with no live feed and no network access to F1.
 /// </summary>
@@ -13,13 +22,17 @@ public sealed class ReplaySessionSource(
     double speed = 1.0,
     long startOffsetMs = 0,
     bool loop = false,
-    ReplayController? controller = null) : ISessionSource
+    ReplayController? controller = null,
+    StreamReader? reader = null,
+    string? description = null) : ISessionSource
 {
     /// <summary>Transport state, when the caller supplied one.</summary>
     public ReplayController? Controller => controller;
 
     public string Description =>
-        $"replay {Path.GetFileName(Path.GetDirectoryName(streamPath))} at {speed}x" + (loop ? " (looping)" : "");
+        description
+        ?? $"replay {Path.GetFileName(Path.GetDirectoryName(streamPath))} at {speed}x"
+           + (loop ? " (looping)" : "");
 
     /// <summary>
     /// Blocks while paused, keeping the pacing clock still so resuming does not
@@ -44,7 +57,12 @@ public sealed class ReplaySessionSource(
             var pacingStarted = false;
             var emitted = 0;
 
-            foreach (var entry in SessionDownloader.ReadJsonl(streamPath))
+            // A fresh enumeration per loop iteration: the database reader holds
+            // a connection, and reusing one across a loop would keep it open for
+            // the length of the session.
+            var frames = reader is null ? SessionDownloader.ReadJsonl(streamPath) : reader();
+
+            foreach (var entry in frames)
             {
                 ct.ThrowIfCancellationRequested();
 

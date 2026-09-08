@@ -10,7 +10,28 @@ so that those measurements keep being true for the paths that already work.
 
 ---
 
-## 1 · The rule that makes this safe
+## 1 · Two modes, and the rule for each
+
+The project supports two deployments, and the difference between them is which
+copy is the one you cannot lose.
+
+**Archive mode (the default).** `stream.jsonl` is authoritative and every
+database is a derived index that can be dropped and rebuilt. This is the mode
+for a machine with disk to spare.
+
+**Database mode.** The raw session stream is stored in PostgreSQL as compressed
+chunks and the host keeps no archive at all. Measured: 192 MB of stream files
+became 17.8 MB in the database, and a replay — including seeking to an arbitrary
+lap — runs entirely from it with the file deleted. In this mode the database
+*is* the copy you cannot lose, and it needs a backup like any other primary
+store.
+
+Everything below is written for archive mode. Where database mode changes the
+answer it says so.
+
+---
+
+## 1a · The rule that makes archive mode safe
 
 **`stream.jsonl` remains authoritative. Every database is a derived index.**
 
@@ -232,6 +253,43 @@ authoritative" rule exists to prevent.
 
 The fallbacks are the point. Every read that works today keeps working with all
 three containers stopped.
+
+---
+
+## 5a · Running with no local storage
+
+The host can keep an empty `data/` directory. What replaces each piece:
+
+| On disk | In the database | Read path |
+|---|---|---|
+| `stream.jsonl` | `session_streams` — DEFLATE chunks of two minutes each | Replay reads chunks directly; a seek loads only the windows it needs |
+| `analysis/*.json` | Mongo `sessions_analysis` | `/api/analysis/{year}/{meeting}/{session}` |
+| `telemetry/*.jsonl` | InfluxDB | `…/telemetry/{number}/{lap}/indexed` |
+| `track-cache/` | *stays on disk* | see below |
+
+To move an existing archive in:
+
+```
+POST /api/storage/backfill    # sessions, laps, stints, analysis, telemetry
+POST /api/storage/streams     # the raw streams themselves
+```
+
+Both are idempotent, so running them twice repairs rather than duplicates.
+
+**Why chunks and not one blob per session.** A replay seek has to reach an
+arbitrary offset. One compressed blob per session would mean decompressing an
+entire race to start at lap 30; two-minute chunks let the reader skip straight
+to the window it needs. A chunk is about 200 KB compressed.
+
+**The track cache stays on disk deliberately.** It is 64 KB, and it is itself a
+cache of the MultiViewer API — losing it costs one HTTP request per circuit.
+Putting a cache of a remote service into a database to avoid a local file is
+motion, not progress.
+
+**What cannot move.** The live delta merge stays in memory. Ten deltas a second
+against a 1–2 MB object, with a network round trip each, would destroy the one
+thing this application cannot afford to be slow at. That is a measurement, not a
+preference.
 
 ---
 

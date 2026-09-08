@@ -73,14 +73,22 @@ public class InfluxLineProtocolTests
     }
 
     [Fact]
-    public void A_session_epoch_is_stable_across_runs()
+    public void A_session_epoch_is_the_same_in_every_process()
     {
-        // Re-indexing must overwrite the same points, not write a second copy
-        // at a new offset.
-        var first = InfluxStore.EpochForSession(new SessionKey(2026, "monaco", "race"));
-        var second = InfluxStore.EpochForSession(new SessionKey(2026, "monaco", "race"));
+        // Pinned to a literal, not compared to itself. The original version
+        // used string.GetHashCode(), which .NET randomises PER PROCESS — so a
+        // same-process comparison passed while every restart silently wrote a
+        // duplicate copy of the telemetry at a new point on the time axis.
+        // Only a fixed expected value can catch that.
+        Assert.Equal(1767277221171, InfluxStore.EpochForSession(
+            new SessionKey(2026, "italian-grand-prix", "race")));
+    }
 
-        Assert.Equal(first, second);
+    [Fact]
+    public void Re_indexing_lands_on_exactly_the_same_epoch()
+    {
+        var key = new SessionKey(2024, "monaco", "race");
+        Assert.Equal(InfluxStore.EpochForSession(key), InfluxStore.EpochForSession(key));
     }
 }
 

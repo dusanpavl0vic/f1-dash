@@ -349,3 +349,39 @@ premature: those queries are new and none has yet been shown to be slow. The
 trigger is written down instead — **when a cross-session query is measured above
 roughly 200 ms and is requested repeatedly, a Redis cache in front of it is the
 right answer** — so the decision is waiting on a number rather than on taste.
+
+## D-015 · The database can be the only copy
+
+D-013 made the databases derived indexes over an authoritative archive. At the
+owner's direction the raw session stream can now live in PostgreSQL too, so a
+host can run with an empty disk.
+
+Stored as DEFLATE-compressed chunks of two minutes of session time. Measured:
+192 MB of stream files became **17.8 MB** in the database — roughly 10:1 — and a
+replay of the 2024 Italian Grand Prix ran entirely from it, including a seek to
+lap 28, with the file deleted from disk.
+
+**Chunks, not one blob per session.** A seek has to reach an arbitrary offset;
+one blob would mean decompressing a whole race to start at lap 30. Two minutes
+is about 200 KB compressed, which makes a two-hour race roughly sixty rows.
+
+**What this changes.** In database mode the "archive is authoritative" rule of
+D-013 no longer applies — the database *is* the primary copy and needs a backup
+like any other. Both modes are supported and the difference is stated at the top
+of `docs/22`, because a deployment that believes it is in archive mode while
+actually being in database mode has no backup at all.
+
+**What did not move, and will not.** The live delta merge stays in memory. Ten
+deltas a second against a 1–2 MB object, with a network round trip each, would
+destroy the only thing this application cannot afford to be slow at.
+
+**A bug this exposed, and the test that had missed it.** Telemetry points were
+placed on the time axis using an epoch derived from `string.GetHashCode()`.
+.NET randomises string hashing **per process**, so every restart wrote the same
+telemetry at a different point instead of overwriting it — a lap that should
+have 316 samples over 86 seconds read back as 948 samples over eight hours.
+
+The existing test compared the epoch to itself within one process and passed
+while the defect was live. It is now pinned to a literal value, which is the
+only form that can catch a hash that varies between runs. The hash is FNV-1a,
+computed in-repo.

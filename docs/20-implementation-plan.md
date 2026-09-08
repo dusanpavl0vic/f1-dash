@@ -288,6 +288,8 @@ D-013 for the reasoning and the measurements.
 | **IMPL-78** ✅ | Storage status | `GET /api/storage` reports which stores are live and states plainly that the archive is authoritative |
 | **IMPL-79** ✅ | Cross-session queries | `/api/insights/*` — circuit records, a driver's pace by season, strategies for a whole season, and laps above a speed threshold. Each returns an empty result rather than an error when its store is down |
 | **IMPL-80** ✅ | Insights page | `/insights` surfaces all four, shows which indexes are up, and explains how to enable them when none is |
+| **IMPL-82** ✅ | Streams in the database | `session_streams` holds the raw session as DEFLATE chunks of two minutes. 192 MB of files became 17.8 MB; a replay including seek runs with the file deleted |
+| **IMPL-83** ✅ | Telemetry read path | A lap can be read back from InfluxDB instead of the file, verified identical: 316 samples, 67–332 km/h, 86.5 s |
 | **IMPL-81** ✅ | Analysis read path | A finished session's analysis is served from Mongo when it is up and from the documents on disk when it is not — verified to return identical data both ways |
 
 Verified end to end: 2 sessions and 21 telemetry files indexed in 13.7 s, and

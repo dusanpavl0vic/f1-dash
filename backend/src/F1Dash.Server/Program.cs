@@ -81,6 +81,7 @@ builder.Services.AddSingleton(sp => new StorageIndexer(
     sp.GetRequiredService<ILogger<StorageIndexer>>()));
 
 builder.Services.AddSingleton<InsightsService>();
+builder.Services.AddSingleton<SessionStreamStore>();
 
 builder.Services.AddSingleton<RelayCollector>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<RelayCollector>());
@@ -137,6 +138,7 @@ builder.Services.AddSingleton(sp => new SessionManager(
     archiveRoot,
     sp.GetRequiredService<RelaySessionSource>(),
     sp.GetRequiredService<StorageIndexer>(),
+    sp.GetRequiredService<SessionStreamStore>(),
     sp.GetRequiredService<ILoggerFactory>()));
 
 builder.Services.AddHostedService(sp => sp.GetRequiredService<SessionManager>());
@@ -373,6 +375,29 @@ app.MapGet("/api/analysis/{year:int}/{meeting}/{session}",
     });
 
 // Stored telemetry for a finished session.
+// A stored lap of telemetry. Influx first when it is up — that is what lets a
+// host keep no telemetry files at all — and the file when it is not.
+app.MapGet("/api/analysis/{year:int}/{meeting}/{session}/telemetry/{number}/{lap:int}/indexed",
+    async (int year, string meeting, string session, string number, int lap,
+           InfluxStore influx, MongoStore mongo, HttpContext http, CancellationToken ct) =>
+    {
+        var key = SessionKey.From(year, meeting, session);
+
+        // Influx is tagged by driver CODE, not racing number, because numbers
+        // are reassigned between seasons. The mapping lives in the analysis
+        // document, which is the same place the indexer read it from.
+        var stored = await mongo.ReadAnalysisAsync(key, ct);
+        var tla = stored is null ? null : TlaFor(stored, number);
+
+        if (tla is null) return Results.NotFound(new { error = "That car is not indexed." });
+
+        var trace = await influx.ReadLapAsync(key, tla, lap, ct);
+        if (trace is null) return Results.NotFound(new { error = "That lap is not indexed." });
+
+        http.Response.Headers.CacheControl = "public, max-age=86400";
+        return Results.Ok(trace);
+    });
+
 app.MapGet("/api/analysis/{year:int}/{meeting}/{session}/telemetry/{number}/{lap:int}",
     (int year, string meeting, string session, string number, int lap,
      AnalysisPrecomputer precomputer, HttpContext http) =>
@@ -520,6 +545,46 @@ app.MapGet("/api/insights/speed",
             above ?? 330, Math.Clamp(limit ?? 25, 1, 200), ct));
     });
 
+// Uploads raw session streams into the database, so a host can run with an
+// empty disk. Compression is roughly 10:1 — a 76 MB race becomes 8 MB.
+app.MapPost("/api/storage/streams",
+    async (int? year, SessionStreamStore streams, IConfiguration _, CancellationToken ct) =>
+    {
+        var root = Environment.GetEnvironmentVariable("ARCHIVE_PATH") ?? "/data/archive";
+        if (!streams.Available)
+        {
+            return Results.BadRequest(new { error = "PostgreSQL is not configured." });
+        }
+
+        var stored = new List<object>();
+
+        foreach (var seasonDirectory in Directory.EnumerateDirectories(root))
+        {
+            if (!int.TryParse(Path.GetFileName(seasonDirectory), out var seasonYear)) continue;
+            if (year is { } wanted && seasonYear != wanted) continue;
+
+            foreach (var meetingDirectory in Directory.EnumerateDirectories(seasonDirectory))
+            {
+                foreach (var sessionDirectory in Directory.EnumerateDirectories(meetingDirectory))
+                {
+                    var path = Path.Combine(sessionDirectory, "stream.jsonl");
+                    if (!File.Exists(path)) continue;
+
+                    var key = new SessionKey(seasonYear,
+                        Path.GetFileName(meetingDirectory), Path.GetFileName(sessionDirectory));
+
+                    var chunks = await streams.StoreAsync(key, path, ct);
+                    if (chunks > 0)
+                    {
+                        stored.Add(new { session = key.ToString(), chunks });
+                    }
+                }
+            }
+        }
+
+        return Results.Ok(new { stored });
+    });
+
 // Walks the archive and fills every configured index. Idempotent — re-running
 // it repairs rather than duplicates, which is how a schema change is applied.
 app.MapPost("/api/storage/backfill",
@@ -547,6 +612,8 @@ app.MapGet("/api/track/{circuitKey:int}/{year:int}",
 // own if it cannot be reached, so this cannot prevent the app from starting.
 await app.Services.GetRequiredService<StorageIndexer>()
     .InitialiseAsync(app.Lifetime.ApplicationStopping);
+await app.Services.GetRequiredService<SessionStreamStore>()
+    .InitialiseAsync(app.Lifetime.ApplicationStopping);
 
 app.MapLiveSocket();
 app.MapRelay(app.Services.GetRequiredService<RelaySessionSource>());
@@ -559,5 +626,29 @@ return 0;
 /// <summary>Body of POST /api/analysis/precompute.</summary>
 /// <summary>Body of POST /api/session/control.</summary>
 internal sealed record ControlRequest(string Action, double? Value = null);
+
+internal static partial class Program
+{
+    /// <summary>Finds a car's three-letter code in a stored analysis document.</summary>
+    internal static string? TlaFor(string analysisJson, string racingNumber)
+    {
+        try
+        {
+            var drivers = System.Text.Json.Nodes.JsonNode.Parse(analysisJson)?["drivers"]?.AsArray();
+            if (drivers is null) return null;
+
+            foreach (var driver in drivers)
+            {
+                if ((string?)driver?["racingNumber"] == racingNumber) return (string?)driver["tla"];
+            }
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            // A malformed stored document should read as "not indexed", not as
+            // a server error.
+        }
+        return null;
+    }
+}
 
 internal sealed record PrecomputeRequest(int Year, string Meeting, string Session, bool Force = false);
