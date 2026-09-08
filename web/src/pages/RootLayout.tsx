@@ -68,6 +68,7 @@ export function RootLayout() {
         <NavLink to="/telemetry" className={className}>Telemetry</NavLink>
         <NavLink to="/drivers" className={className}>Drivers</NavLink>
         <NavLink to="/teams" className={className}>Teams</NavLink>
+        <NavLink to="/insights" className={className}>Insights</NavLink>
         <div className={s.spacer} />
         <div className={s.brandStrip}>
           {live?.live

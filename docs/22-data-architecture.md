@@ -206,15 +206,29 @@ indexing; it cannot delay a position update.
 
 ## 5 · Read paths
 
-| Question | Answered by |
-|---|---|
-| Play this session | `stream.jsonl` — unchanged, no database involved |
-| This session's analysis | Mongo, falling back to `analysis.json` on disk |
-| This driver's telemetry, this lap | `telemetry/*.jsonl` — 11 ms, no database involved |
-| Every lap over 330 km/h this season | InfluxDB |
-| Monza sector 2 across three years | InfluxDB + Postgres |
-| Every two-stop race in 2026 | Postgres |
-| Which sessions exist | Postgres, falling back to the filesystem |
+| Question | Answered by | Built |
+|---|---|---|
+| Play this session | `stream.jsonl` — no database involved | ✅ unchanged |
+| This session's analysis | Mongo, falling back to the documents on disk | ✅ |
+| This driver's telemetry, this lap | `telemetry/*.jsonl` — 11 ms, no database | ✅ unchanged |
+| Fastest laps at a circuit, every season | Postgres | ✅ `/api/insights/circuit/{slug}` |
+| A driver's pace season by season | Postgres | ✅ `/api/insights/driver/{code}` |
+| Every two-stop race in a season | Postgres | ✅ `/api/insights/strategies/{year}` |
+| Every lap above a speed | InfluxDB | ✅ `/api/insights/speed` |
+| Which sessions exist | **The archive index, not Postgres** | see below |
+
+### Why the catalogue is not read from Postgres
+
+An earlier draft of this document said the session list would come from Postgres
+with a filesystem fallback. That was wrong, and it is recorded rather than
+quietly deleted.
+
+Postgres only knows sessions that have been **indexed**, which means sessions
+that have a saved analysis. The archive index lists every session that exists,
+including ones never downloaded. Making Postgres primary would therefore *hide*
+sessions from the picker — the database would be authoritative about something
+it has an incomplete view of, which is exactly the failure the "archive is
+authoritative" rule exists to prevent.
 
 The fallbacks are the point. Every read that works today keeps working with all
 three containers stopped.

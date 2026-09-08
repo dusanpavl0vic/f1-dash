@@ -286,6 +286,9 @@ D-013 for the reasoning and the measurements.
 | **IMPL-72** ✅ | Analysis in MongoDB | Whole analysis documents, replace-on-upsert, serialised through the same options the API uses so the stored shape matches the served one |
 | **IMPL-77** ✅ | Backfill | `POST /api/storage/backfill` walks the archive and fills every configured index. Idempotent, so re-running repairs rather than duplicates |
 | **IMPL-78** ✅ | Storage status | `GET /api/storage` reports which stores are live and states plainly that the archive is authoritative |
+| **IMPL-79** ✅ | Cross-session queries | `/api/insights/*` — circuit records, a driver's pace by season, strategies for a whole season, and laps above a speed threshold. Each returns an empty result rather than an error when its store is down |
+| **IMPL-80** ✅ | Insights page | `/insights` surfaces all four, shows which indexes are up, and explains how to enable them when none is |
+| **IMPL-81** ✅ | Analysis read path | A finished session's analysis is served from Mongo when it is up and from the documents on disk when it is not — verified to return identical data both ways |
 
 Verified end to end: 2 sessions and 21 telemetry files indexed in 13.7 s, and
 the cross-season query that the file layout could not answer returns instantly.

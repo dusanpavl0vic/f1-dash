@@ -1,0 +1,91 @@
+/*
+ * `margin: 0 auto` on a flex child in a COLUMN container switches off
+ * `align-self: stretch`, so the box shrinks to its content instead of filling
+ * the width — 698 px inside a 1432 px shell. An explicit width restores the
+ * fill; the auto margins still centre it once it reaches its max.
+ */
+.page { max-width: var(--app-width); width: 100%; margin: 0 auto; padding: 26px 20px 48px 20px; }
+
+.head { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+.title {
+  font-family: var(--font-display); font-size: var(--fs-32); font-weight: 800;
+  letter-spacing: var(--ls-tight); margin: 0;
+}
+.subtitle { font-size: var(--fs-13); color: var(--text-faint); max-width: 62ch; margin-top: 8px; text-wrap: pretty; }
+
+.stores { display: flex; gap: 8px; margin-left: auto; }
+.store {
+  font-family: var(--font-mono); font-size: var(--fs-9);
+  letter-spacing: var(--ls-wide); text-transform: uppercase;
+  padding: 4px 8px; border: 1px solid;
+}
+.storeUp { color: var(--green); border-color: var(--green-bd); background: var(--green-bg); }
+.storeDown { color: var(--text-disabled); border-color: var(--border); }
+
+.offline {
+  border: 1px dashed var(--border-strong);
+  background: var(--surface);
+  padding: 22px;
+  margin-top: 26px;
+  font-size: var(--fs-13);
+  line-height: 1.7;
+  color: var(--text-faint);
+  max-width: 70ch;
+  text-wrap: pretty;
+}
+.offline strong { color: var(--text-dim); }
+.offline code {
+  font-family: var(--font-mono); font-size: var(--fs-11);
+  background: var(--surface-3); padding: 1px 5px;
+}
+
+.tabs { display: flex; margin: 26px 0 0 0; flex-wrap: wrap; }
+.tab {
+  padding: 9px 16px; border: 1px solid var(--border); border-right: none;
+  background: transparent; color: var(--text-fainter);
+  font-family: var(--font-mono); font-size: var(--fs-11);
+  letter-spacing: var(--ls-wide); text-transform: uppercase; cursor: pointer;
+  white-space: nowrap;
+}
+.tab:last-child { border-right: 1px solid var(--border); }
+.tabActive { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+
+.controls { display: flex; gap: 10px; align-items: center; margin: 16px 0; flex-wrap: wrap; }
+.label {
+  font-family: var(--font-mono); font-size: var(--fs-9);
+  letter-spacing: var(--ls-wider); text-transform: uppercase; color: var(--text-disabled);
+}
+.input, .select {
+  background: var(--surface-3); border: 1px solid var(--border);
+  color: var(--text); padding: 6px 9px;
+  font-family: var(--font-mono); font-size: var(--fs-12);
+}
+
+.panel { border: 1px solid var(--border); background: var(--surface); overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; min-width: 560px; }
+.table th {
+  text-align: left; padding: 9px 12px;
+  font-family: var(--font-mono); font-size: var(--fs-9);
+  letter-spacing: var(--ls-wider); text-transform: uppercase;
+  color: var(--text-disabled); font-weight: 400;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: var(--surface);
+}
+.table td {
+  padding: 9px 12px; border-bottom: 1px solid var(--border-row); font-size: var(--fs-12);
+}
+.table tr:last-child td { border-bottom: none; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; }
+.code { font-family: var(--font-mono); font-weight: 700; }
+.rank {
+  font-family: var(--font-mono); font-size: var(--fs-10); color: var(--text-disabled);
+  width: 34px; text-align: right;
+}
+.empty { padding: 30px 16px; text-align: center; font-size: var(--fs-12); color: var(--text-disabled); }
+.compounds { font-family: var(--font-mono); font-size: var(--fs-11); color: var(--text-dim); }
+
+@media (max-width: 767px) {
+  .page { padding: 16px 12px 34px 12px; }
+  .title { font-size: var(--fs-24); }
+  .stores { margin-left: 0; width: 100%; }
+}

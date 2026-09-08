@@ -36,6 +36,7 @@ export function AppFooter() {
           <Link to="/telemetry">Telemetry</Link>
           <Link to="/drivers">Drivers</Link>
           <Link to="/teams">Teams</Link>
+          <Link to="/insights">Insights</Link>
         </div>
 
         <div className={s.col}>

@@ -109,3 +109,64 @@ public class SlugTests
             F1Dash.Server.Ingest.SessionManager.Slug("  Sprint --- Qualifying  "));
     }
 }
+
+public class InfluxCsvTests
+{
+    /// <summary>
+    /// Influx returns annotated CSV whose column ORDER is not fixed between
+    /// queries. Reading fields by hard-coded index works until the query
+    /// changes, and then returns the wrong field rather than failing.
+    /// </summary>
+    [Fact]
+    public void Fields_are_read_by_name_not_position()
+    {
+        const string csv = """
+            #datatype,string,long,long,string,string,string
+            #group,false,false,false,true,true,true
+            #default,_result,,,,,
+            ,result,table,_value,driver,lap,session
+            ,,0,351,HAM,1,2026/italian-grand-prix/race
+            ,,0,350,NOR,52,2026/italian-grand-prix/race
+            """;
+
+        var rows = InsightsService.ParseSpeedCsv(csv);
+
+        Assert.Equal(2, rows.Count);
+        Assert.Equal("HAM", rows[0].Driver);
+        Assert.Equal(351, rows[0].TopSpeed);
+        Assert.Equal(1, rows[0].Lap);
+        Assert.Equal("2026/italian-grand-prix/race", rows[0].Session);
+    }
+
+    [Fact]
+    public void A_different_column_order_still_parses()
+    {
+        const string csv = """
+            ,result,table,session,driver,_value,lap
+            ,,0,2024/monza/race,VER,340,7
+            """;
+
+        var rows = InsightsService.ParseSpeedCsv(csv);
+
+        Assert.Single(rows);
+        Assert.Equal("VER", rows[0].Driver);
+        Assert.Equal(340, rows[0].TopSpeed);
+        Assert.Equal(7, rows[0].Lap);
+    }
+
+    [Fact]
+    public void Annotation_lines_and_blanks_are_ignored()
+    {
+        const string csv = "#datatype,string\n\n,result,table,_value,driver\n,,0,300,HAM\n\n";
+
+        Assert.Single(InsightsService.ParseSpeedCsv(csv));
+    }
+
+    [Fact]
+    public void An_empty_result_is_an_empty_list_not_a_crash()
+    {
+        // A query matching nothing is the normal case for a fresh install.
+        Assert.Empty(InsightsService.ParseSpeedCsv(""));
+        Assert.Empty(InsightsService.ParseSpeedCsv("#datatype,string\n"));
+    }
+}

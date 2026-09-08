@@ -80,6 +80,8 @@ builder.Services.AddSingleton(sp => new StorageIndexer(
     archiveRoot,
     sp.GetRequiredService<ILogger<StorageIndexer>>()));
 
+builder.Services.AddSingleton<InsightsService>();
+
 builder.Services.AddSingleton<RelayCollector>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<RelayCollector>());
 
@@ -342,8 +344,23 @@ app.MapPost("/api/analysis/precompute",
 // dashboard at all.
 app.MapGet("/api/analysis/{year:int}/{meeting}/{session}",
     async (int year, string meeting, string session,
-           AnalysisPrecomputer precomputer, HttpContext http, CancellationToken ct) =>
+           AnalysisPrecomputer precomputer, MongoStore mongo, HttpContext http, CancellationToken ct) =>
     {
+        // Mongo first when it is up: the document is already assembled there,
+        // where the disk path reads three files and joins them. The files stay
+        // authoritative, so this is a shortcut and never the only route.
+        if (mongo.Available)
+        {
+            var stored = await mongo.ReadAnalysisAsync(
+                SessionKey.From(year, meeting, session), ct);
+
+            if (stored is not null)
+            {
+                http.Response.Headers.CacheControl = "public, max-age=86400";
+                return Results.Content(stored, "application/json");
+            }
+        }
+
         var analysis = await precomputer.LoadAsync(year, meeting, session, ct);
         if (analysis is null)
         {
@@ -461,6 +478,47 @@ app.MapGet("/api/storage", (StorageIndexer indexer) => Results.Ok(new
     // deployment rather than a broken one.
     archiveIsAuthoritative = true,
 }));
+
+// --- cross-session insights ------------------------------------------------
+//
+// These are the questions the indexes exist for. Each returns an empty result
+// rather than an error when its store is unavailable: showing nothing is a
+// correct answer for a deployment that runs no databases.
+
+app.MapGet("/api/insights", (InsightsService insights) => Results.Ok(new
+{
+    relational = insights.RelationalAvailable,
+    telemetry = insights.TelemetryAvailable,
+}));
+
+app.MapGet("/api/insights/circuit/{slug}",
+    async (string slug, int? limit, InsightsService insights, HttpContext http, CancellationToken ct) =>
+    {
+        http.Response.Headers.CacheControl = "public, max-age=300";
+        return Results.Ok(await insights.CircuitRecordsAsync(slug, Math.Clamp(limit ?? 20, 1, 200), ct));
+    });
+
+app.MapGet("/api/insights/driver/{code}",
+    async (string code, InsightsService insights, HttpContext http, CancellationToken ct) =>
+    {
+        http.Response.Headers.CacheControl = "public, max-age=300";
+        return Results.Ok(await insights.DriverHistoryAsync(code.ToUpperInvariant(), ct));
+    });
+
+app.MapGet("/api/insights/strategies/{year:int}",
+    async (int year, int? stops, InsightsService insights, HttpContext http, CancellationToken ct) =>
+    {
+        http.Response.Headers.CacheControl = "public, max-age=300";
+        return Results.Ok(await insights.StrategiesAsync(year, stops, ct));
+    });
+
+app.MapGet("/api/insights/speed",
+    async (int? above, int? limit, InsightsService insights, HttpContext http, CancellationToken ct) =>
+    {
+        http.Response.Headers.CacheControl = "public, max-age=300";
+        return Results.Ok(await insights.FastestLapsAsync(
+            above ?? 330, Math.Clamp(limit ?? 25, 1, 200), ct));
+    });
 
 // Walks the archive and fills every configured index. Idempotent — re-running
 // it repairs rather than duplicates, which is how a schema change is applied.

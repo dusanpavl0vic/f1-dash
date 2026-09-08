@@ -1,4 +1,10 @@
-.page { max-width: var(--app-width); margin: 0 auto; padding: 26px 20px 48px 20px; }
+/*
+ * `margin: 0 auto` on a flex child in a COLUMN container switches off
+ * `align-self: stretch`, so the box shrinks to its content instead of filling
+ * the width — 698 px inside a 1432 px shell. An explicit width restores the
+ * fill; the auto margins still centre it once it reaches its max.
+ */
+.page { max-width: var(--app-width); width: 100%; margin: 0 auto; padding: 26px 20px 48px 20px; }
 
 .hero {
   position: relative;

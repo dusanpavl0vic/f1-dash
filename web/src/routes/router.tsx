@@ -3,6 +3,7 @@ import { AnalysisPage } from "@/pages/AnalysisPage";
 import { DriverDetailPage } from "@/pages/DriverDetailPage";
 import { DriversPage } from "@/pages/DriversPage";
 import { HomePage } from "@/pages/HomePage";
+import { InsightsPage } from "@/pages/InsightsPage";
 import { ResultsPage } from "@/pages/ResultsPage";
 import { TelemetryPage } from "@/pages/TelemetryPage";
 import { LivePage } from "@/pages/LivePage";
@@ -38,6 +39,7 @@ export const router = createBrowserRouter([
       { path: "drivers", element: <DriversPage mode="drivers" /> },
       { path: "drivers/:driverId", element: <DriverDetailPage /> },
       { path: "teams", element: <DriversPage mode="teams" /> },
+      { path: "insights", element: <InsightsPage /> },
       { path: "support", element: <SupportPage /> },
       { path: "settings", element: <SettingsPage /> },
       { path: "analysis/:year/:meeting/:session", element: <AnalysisPage /> },
