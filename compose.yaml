@@ -22,10 +22,84 @@ services:
       # Shared secret for /relay. Without it the endpoint refuses every
       # connection - anything accepted there becomes the session everyone sees.
       RELAY_TOKEN: ${RELAY_TOKEN:-}
+      # The three stores are OPTIONAL. Unset, every read falls back to the
+      # archive on disk and the application behaves exactly as it did before
+      # they existed (docs/22 §6).
+      POSTGRES_URL: ${POSTGRES_URL:-}
+      INFLUX_URL: ${INFLUX_URL:-}
+      INFLUX_TOKEN: ${INFLUX_TOKEN:-}
+      INFLUX_ORG: ${INFLUX_ORG:-apex}
+      INFLUX_BUCKET: ${INFLUX_BUCKET:-telemetry}
+      MONGO_URL: ${MONGO_URL:-}
     volumes:
       - ./data:/data
     ports:
       - "4000:4000"
+    restart: unless-stopped
+
+  # --- optional stores -----------------------------------------------------
+  #
+  # Started only with `--profile stores`, so `docker compose up` on a small box
+  # still runs just the two application containers. The archive stays
+  # authoritative either way; everything here is a derived index that can be
+  # dropped and rebuilt.
+
+  postgres:
+    profiles: ["stores"]
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: apex
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-apex}
+      POSTGRES_DB: apex
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U apex -d apex"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
+  influxdb:
+    profiles: ["stores"]
+    image: influxdb:2.7-alpine
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: apex
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUX_PASSWORD:-apexapex}
+      DOCKER_INFLUXDB_INIT_ORG: ${INFLUX_ORG:-apex}
+      DOCKER_INFLUXDB_INIT_BUCKET: ${INFLUX_BUCKET:-telemetry}
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUX_TOKEN:-apex-dev-token}
+    volumes:
+      - influx-data:/var/lib/influxdb2
+    ports:
+      - "8086:8086"
+    healthcheck:
+      # 127.0.0.1, not localhost: localhost resolves to ::1 and the service
+      # binds IPv4 — the same trap the backend healthcheck hit.
+      test: ["CMD", "influx", "ping", "--host", "http://127.0.0.1:8086"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
+  mongo:
+    profiles: ["stores"]
+    image: mongo:7
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: apex
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-apex}
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
     restart: unless-stopped
 
   web:
@@ -40,3 +114,8 @@ services:
       backend:
         condition: service_healthy
     restart: unless-stopped
+
+volumes:
+  postgres-data:
+  influx-data:
+  mongo-data:

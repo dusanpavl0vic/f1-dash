@@ -6,6 +6,7 @@ using F1Dash.Server.Catalog;
 using F1Dash.Server.Cli;
 using F1Dash.Server.Ingest;
 using F1Dash.Server.Realtime;
+using F1Dash.Server.Storage;
 
 // The backend is one application. It runs as a web host by default and exposes
 // operational subcommands for work that happens outside a request — downloading
@@ -61,6 +62,24 @@ builder.Services.AddSingleton<LiveSessionState>();
 builder.Services.AddSingleton(sp => new RelaySessionSource(
     sp.GetRequiredService<ILogger<RelaySessionSource>>()));
 
+// --- storage indexes (docs/22) ---------------------------------------------
+//
+// All three are optional. Unconfigured they report themselves unavailable and
+// every read falls back to the archive, so a small self-hosted box does not
+// have to run three databases.
+builder.Services.AddSingleton<PostgresStore>();
+builder.Services.AddSingleton<MongoStore>();
+builder.Services.AddSingleton(sp => new InfluxStore(
+    new HttpClient { Timeout = TimeSpan.FromMinutes(2) },
+    sp.GetRequiredService<ILogger<InfluxStore>>()));
+
+builder.Services.AddSingleton(sp => new StorageIndexer(
+    sp.GetRequiredService<PostgresStore>(),
+    sp.GetRequiredService<InfluxStore>(),
+    sp.GetRequiredService<MongoStore>(),
+    archiveRoot,
+    sp.GetRequiredService<ILogger<StorageIndexer>>()));
+
 builder.Services.AddSingleton<RelayCollector>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<RelayCollector>());
 
@@ -115,6 +134,7 @@ builder.Services.AddSingleton(sp => new SessionManager(
     sp.GetRequiredService<ArchiveClient>(),
     archiveRoot,
     sp.GetRequiredService<RelaySessionSource>(),
+    sp.GetRequiredService<StorageIndexer>(),
     sp.GetRequiredService<ILoggerFactory>()));
 
 builder.Services.AddHostedService(sp => sp.GetRequiredService<SessionManager>());
@@ -431,6 +451,23 @@ app.MapGet("/api/standings/{year:int}",
         return Results.Ok(table);
     });
 
+// --- storage ---------------------------------------------------------------
+
+app.MapGet("/api/storage", (StorageIndexer indexer) => Results.Ok(new
+{
+    stores = indexer.Stores.Select(s => new { name = s.Name, available = s.Available }),
+    // Said plainly rather than implied by an empty list: with nothing
+    // configured the archive on disk IS the store, and that is a supported
+    // deployment rather than a broken one.
+    archiveIsAuthoritative = true,
+}));
+
+// Walks the archive and fills every configured index. Idempotent — re-running
+// it repairs rather than duplicates, which is how a schema change is applied.
+app.MapPost("/api/storage/backfill",
+    async (int? year, StorageIndexer indexer, CancellationToken ct) =>
+        Results.Ok(await indexer.BackfillAsync(year, ct)));
+
 // Forces a write without waiting for the session to end — the button behind
 // "export" in the UI.
 app.MapPost("/api/analysis/save", async (SessionManager sessions, CancellationToken ct) =>
@@ -447,6 +484,11 @@ app.MapGet("/api/track/{circuitKey:int}/{year:int}",
         http.Response.Headers.CacheControl = "public, max-age=31536000, immutable";
         return Results.Ok(geometry);
     });
+
+// Bring the indexes up before serving. Each one degrades to unavailable on its
+// own if it cannot be reached, so this cannot prevent the app from starting.
+await app.Services.GetRequiredService<StorageIndexer>()
+    .InitialiseAsync(app.Lifetime.ApplicationStopping);
 
 app.MapLiveSocket();
 app.MapRelay(app.Services.GetRequiredService<RelaySessionSource>());

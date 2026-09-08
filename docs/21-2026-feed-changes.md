@@ -73,3 +73,27 @@ detected from the data rather than from the season number:
 Detecting from the payload rather than from the year means a mid-season feed
 change degrades instead of breaking, and a 2026 session replayed from an
 archive behaves identically to a live one.
+
+
+## Appendix · SignalR Core Subscribe, what has been ruled out
+
+The C# client is rejected with `{"type":7,"error":"Connection closed with an
+error.","allowReconnect":true}` immediately after `Subscribe`, while a Node
+client on the same machine, at the same moment, receives the full initial state.
+
+Ruled out by direct experiment on 2026-09-08, not by reasoning:
+
+| Hypothesis | Test | Result |
+|---|---|---|
+| The topic list is wrong | Ran the Node probe with the **exact** C# list of 20 topics | Node succeeded — 90,523 bytes of state. Not the cause. |
+| The frame differs | Printed both frames | C# builds 361 chars, Node sends 362 bytes including the record separator. **Byte-identical.** |
+| .NET mis-parses `Set-Cookie` | Printed what .NET reads | Two clean values, correctly joined. Not the cause. |
+| The cookie is optional | Connected without it | HTTP 404. The cookie is required, and it is being sent. |
+
+So the payload, the topic list and the authentication are all identical. The
+difference is somewhere in the WebSocket transport itself — the upgrade request
+headers that `ClientWebSocket` sends versus those `ws` sends, or the framing.
+
+This is not a blocker. `StaticPollingSource` reads the same session from the CDN
+and `FailoverSessionSource` switches to it automatically, so a live session
+works today regardless.

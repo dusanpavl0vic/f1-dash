@@ -1,7 +1,9 @@
+using System.Text;
 using F1Dash.Core;
 using F1Dash.Core.Analysis;
 using F1Dash.Core.Archive;
 using F1Dash.Server.Realtime;
+using F1Dash.Server.Storage;
 
 namespace F1Dash.Server.Ingest;
 
@@ -41,6 +43,7 @@ public sealed class SessionManager(
     ArchiveClient archive,
     string archiveRoot,
     RelaySessionSource relay,
+    StorageIndexer indexer,
     ILoggerFactory loggers) : IHostedService
 {
     private readonly ILogger _logger = loggers.CreateLogger<SessionManager>();
@@ -270,6 +273,32 @@ public sealed class SessionManager(
             RecordedAtUtc: DateTime.UtcNow.ToString("O"));
     }
 
+    /// <summary>
+    /// Pushes the finished session into every configured index.
+    ///
+    /// Best-effort and off the live path: a database being down delays indexing
+    /// and costs a re-run of the backfill, nothing more.
+    /// </summary>
+    private async Task IndexCurrentSessionAsync()
+    {
+        if (_analysis is null || _sessionDirectory is null) return;
+        if (indexer.AvailableStores.Count == 0) return;
+
+        try
+        {
+            var meta = CurrentMeta();
+            var built = _analysis.Build(state.Accumulator, meta);
+
+            await indexer.IndexSessionAsync(
+                SessionKey.From(meta), built, _sessionDirectory, CancellationToken.None)
+                .ConfigureAwait(false);
+        }
+        catch (Exception e)
+        {
+            _logger.LogWarning(e, "Could not index the finished session");
+        }
+    }
+
     /// <summary>Writes the analysis for the running session to disk.</summary>
     public async Task<bool> SaveAnalysisAsync(CancellationToken ct)
     {
@@ -323,6 +352,11 @@ public sealed class SessionManager(
                 // The session ended on its own, so the analysis is final.
                 await SaveAnalysisAsync(CancellationToken.None).ConfigureAwait(false);
                 _logger.LogInformation("Analysis saved to {Directory}", _store?.Directory);
+
+                // Indexing happens AFTER the analysis is on disk, never before.
+                // The archive is the source of truth; an index written from
+                // memory could outlive a save that failed.
+                await IndexCurrentSessionAsync().ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
@@ -371,15 +405,86 @@ public sealed class SessionManager(
         return path;
     }
 
-    /// <summary>Filesystem-safe, and stable enough to match a user's input.</summary>
+    /// <summary>
+    /// Filesystem-safe, and stable enough to match a user's input.
+    ///
+    /// Diacritics are folded. F1 publishes "São Paulo Grand Prix" with the
+    /// accent, and <c>char.IsLetterOrDigit</c> happily keeps 'ã' — so a user
+    /// typing "Sao Paulo", which is the natural thing to type, produced a
+    /// different slug and matched nothing.
+    ///
+    /// The fold is an explicit table rather than Unicode normalisation because
+    /// this project builds with <c>InvariantGlobalization</c>, where
+    /// <c>string.Normalize</c> is a no-op and silently returns the accented
+    /// character unchanged. That was not a guess: the first attempt used
+    /// NFD and the test proved it did nothing.
+    ///
+    /// Note for an existing deployment: an archive directory already named with
+    /// an accent will no longer be found and the session is downloaded once
+    /// more. A one-off cost, and preferable to a name a user cannot type.
+    /// </summary>
     public static string Slug(string value)
     {
-        var chars = value.Select(c => char.IsLetterOrDigit(c) ? char.ToLowerInvariant(c) : '-');
-        var slug = new string([.. chars]).Trim('-');
+        var builder = new StringBuilder(value.Length);
+
+        foreach (var c in value)
+        {
+            var folded = Fold(c);
+            builder.Append(char.IsLetterOrDigit(folded) ? char.ToLowerInvariant(folded) : '-');
+        }
+
+        var slug = builder.ToString().Trim('-');
         while (slug.Contains("--", StringComparison.Ordinal))
         {
             slug = slug.Replace("--", "-", StringComparison.Ordinal);
         }
         return slug;
     }
+
+    /// <summary>
+    /// Latin-1 and Latin Extended-A letters folded to ASCII.
+    ///
+    /// Covers every accented character that has appeared in an F1 meeting or
+    /// circuit name — São Paulo, Nürburgring, México, Türkiye — and anything
+    /// outside the table falls through unchanged, becoming a hyphen. A name
+    /// made entirely of unfoldable characters would slug to nothing, which is
+    /// the same outcome as today and has never occurred.
+    /// </summary>
+    private static char Fold(char c) => c switch
+    {
+        >= 'A' and <= 'Z' or >= 'a' and <= 'z' or >= '0' and <= '9' => c,
+        'à' or 'á' or 'â' or 'ã' or 'ä' or 'å' or 'ā' or 'ă' or 'ą' => 'a',
+        'À' or 'Á' or 'Â' or 'Ã' or 'Ä' or 'Å' or 'Ā' or 'Ă' or 'Ą' => 'A',
+        'è' or 'é' or 'ê' or 'ë' or 'ē' or 'ĕ' or 'ė' or 'ę' or 'ě' => 'e',
+        'È' or 'É' or 'Ê' or 'Ë' or 'Ē' or 'Ĕ' or 'Ė' or 'Ę' or 'Ě' => 'E',
+        'ì' or 'í' or 'î' or 'ï' or 'ī' or 'į' => 'i',
+        'Ì' or 'Í' or 'Î' or 'Ï' or 'Ī' or 'Į' => 'I',
+        'ò' or 'ó' or 'ô' or 'õ' or 'ö' or 'ø' or 'ō' or 'ő' => 'o',
+        'Ò' or 'Ó' or 'Ô' or 'Õ' or 'Ö' or 'Ø' or 'Ō' or 'Ő' => 'O',
+        'ù' or 'ú' or 'û' or 'ü' or 'ū' or 'ů' or 'ű' => 'u',
+        'Ù' or 'Ú' or 'Û' or 'Ü' or 'Ū' or 'Ů' or 'Ű' => 'U',
+        'ç' or 'ć' or 'č' => 'c',
+        'Ç' or 'Ć' or 'Č' => 'C',
+        'ñ' or 'ń' or 'ň' => 'n',
+        'Ñ' or 'Ń' or 'Ň' => 'N',
+        'ś' or 'š' => 's',
+        'Ś' or 'Š' => 'S',
+        'ý' or 'ÿ' => 'y',
+        'Ý' => 'Y',
+        'ź' or 'ż' or 'ž' => 'z',
+        'Ź' or 'Ż' or 'Ž' => 'Z',
+        'ğ' => 'g',
+        'Ğ' => 'G',
+        'ı' => 'i',
+        'İ' => 'I',
+        'ł' => 'l',
+        'Ł' => 'L',
+        'ř' => 'r',
+        'Ř' => 'R',
+        'ť' => 't',
+        'Ť' => 'T',
+        'đ' => 'd',
+        'Đ' => 'D',
+        _ => c,
+    };
 }

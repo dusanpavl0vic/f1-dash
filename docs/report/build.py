@@ -202,8 +202,10 @@ an event to be shown later, it is the state the queued deltas patch.</p>
     ("Storage", "Why the archive is the database", """
 FIG:storage
 
+FIG:stores
+
 <h3>The question, asked properly</h3>
-<p>InfluxDB and MongoDB were both offered as free choices. Rather than reason about which shape of
+<p>InfluxDB and MongoDB were first offered as free choices. Rather than reason about which shape of
 database fits telemetry in the abstract, the actual access patterns were measured.</p>
 
 <table>
@@ -218,13 +220,40 @@ database fits telemetry in the abstract, the actual access patterns were measure
 replace that with a network round-trip to a container that must be running, backed up and
 version-matched — and win nothing.</p>
 
-<div class="note green"><span class="lbl">The trigger, written down in advance</span>
-Both answers are about <b>per-session</b> access. The moment a screen asks a question spanning
-sessions — <em>"every lap over 330 km/h this season"</em>, <em>"Monza sector 2 across three
-years"</em> — the file layout stops working, because answering means opening every file in the
-archive. At that point InfluxDB goes in for telemetry and the analysis documents get indexed.
-The decision is recorded as <b>D-011</b>, and the migration is designed as <b>Phase K</b>, so it is
-planned rather than improvised.</div>
+<p><u>Eleven milliseconds</u> is why none of these reads goes near a database today. But the
+measurement only ever answered a question about <b>per-session</b> access. The moment a screen asks
+something spanning sessions the file layout stops working, because answering means opening every
+file in the archive — and that is the boundary the three indexes were added to cross.</p>
+
+<h3>What each index actually earns</h3>
+<table>
+<thead><tr><th style="width:20%">Store</th><th style="width:34%">Holds</th><th>The question it makes possible</th></tr></thead>
+<tbody>
+<tr><td><b>PostgreSQL</b></td><td>Sessions, drivers, laps, stints, results</td>
+<td><em>"Every driver's Monza history since 2018"</em> — one indexed query, and a walk over the
+whole archive without it.</td></tr>
+<tr><td><b>InfluxDB</b></td><td>Per-lap channels</td>
+<td><em>"Every lap above 330 km/h this season"</em> — 148 of them, answered in one query.</td></tr>
+<tr><td><b>MongoDB</b></td><td>Analysis documents</td>
+<td>Shape that changes by era. 2026 gained an overtake counter and lost DRS; in a relational schema
+that is a migration at every season boundary.</td></tr>
+</tbody></table>
+
+<div class="note green"><span class="lbl">The rule that makes this safe</span>
+<b>Every database is a derived index and every one is optional.</b> Unconfigured, each reports
+itself unavailable and every read falls back to the files, so a small self-hosted box still runs two
+containers and no databases. Any store can be dropped and rebuilt from the archive, which makes a
+lost database an inconvenience rather than data loss, and a schema change a re-run rather than a
+migration that has to be perfect. Recorded as <b>D-013</b>.</div>
+
+<div class="note"><span class="lbl">Two bugs this work exposed in existing code</span>
+<b>Telemetry files are named by racing number</b>, and numbers are reassigned between seasons.
+Tagging the time series with one would have made a query for a driver return several people's
+careers — the exact trap the schema notes warn about.<br><br>
+<b><code>Slug</code> did not fold diacritics.</b> F1 publishes "São Paulo Grand Prix" with the
+accent, so a user typing "Sao Paulo" matched nothing. The first fix used Unicode normalisation, and
+a test proved it did nothing at all: this project builds with <code>InvariantGlobalization</code>,
+where <code>string.Normalize</code> silently returns the accented character unchanged.</div>
 
 <h3>Two rules that hold regardless</h3>
 <ul>
@@ -370,9 +399,14 @@ from delivery. Caught by a test, not by observation.</td></tr>
 <tr><td><b>D-012</b></td><td>Three live sources</td>
 <td>Failover is judged on <em>data delivered</em>, not on connection — the observed
 failure is a handshake that completes and then goes silent.</td></tr>
-<tr><td><b>D-011</b></td><td>No database yet</td>
-<td>Measured, not assumed: 11 ms to read a race of telemetry. The trigger for revisiting is written
-down rather than left to judgement.</td></tr>
+<tr><td><b>D-011</b></td><td>No database at first</td>
+<td>Measured, not assumed: 11 ms to read a race of telemetry. Superseded by D-013, but the
+measurement still governs which reads touch a database.</td></tr>
+<tr><td><b>D-013</b></td><td>Three stores adopted</td>
+<td>Each optional, each a derived index over an archive that stays authoritative.</td></tr>
+<tr><td><b>D-014</b></td><td>Redis still not adopted</td>
+<td>It cannot speed up a path with no network hop in it. The one place it would help — caching the
+new cross-session queries — is waiting on a measurement rather than on taste.</td></tr>
 </tbody></table>
 
 <h3>Verification</h3>

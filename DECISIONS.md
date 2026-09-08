@@ -283,3 +283,69 @@ would break the first time a home connection was renumbered.
 It forwards **raw topic updates, never merged state**. Merged state would be
 1-2 MB per update instead of a few kilobytes, and would put a second copy of the
 merge algorithm in production where it could drift from the first.
+
+## D-013 · PostgreSQL, InfluxDB and MongoDB adopted
+
+Supersedes D-011 by decision of the project owner, who asked for the full
+architectural package. D-011's measurements are not withdrawn and the design
+below is shaped so they keep being true.
+
+**The rule that makes this safe: `stream.jsonl` remains authoritative and every
+database is a derived index.** Any store can be dropped and rebuilt. That single
+rule means a lost database is an inconvenience rather than data loss, a schema
+change is a re-run rather than a migration that must be perfect, and no store
+sits in the live ingest path.
+
+| Store | Holds | Why this one |
+|---|---|---|
+| PostgreSQL | Sessions, drivers, laps, stints, results | Relational data asked relational questions. "Every driver's Monza history since 2018" is one indexed query. |
+| InfluxDB | Per-lap telemetry channels | A genuine time series: ~20,000 samples per channel per driver per race. |
+| MongoDB | Analysis documents, race control | Variable-shape JSON that changes between eras — 2026 gained an overtake counter and lost DRS. |
+
+**Every one is optional.** Unconfigured they report themselves unavailable and
+every read falls back to the archive, so a small self-hosted box still runs two
+containers and no databases. They start under `--profile stores`.
+
+**The cost, stated plainly.** This backend had zero NuGet dependencies; it now
+has two. PostgreSQL and MongoDB speak binary wire protocols with no HTTP
+surface, so there was nothing to hand-roll against. InfluxDB deliberately has no
+package: its API is line protocol over HTTP, which is two requests.
+
+**Verified, not assumed.** Backfilling the archive indexed 2 sessions and 21
+telemetry files in 13.7 s across all three. The cross-season query that files
+could not answer — a driver's best lap at one circuit across two seasons —
+returns instantly, and Influx reports 148 laps above 330 km/h with per-driver top
+speeds of 344–351 km/h at Monza, which is right for that circuit.
+
+**Two bugs this work exposed, both in existing code.**
+
+*Telemetry files are named by racing number.* Tagging the time series with it
+would have made a query for one driver return several people's careers, since
+numbers are reassigned between seasons — the exact trap the schema notes warn
+about for `drivers`. The analysis carries the mapping, so the code resolves the
+driver code before writing.
+
+*`Slug` did not fold diacritics.* F1 publishes "São Paulo Grand Prix" with the
+accent, and `char.IsLetterOrDigit` keeps 'ã', so a user typing "Sao Paulo" —
+the natural thing to type — matched nothing. The first fix used Unicode
+normalisation and a test proved it did nothing at all: this project builds with
+`InvariantGlobalization`, where `string.Normalize` silently returns the accented
+character unchanged. The fold is now an explicit table.
+
+## D-014 · Redis still not adopted
+
+Asked again alongside the three databases, and the answer is still no, for a
+different reason than D-009's.
+
+Redis cannot speed up the live path because the live path has no network hop to
+remove. Fan-out is one serialise and N in-process socket writes; a round trip to
+Redis would make it slower, not faster. The measurements stand: 0.52% CPU and
+58 MB resident for a full session.
+
+There is now exactly one place it would help — caching the results of the
+cross-session Postgres aggregations and Flux queries added in D-013, which are
+the only genuinely expensive reads in the system. That is a real use, but it is
+premature: those queries are new and none has yet been shown to be slow. The
+trigger is written down instead — **when a cross-session query is measured above
+roughly 200 ms and is requested repeatedly, a Redis cache in front of it is the
+right answer** — so the decision is waiting on a number rather than on taste.

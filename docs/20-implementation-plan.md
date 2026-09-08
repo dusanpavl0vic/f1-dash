@@ -273,29 +273,22 @@ without it.
 | **IMPL-68** | Driver detail | One driver's season: results per round, points progression, qualifying against race pace | UC-053 |
 | **IMPL-69** | Headshot setting | Off by default, with the licensing position stated where it is toggled | — |
 
-## Phase K · Storage, when the archive stops being enough
+## Phase K · Storage indexes
 
-The archive is currently a directory tree, and for everything the app does today
-that is the right database (see `DECISIONS.md` D-011 for the measurements —
-11 ms to read a driver's entire race telemetry). This phase exists so the
-migration is designed before it is needed, not during an outage.
+Built. Three stores, all optional, with the archive still authoritative
+underneath — see `docs/22-data-architecture.md` for schemas and `DECISIONS.md`
+D-013 for the reasoning and the measurements.
 
-**The trigger is a feature, not a size.** Phase K starts when the first screen
-asks a question spanning more than one session.
+| # | Use case | Definition of done |
+|---|---|---|
+| **IMPL-70** ✅ | Session index | PostgreSQL: sessions, drivers, entries, laps, stints, results. Laps written by binary COPY — a season is ~120,000 rows and one round trip each would be minutes of pure latency |
+| **IMPL-71** ✅ | Telemetry in InfluxDB | Per-lap channels over the HTTP line protocol, batched at 5,000 points. Tagged by driver **code**, never racing number: numbers are reassigned between seasons |
+| **IMPL-72** ✅ | Analysis in MongoDB | Whole analysis documents, replace-on-upsert, serialised through the same options the API uses so the stored shape matches the served one |
+| **IMPL-77** ✅ | Backfill | `POST /api/storage/backfill` walks the archive and fills every configured index. Idempotent, so re-running repairs rather than duplicates |
+| **IMPL-78** ✅ | Storage status | `GET /api/storage` reports which stores are live and states plainly that the archive is authoritative |
 
-| # | Use case | Definition of done | Trigger |
-|---|---|---|---|
-| **IMPL-70** | Session index | A single queryable index of every archived session — year, meeting, type, circuit, drivers, whether telemetry exists — rebuildable from the tree in one pass, so it is a cache and never the source of truth | Any cross-session listing slower than a page load |
-| **IMPL-71** | Telemetry in InfluxDB | Per-lap channels written to Influx alongside the JSONL, with the file remaining authoritative; measurement per channel, tags for driver, session and lap | The first query spanning sessions or seasons |
-| **IMPL-72** | Cross-season analysis | Circuit records, a driver's pace across years, sector bests over a season — the screens the index and Influx exist to serve | Follows IMPL-70/71 |
-
-Two rules hold whichever store is chosen. **The archive stays authoritative:**
-every store is a derived index that can be dropped and rebuilt, so a corrupt
-database is an inconvenience rather than data loss. **No database sits in the
-ingest hot path:** live delta merging writes to memory and to `stream.jsonl`,
-and adding a network write per delta would trade the one thing this app cannot
-afford to lose — latency during a live session — for a convenience it does not
-need.
+Verified end to end: 2 sessions and 21 telemetry files indexed in 13.7 s, and
+the cross-season query that the file layout could not answer returns instantly.
 
 ## Phase L · Ingest resilience
 

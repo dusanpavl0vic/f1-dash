@@ -4,6 +4,20 @@
     <ServerGarbageCollection>true</ServerGarbageCollection>
   </PropertyGroup>
   <ItemGroup>
+    <!-- The line-protocol helpers are internal because nothing outside the
+         store should build one, but they are exactly the kind of pure function
+         worth pinning with tests. -->
+    <InternalsVisibleTo Include="F1Dash.Core.Tests" />
     <ProjectReference Include="../F1Dash.Core/F1Dash.Core.csproj" />
+
+    <!--
+      The first NuGet dependencies in this backend, and a real cost: until now
+      it ran on the base class library alone. Both are unavoidable.
+      PostgreSQL and MongoDB speak binary wire protocols with no HTTP surface,
+      so there is nothing to hand-roll against. InfluxDB deliberately has no
+      package here — its API is line protocol over HTTP, which is two requests.
+    -->
+    <PackageReference Include="Npgsql" Version="9.0.2" />
+    <PackageReference Include="MongoDB.Driver" Version="3.1.0" />
   </ItemGroup>
 </Project>

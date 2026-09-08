@@ -49,3 +49,7 @@ pnpm-debug.log*
 # --- .NET build output inside backend ---
 backend/**/bin/
 backend/**/obj/
+
+# Local store credentials. compose.yaml reads these; the defaults in it are
+# development-only and every variable is optional (docs/22 §6).
+.env

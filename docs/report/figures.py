@@ -251,6 +251,34 @@ def fig_deploy():
     return svg(700, 268, "".join(b))
 
 
+def fig_stores():
+    """The three indexes, and what stays true when they are all stopped."""
+    b = [label(14, 22, "STORAGE INDEXES — THE ARCHIVE IS STILL UNDERNEATH", 9, INK, "700")]
+
+    b.append(box(232, 44, 236, 44, "stream.jsonl", ["the source of truth"], ACCENT, PANEL))
+    b.append(box(232, 116, 236, 40, "StorageIndexer", ["after a session, never during"], INK, PANEL))
+    b.append(arrow(350, 88, 350, 116, "reads", FAINT, lx=378, ly=106))
+
+    stores = [
+        (14,  "POSTGRESQL", ["sessions, drivers", "laps, stints, results"], BLUE,
+         "relational questions"),
+        (250, "INFLUXDB", ["speed, throttle, brake", "rpm, gear — per lap"], GREEN,
+         "time series"),
+        (486, "MONGODB", ["analysis documents", "race control"], AMBER,
+         "shape changes by era"),
+    ]
+    for x, title, lines, colour, why in stores:
+        b.append(box(x, 186, 200, 62, title, lines, colour))
+        b.append(label(x + 100, 264, why, 7.6, colour, "700", "middle"))
+        b.append(arrow(350, 156, x + 100, 186, None, FAINT))
+
+    b.append(f'<rect x="14" y="286" width="672" height="60" fill="{PANEL}" stroke="{RULE}"/>')
+    b.append(label(24, 304, "EVERY ONE IS OPTIONAL AND EVERY ONE IS DERIVED", 7.4, INK, "700"))
+    b.append(label(24, 320, "Unconfigured, each reports itself unavailable and reads fall back to the files.", 7.8, SOFT))
+    b.append(label(24, 332, "Any of them can be dropped and rebuilt, so a lost database is an inconvenience, not data loss.", 7.8, SOFT))
+    return svg(700, 356, "".join(b))
+
+
 FIGURES = {
     "system": (fig_system, "Figure 1", "System context — every component and the direction of every arrow"),
     "ingest": (fig_ingest, "Figure 2", "One update, from the wire to the screen"),
@@ -258,5 +286,6 @@ FIGURES = {
     "sources": (fig_sources, "Figure 4", "Three ways to get live data, behind one interface"),
     "realtime": (fig_realtime, "Figure 5", "Snapshot, deltas, and what a reconnect actually costs"),
     "storage": (fig_storage, "Figure 6", "What is on disk, and why there is no database"),
-    "deploy": (fig_deploy, "Figure 7", "Deployment topology, with the relay fallback"),
+    "stores": (fig_stores, "Figure 7", "The three storage indexes, and what stays true without them"),
+    "deploy": (fig_deploy, "Figure 8", "Deployment topology, with the relay fallback"),
 }
