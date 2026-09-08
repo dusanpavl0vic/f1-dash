@@ -297,8 +297,36 @@ and adding a network write per delta would trade the one thing this app cannot
 afford to lose — latency during a live session — for a convenience it does not
 need.
 
+## Phase L · Ingest resilience
+
+Live data is the only genuinely fragile part of this system, because it is the
+only part that depends on someone else's server being willing to talk to yours.
+Measured from a development machine on 2026-09-07:
+
+| Endpoint | Response |
+|---|---|
+| `signalr/negotiate` (legacy 1.5) | **401** |
+| `signalrcore/negotiate` | 200 |
+| `static/…` archive | 200 — `AmazonS3` via `CloudFront` |
+
+The static path is an ordinary CDN, so it is **not** subject to the origin's
+IP filtering. That makes polling a genuine fallback rather than a consolation
+prize, and it is why these are ordered cheapest-first.
+
+| # | Use case | Definition of done |
+|---|---|---|
+| **IMPL-73** | Static polling source | A third `ISessionSource` that re-reads each topic's `.jsonStream` with HTTP `Range` from the last byte offset, at a 1 s interval. Format is identical to the archive, BOM included, so `ArchiveClient`'s parser is reused rather than duplicated. |
+| **IMPL-74** | Source failover | Try SignalR, fall back to polling, report which is in use in the UI. A dashboard silently running 3 s behind must say so. |
+| **IMPL-75** | Relay collector | A minimal process that runs where F1 accepts connections and **dials outward** to the backend over authenticated WSS, forwarding raw `TopicUpdate`s. Outward is the whole design: a server-initiated link needs a static IP, port forwarding and a firewall rule at the operator's home. |
+| **IMPL-76** | Relay source | The backend side of IMPL-75 — a fourth `ISessionSource`, with sequence numbers and resend so a dropped link loses nothing. |
+
+Two rules. The collector forwards **raw updates, never merged state**: merged
+state is 1–2 MB per update instead of a few kilobytes, and it would put a second
+copy of the merge algorithm in production where it could drift from the first.
+And every source stays behind `ISessionSource`, so nothing downstream — analysis,
+telemetry, fan-out — can tell which one is running.
+
 ## Not in this plan yet
 
-Replay transport controls (UC-043, UC-044), schedule and standings pages (UC-05x), and the
-responsive breakpoints below 1440 px. The design covers the 1440 px desktop dashboard only; those
-screens need design before they need code.
+The responsive breakpoints below 768 px are implemented but have not been
+reviewed against a real device. Everything else in this document is built.
