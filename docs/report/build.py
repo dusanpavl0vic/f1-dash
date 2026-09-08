@@ -135,8 +135,8 @@ merging them would accumulate stale entries. Two are <u>append-only</u> —
 
     ("Getting live data", "Three sources behind one interface", """
 <p>Live data is the only genuinely fragile part of this system, because it is the only part that
-depends on someone else's server being willing to talk to yours. So there are three ways in, and
-they are interchangeable.</p>
+depends on someone else's server being willing to talk to yours. So there are three ways in, they
+are interchangeable, and the backend moves between them without being told to.</p>
 FIG:sources
 
 <h3>What was measured</h3>
@@ -352,6 +352,9 @@ to bridge. The seam is preserved — replacing it touches one file.</td></tr>
 <tr><td><b>D-010</b></td><td>Bounded channels use <code>Wait</code></td>
 <td><code>DropWrite</code> discards silently <em>and returns success</em>, which is indistinguishable
 from delivery. Caught by a test, not by observation.</td></tr>
+<tr><td><b>D-012</b></td><td>Three live sources</td>
+<td>Failover is judged on <em>data delivered</em>, not on connection — the observed
+failure is a handshake that completes and then goes silent.</td></tr>
 <tr><td><b>D-011</b></td><td>No database yet</td>
 <td>Measured, not assumed: 11 ms to read a race of telemetry. The trigger for revisiting is written
 down rather than left to judgement.</td></tr>
@@ -364,10 +367,12 @@ ten <u>exactly</u>. Everything upstream of that — inflate, parse, merge, accum
 for it to hold.</p>
 
 <div class="note green"><span class="lbl">Status</span>
-90 backend tests and a typechecked, linted frontend. Live SignalR subscription remains the one open
-item: the handshake completes and the initial state arrives in a Node probe, while the identical
-byte-for-byte payload is rejected in C#. The static polling source in §5 exists partly so that this
-is not a blocker.</div>
+110 backend tests and 55 in the browser suite, with a typechecked and linted frontend. All three
+ingest sources are built and each is verified against something real: the poller against F1's live
+archive, the relay end to end over websockets. Live SignalR subscription remains the one open item —
+the handshake completes and the initial state arrives in a Node probe, while the identical
+byte-for-byte payload is rejected in C#. It is no longer a blocker, which is why §5 is ordered the
+way it is.</div>
 """, None),
 ]
 
