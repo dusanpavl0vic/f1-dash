@@ -1,0 +1,135 @@
+.wall { display: grid; grid-template-columns: 300px minmax(0, 1fr) 340px; }
+.wall > * { border-right: 1px solid var(--border); min-width: 0; }
+.wall > *:last-child { border-right: none; }
+.col { padding: 14px 16px 18px 16px; display: flex; flex-direction: column; gap: 14px; }
+
+/* -------------------------------------------------------------- selector */
+.chips {
+  display: flex; flex-wrap: wrap; gap: 5px;
+  padding: 10px 16px; border-bottom: 1px solid var(--border);
+}
+.chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 9px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--team, var(--border-strong));
+  background: transparent;
+  color: var(--text-fainter);
+  font-family: var(--font-mono); font-size: var(--fs-11); font-weight: 600;
+  cursor: pointer;
+}
+.chip:hover { color: var(--text); border-color: var(--accent); }
+.chipActive { background: var(--surface-3); color: var(--text); }
+.chipPos { font-size: var(--fs-9); color: var(--text-disabled); }
+
+/* ---------------------------------------------------------------- panels */
+.panel { border: 1px solid var(--border); background: var(--surface); padding: var(--panel-pad); }
+.title {
+  font-family: var(--font-mono); font-size: var(--fs-10);
+  letter-spacing: var(--ls-widest); text-transform: uppercase;
+  color: var(--text-faintest); margin-bottom: 10px;
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+}
+/* Estimates are marked at the panel, not in a footnote. A number that looks
+   measured and is not is worse than no number. */
+.estimate {
+  font-family: var(--font-mono); font-size: var(--fs-9);
+  letter-spacing: var(--ls-wide); text-transform: uppercase;
+  color: var(--amber, var(--yellow)); border: 1px solid var(--yellow-bd);
+  background: var(--yellow-bg); padding: 2px 6px; white-space: nowrap;
+}
+.empty { font-size: var(--fs-11); color: var(--text-disabled); padding: 10px 0; }
+
+/* ------------------------------------------------------------ driver head */
+.head { position: relative; overflow: hidden; }
+.headGhost {
+  position: absolute; right: 2px; top: -14px;
+  font-family: var(--font-display); font-size: var(--fs-74); font-weight: 800;
+  line-height: 1; color: var(--team, var(--text-ghost)); opacity: 0.16;
+  user-select: none; pointer-events: none;
+}
+.headTla {
+  font-family: var(--font-display); font-size: var(--fs-32); font-weight: 800;
+  letter-spacing: var(--ls-tight); color: var(--team, var(--text));
+}
+.headName { font-size: var(--fs-12); color: var(--text-faint); margin-top: 2px; }
+.headTeam {
+  font-family: var(--font-mono); font-size: var(--fs-10);
+  letter-spacing: var(--ls-wide); text-transform: uppercase;
+  color: var(--text-faintest); margin-top: 6px;
+}
+
+/* ------------------------------------------------------------- tyre state */
+.tyreRow { display: flex; align-items: center; gap: 14px; }
+.ring { flex: 0 0 auto; }
+.tyreFacts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; flex: 1 1 auto; }
+.factLabel {
+  font-family: var(--font-mono); font-size: var(--fs-9);
+  letter-spacing: var(--ls-wider); text-transform: uppercase; color: var(--text-disabled);
+}
+.factValue {
+  font-family: var(--font-mono); font-size: var(--fs-14);
+  font-variant-numeric: tabular-nums; color: var(--text);
+}
+.fresh { color: var(--green); }
+.working { color: var(--text); }
+.worn { color: var(--yellow); }
+.critical { color: var(--red-bright); }
+
+/* ---------------------------------------------------------- car systems */
+.bars { display: flex; flex-direction: column; gap: 9px; }
+.bar { display: grid; grid-template-columns: 58px 1fr 46px; align-items: center; gap: 8px; }
+.barTrack { height: 10px; background: var(--surface-4); border: 1px solid var(--border-inset); }
+.barFill { height: 100%; }
+.barValue {
+  font-family: var(--font-mono); font-size: var(--fs-11);
+  font-variant-numeric: tabular-nums; text-align: right; color: var(--text-dim);
+}
+.gearRow { display: flex; align-items: baseline; gap: 16px; margin-bottom: 12px; }
+.bigValue {
+  font-family: var(--font-mono); font-size: var(--fs-38); font-weight: 600;
+  line-height: 1; font-variant-numeric: tabular-nums;
+}
+.bigUnit {
+  font-family: var(--font-mono); font-size: var(--fs-10);
+  letter-spacing: var(--ls-wider); text-transform: uppercase; color: var(--text-disabled);
+}
+.drsOn { color: var(--green); }
+.drsOff { color: var(--text-disabled); }
+
+/* -------------------------------------------------------------- threats */
+.threat {
+  display: grid; grid-template-columns: 46px 1fr auto; gap: 10px;
+  align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border-row);
+}
+.threat:last-child { border-bottom: none; }
+.threatTla {
+  font-family: var(--font-mono); font-size: var(--fs-13); font-weight: 700;
+  border-left: 3px solid var(--team, var(--border-strong)); padding-left: 7px;
+}
+.threatMeta { font-family: var(--font-mono); font-size: var(--fs-10); color: var(--text-faint); }
+.threatGap {
+  font-family: var(--font-mono); font-size: var(--fs-13);
+  font-variant-numeric: tabular-nums; text-align: right;
+}
+.threatDanger { color: var(--red-bright); }
+
+/* --------------------------------------------------------------- traces */
+.trace { width: 100%; height: auto; display: block; }
+.traceHead {
+  display: flex; align-items: baseline; justify-content: space-between;
+  font-family: var(--font-mono); font-size: var(--fs-9);
+  letter-spacing: var(--ls-wider); text-transform: uppercase; color: var(--text-disabled);
+  margin-bottom: 4px;
+}
+.traceHigh { color: var(--text-dim); }
+
+@media (max-width: 1279px) {
+  .wall { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .wall > * { border-right: none; border-bottom: 1px solid var(--border); }
+}
+@media (max-width: 767px) {
+  .wall { grid-template-columns: minmax(0, 1fr); }
+  .col { padding: 12px; }
+  .chips { padding: 10px 12px; }
+}

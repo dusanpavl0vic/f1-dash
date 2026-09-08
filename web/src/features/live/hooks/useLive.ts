@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { liveStore } from "../store/liveStore";
 
 const API_URL = import.meta.env["VITE_API_URL"] ?? "http://localhost:4000";
-import type { PaceLine, SessionSnapshot, TimelineBand } from "../model/types";
+import type { CarChannels, PaceLine, SessionSnapshot, TimelineBand } from "../model/types";
 
 /**
  * Components subscribe through these hooks, never to the raw store.
@@ -87,4 +87,22 @@ export function useLiveSource(mode: "live" | "replay" | "none"): string | null {
   }, [mode]);
 
   return source;
+}
+
+
+/** One driver's recent channel trace and completed lap times. */
+export function useDriverTrace(tla: string | null): {
+  trace: CarChannels[];
+  laps: { lap: number; seconds: number }[];
+} {
+  const session = useLiveSession();
+
+  return useMemo(() => {
+    if (!tla) return { trace: [], laps: [] };
+
+    const history = liveStore.getHistory();
+    return { trace: history.trace(tla), laps: history.lapsFor(tla) };
+    // `session` is the per-frame signal; the history object mutates in place.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, tla]);
 }

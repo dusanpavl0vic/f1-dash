@@ -88,6 +88,19 @@ export interface TimingRow {
   overtakes: number;
 }
 
+/** The live channels a car publishes. Everything here is real feed data. */
+export interface CarChannels {
+  rpm: number;
+  speed: number;
+  gear: number;
+  /** 0-100. */
+  throttle: number;
+  /** 0 or 100 in the feed — it is a switch, not a pressure. */
+  brake: number;
+  /** Pre-2026 only; channel 45 is absent from 2026 onward. */
+  drs: number;
+}
+
 export interface CarPosition {
   tla: string;
   /** Coordinates in the map's own viewBox space (see TrackMap). */
@@ -178,6 +191,8 @@ export interface SessionSnapshot {
   drivers: Record<string, Driver>;
   timing: TimingRow[];
   positions: CarPosition[];
+  /** Latest car channels per TLA, for the telemetry panels. */
+  channels: Record<string, CarChannels>;
   messages: RaceControlMessage[];
   penalties: Penalty[];
   timeline: TimelineBand[];

@@ -87,11 +87,11 @@ See `DECISIONS.md` D-008.
 
 | # | Use case | Definition of done | Product UC |
 |---|---|---|---|
-| **IMPL-18** | Driver chip selector | Ten chips, selection drives the whole view | UC-031 |
-| **IMPL-19** | Driver focus and tyre status | Name block, wear ring, condition, stint, pit-window estimate, stop history — estimates visibly labelled | UC-031 |
-| **IMPL-20** | Undercut monitor | Threat cards with gap, tyre, cliff and degradation | UC-031 |
-| **IMPL-21** | Car systems | Car silhouette with per-corner readouts driven by real channels (see the note above), plus RPM, throttle and brake bars | UC-031 |
-| **IMPL-22** | Traces and lap performance | Three traces with ring gauges and high/low, then top speed, last and best lap, throttle, brake and DRS | UC-031, UC-032 |
+| **IMPL-18** ✅ | Driver chip selector | Every driver, in team colours; selection drives the whole view and is shared with the dashboard | UC-031 |
+| **IMPL-19** ✅ | Driver focus and tyre status | Name block, wear ring, condition and remaining life — every figure labelled ESTIMATED, with the nominal life it was derived from stated in the panel | UC-031 |
+| **IMPL-20** ✅ | Undercut monitor | Cars within a stop's worth of track position behind, with cumulative gap, tyre and derived degradation. Labelled DERIVED | UC-031 |
+| **IMPL-21** ✅ | Car systems | Speed, gear, throttle, brake and RPM from the real channels. DRS shown only in DRS-era sessions, decided by era detection rather than by value | UC-031 |
+| **IMPL-22** ✅ | Traces and lap performance | Speed, throttle and brake traces over the recent channel window with high/low, plus top speed, last and best lap | UC-031, UC-032 |
 
 ## Phase E — Race control
 

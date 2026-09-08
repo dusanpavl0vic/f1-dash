@@ -194,6 +194,9 @@ export function buildMockSession(
 
   return {
     overtakeAid: "drs",
+    // The mock has no CarData; the telemetry panels render their own empty
+    // state rather than being handed invented channel values.
+    channels: {},
     session: {
       meetingName: "Bahrain Grand Prix",
       circuitName: "Bahrain International Circuit",

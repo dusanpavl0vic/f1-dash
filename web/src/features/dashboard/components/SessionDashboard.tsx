@@ -9,6 +9,7 @@ import { PenaltyList } from "@/features/insights/components/PenaltyList";
 import { SessionTimeline } from "@/features/insights/components/SessionTimeline";
 import { GapBars, StintBars } from "@/features/insights/components/StintBars";
 import { useConnectionStatus, useLiveSession, useLiveSource, useSessionHistory } from "@/features/live/hooks/useLive";
+import { TelemetryWall } from "@/features/telemetry-wall/components/TelemetryWall";
 import { ToastStack } from "@/features/toasts/components/ToastStack";
 import { useToasts } from "@/features/toasts/lib/useToasts";
 import { useIsCompact } from "@/hooks/useBreakpoint";
@@ -162,7 +163,11 @@ export function SessionDashboard({ mode, headerControl, emptyState }: SessionDas
       )}
 
       {view === "telemetry" && (
-        <div className={s.placeholder}>TELEMETRY WALL — IMPL-18 TO IMPL-22</div>
+        <TelemetryWall
+          session={session}
+          selected={selected}
+          onSelect={setSelected}
+        />
       )}
 
       {/* Only live sessions can be behind a broadcast; a replay is already

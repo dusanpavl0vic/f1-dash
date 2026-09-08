@@ -1,4 +1,4 @@
-import type { PaceLine, SessionSnapshot, TimelineBand, TrackState } from "../model/types";
+import type { CarChannels, PaceLine, SessionSnapshot, TimelineBand, TrackState } from "../model/types";
 
 /**
  * Accumulates what the feed does not keep.
@@ -35,10 +35,20 @@ interface DriverHistory {
   color: string;
 }
 
+/**
+ * How many channel frames to keep per driver.
+ *
+ * The feed publishes several times a second, so 240 is roughly the last minute
+ * — enough for a trace, and bounded so a three-hour session cannot grow this
+ * without limit.
+ */
+const TRACE_LENGTH = 240;
+
 export class SessionHistory {
   private drivers = new Map<string, DriverHistory>();
   private bands: TimelineBand[] = [];
   private lastLapSeen = new Map<string, string>();
+  private traces = new Map<string, CarChannels[]>();
 
   /** Watches one projected frame. Cheap enough to run every flush. */
   observe(snapshot: SessionSnapshot): void {
@@ -65,7 +75,38 @@ export class SessionHistory {
       history.laps.set(Math.max(1, lap - 1), seconds);
     }
 
+    this.observeChannels(snapshot.channels);
     this.observeTrack(snapshot.trackState, Math.max(1, lap));
+  }
+
+  private observeChannels(channels: Record<string, CarChannels>): void {
+    for (const [tla, current] of Object.entries(channels)) {
+      let trace = this.traces.get(tla);
+      if (!trace) {
+        trace = [];
+        this.traces.set(tla, trace);
+      }
+
+      // The projection runs every frame whether or not CarData moved, so an
+      // unchanged reading is not a new sample. Recording it anyway would make
+      // a stationary car look like a flat line of fresh data.
+      const previous = trace[trace.length - 1];
+      if (previous
+        && previous.speed === current.speed
+        && previous.rpm === current.rpm
+        && previous.throttle === current.throttle
+        && previous.brake === current.brake) {
+        continue;
+      }
+
+      trace.push(current);
+      if (trace.length > TRACE_LENGTH) trace.shift();
+    }
+  }
+
+  /** The recent channel trace for one driver, oldest first. */
+  trace(tla: string): CarChannels[] {
+    return this.traces.get(tla) ?? [];
   }
 
   private observeTrack(state: TrackState, lap: number): void {
@@ -142,5 +183,6 @@ export class SessionHistory {
     this.drivers.clear();
     this.bands = [];
     this.lastLapSeen.clear();
+    this.traces.clear();
   }
 }

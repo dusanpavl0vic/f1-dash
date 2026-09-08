@@ -314,6 +314,39 @@ export function selectChannels(state: JsonObject, racingNumber: string): CarChan
   };
 }
 
+/**
+ * Every car's latest channels, keyed by TLA.
+ *
+ * Read once per frame rather than per component. Twenty small objects is
+ * nothing next to the merge that produced them, and it means the telemetry
+ * history has something to accumulate without each panel re-walking CarData.
+ */
+export function selectAllChannels(
+  state: JsonObject, drivers: Record<string, Driver>): Record<string, CarChannels> {
+  const frames = ordered(obj(state.CarData)?.Entries);
+  const latest = frames[frames.length - 1]?.[1];
+  const cars = obj(latest?.Cars);
+  if (!cars) return {};
+
+  const result: Record<string, CarChannels> = {};
+
+  for (const driver of Object.values(drivers)) {
+    const channels = obj(obj(cars[String(driver.number)])?.Channels);
+    if (!channels) continue;
+
+    result[driver.tla] = {
+      rpm: num(channels["0"]) ?? 0,
+      speed: num(channels["2"]) ?? 0,
+      gear: num(channels["3"]) ?? 0,
+      throttle: num(channels["4"]) ?? 0,
+      brake: num(channels["5"]) ?? 0,
+      drs: num(channels["45"]) ?? 0,
+    };
+  }
+
+  return result;
+}
+
 /* --------------------------------------------------------------- Position */
 
 export function selectPositions(state: JsonObject, drivers: Record<string, Driver>): CarPosition[] {
@@ -505,6 +538,7 @@ export function selectSnapshot(state: JsonObject): SessionSnapshot {
     drivers,
     timing,
     positions: selectPositions(state, drivers),
+    channels: selectAllChannels(state, drivers),
     messages: selectMessages(state),
     penalties: selectPenalties(state, drivers),
     timeline: selectTimeline(state, session.currentLap),
