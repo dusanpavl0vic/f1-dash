@@ -465,6 +465,21 @@ the sampling rate is not constant, and an uncapped buffer grows without bound.<b
 the scale of an entire chart, and the track status had already cleared by the time the lap
 completed, so the flag could not be used to filter it.</div>
 
+<h3>What the telemetry view can and cannot show</h3>
+<p>Tyre temperatures, brake temperatures, pressures and fuel load are <u>team-internal and never
+published</u>. They are absent from the interface rather than invented. What replaces them is the
+channel data F1 does publish — speed, gear, throttle, brake and RPM — alongside estimates that
+declare themselves on the panel rather than in a footnote.</p>
+<p>Tyre wear is inferred from age against a nominal life the panel states out loud. Degradation is a
+least-squares slope over recent laps with outliers removed <em>before</em> fitting, because a single
+safety-car lap otherwise turns a flat trend into a claimed four seconds a lap.</p>
+
+<div class="note"><span class="lbl">A value question that was really an era question</span>
+DRS was displayed from channel 45's value. In a DRS season <code>0</code> means closed; from 2026
+the channel is absent and every reading is <code>0</code> — which rendered as a permanently closed
+wing on a car that never had one. It is now gated on era detection. Verified both ways: 2024 Monza
+publishes channels 0, 2, 3, 4, 5 and 45; 2026 Monza publishes 0, 2, 3, 4, 5.</div>
+
 <h3>The 2026 feed change</h3>
 <p>DRS was removed from the regulations and from the feed: <code>CarData</code> channel 45 is simply
 absent. The replacement aids are not published at all, so nothing can be shown for them; what 2026
@@ -568,7 +583,7 @@ ten <u>exactly</u>. Everything upstream of that — inflate, parse, merge, accum
 for it to hold.</p>
 
 <div class="note green"><span class="lbl">Status</span>
-110 backend tests and 55 in the browser suite, with a typechecked and linted frontend. All three
+110 backend tests and 66 in the browser suite, with a typechecked and linted frontend. All three
 ingest sources are built and each is verified against something real: the poller against F1's live
 archive, the relay end to end over websockets. Live SignalR subscription remains the one open item —
 the handshake completes and the initial state arrives in a Node probe, while the identical
