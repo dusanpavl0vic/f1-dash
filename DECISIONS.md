@@ -244,3 +244,42 @@ and it is the faster one.
 
 Recorded because "we considered it" is worth less than "we measured it and here
 are the numbers".
+
+## D-012 · Three live sources, ordered cheapest-first
+
+The live feed is the only part of this system that depends on someone else's
+server being willing to talk to yours, so it has three implementations of one
+interface rather than one implementation and a hope.
+
+Measured from a development machine on 2026-09-08:
+
+| Endpoint | Response |
+|---|---|
+| `signalr/negotiate` (legacy 1.5) | **401** |
+| `signalrcore/negotiate` | 200 |
+| `static/…` archive | 200 — `AmazonS3` via `CloudFront` |
+
+The static archive is a plain CDN. It is therefore **not** subject to whatever
+the SignalR origin is doing to refuse requests, which is what turns polling from
+a consolation prize into a real answer. The files support HTTP `Range` (verified
+with a `206`), so a poller re-reads only what was appended — kilobytes a second
+against a 5.6 MB file — and the format is byte-identical to the archive the
+replay source already parses.
+
+**Failover is judged on data, not on connection.** The SignalR endpoint will
+complete a handshake and then send nothing; that is the failure actually
+observed here. A source that has connected but produced no update inside a
+probation window is treated as failed. Once it produces one update it is trusted
+for the rest of the session, because falling back mid-race over a quiet minute
+under a red flag would be worse than the problem.
+
+**The relay collector dials outward.** When neither source works from the server
+at all, a collector runs somewhere F1 accepts — a home connection, being a
+residential address, is the most reliable — and connects *to* the backend. The
+direction is the whole design: a server-initiated link would need a static
+address, port forwarding and a firewall rule wherever the collector runs, and
+would break the first time a home connection was renumbered.
+
+It forwards **raw topic updates, never merged state**. Merged state would be
+1-2 MB per update instead of a few kilobytes, and would put a second copy of the
+merge algorithm in production where it could drift from the first.

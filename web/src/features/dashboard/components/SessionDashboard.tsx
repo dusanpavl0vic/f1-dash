@@ -8,7 +8,7 @@ import { PaceChart } from "@/features/insights/components/PaceChart";
 import { PenaltyList } from "@/features/insights/components/PenaltyList";
 import { SessionTimeline } from "@/features/insights/components/SessionTimeline";
 import { GapBars, StintBars } from "@/features/insights/components/StintBars";
-import { useConnectionStatus, useLiveSession, useSessionHistory } from "@/features/live/hooks/useLive";
+import { useConnectionStatus, useLiveSession, useLiveSource, useSessionHistory } from "@/features/live/hooks/useLive";
 import { ToastStack } from "@/features/toasts/components/ToastStack";
 import { useToasts } from "@/features/toasts/lib/useToasts";
 import { useIsCompact } from "@/hooks/useBreakpoint";
@@ -43,6 +43,7 @@ export function SessionDashboard({ mode, headerControl, emptyState }: SessionDas
   const [selected, setSelected] = useState<string | null>(null);
 
   const compact = useIsCompact();
+  const liveSource = useLiveSource(mode);
   const { toasts, dismiss } = useToasts(session);
 
   // The pace chart follows the focus cards rather than the whole field: twenty
@@ -88,6 +89,14 @@ export function SessionDashboard({ mode, headerControl, emptyState }: SessionDas
       {banner && (
         <div className={s.banner} style={{ color: banner.color }} role="status">
           {banner.label}
+        </div>
+      )}
+
+      {/* The polling source is a second or three behind the socket. Saying so
+          is the difference between a known delay and an unexplained one. */}
+      {liveSource?.includes("polled") && (
+        <div className={s.banner} style={{ color: "var(--yellow)" }} role="status">
+          FOLLOWING THE STATIC FEED — ABOUT 1–3 SECONDS BEHIND LIVE
         </div>
       )}
 

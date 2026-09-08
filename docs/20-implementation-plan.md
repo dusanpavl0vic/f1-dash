@@ -315,10 +315,10 @@ prize, and it is why these are ordered cheapest-first.
 
 | # | Use case | Definition of done |
 |---|---|---|
-| **IMPL-73** | Static polling source | A third `ISessionSource` that re-reads each topic's `.jsonStream` with HTTP `Range` from the last byte offset, at a 1 s interval. Format is identical to the archive, BOM included, so `ArchiveClient`'s parser is reused rather than duplicated. |
-| **IMPL-74** | Source failover | Try SignalR, fall back to polling, report which is in use in the UI. A dashboard silently running 3 s behind must say so. |
-| **IMPL-75** | Relay collector | A minimal process that runs where F1 accepts connections and **dials outward** to the backend over authenticated WSS, forwarding raw `TopicUpdate`s. Outward is the whole design: a server-initiated link needs a static IP, port forwarding and a firewall rule at the operator's home. |
-| **IMPL-76** | Relay source | The backend side of IMPL-75 — a fourth `ISessionSource`, with sequence numbers and resend so a dropped link loses nothing. |
+| **IMPL-73** ✅ | Static polling source | `StaticPollingSource` re-reads each topic's `.jsonStream` with HTTP `Range` from the last byte offset, once a second. Verified against F1's real archive: 16 topics, `OvertakeSeries` and `CurrentTyres` included. |
+| **IMPL-74** ✅ | Source failover | `FailoverSessionSource` tries SignalR, falls back to polling, and `/api/session` reports which won. The dashboard says when it is following the polled feed. |
+| **IMPL-75** ✅ | Relay collector | `RelayCollector` runs the same binary in a different mode and **dials outward** to the backend over authenticated WSS, forwarding raw `TopicUpdate`s. |
+| **IMPL-76** ✅ | Relay source | `RelaySessionSource` plus `/relay`, with sequence numbers, resume-on-reconnect and duplicate rejection. Verified end to end: frames sent by a collector arrive at a browser as deltas. |
 
 Two rules. The collector forwards **raw updates, never merged state**: merged
 state is 1–2 MB per update instead of a few kilobytes, and it would put a second
@@ -326,7 +326,18 @@ copy of the merge algorithm in production where it could drift from the first.
 And every source stays behind `ISessionSource`, so nothing downstream — analysis,
 telemetry, fan-out — can tell which one is running.
 
+### What failover is judged on
+
+"Delivers data", not "connects". The SignalR endpoint will complete a handshake
+and then send nothing — that is the failure this project actually hit — so a
+source that has connected but produced no update inside a probation window is
+treated as failed. Once it has produced one update it is trusted for the rest of
+the session; falling back mid-race because of a quiet minute under a red flag
+would be worse than the problem.
+
 ## Not in this plan yet
 
-The responsive breakpoints below 768 px are implemented but have not been
-reviewed against a real device. Everything else in this document is built.
+Everything in this document is built. Responsive layout is verified by
+measurement rather than by eye: every page reports `scrollWidth == clientWidth`
+at 375, 768 and 1024 px under device emulation. It has still not been opened on
+a physical handset.

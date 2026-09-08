@@ -16,6 +16,12 @@ services:
       REPLAY_START_MS: ${REPLAY_START_MS:-0}
       REPLAY_LOOP: ${REPLAY_LOOP:-1}
       F1_HTTP_PROXY: ${F1_HTTP_PROXY:-}
+      # Set to run this instance as a collector, forwarding to another host
+      # that F1 will not talk to. Leave empty for a normal deployment.
+      RELAY_UPSTREAM: ${RELAY_UPSTREAM:-}
+      # Shared secret for /relay. Without it the endpoint refuses every
+      # connection - anything accepted there becomes the session everyone sees.
+      RELAY_TOKEN: ${RELAY_TOKEN:-}
     volumes:
       - ./data:/data
     ports:

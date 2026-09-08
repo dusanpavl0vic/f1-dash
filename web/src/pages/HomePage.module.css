@@ -58,3 +58,19 @@
 .badgeLive { color: var(--green); border-color: var(--green-bd); background: var(--green-bg); }
 .badgeIdle { color: var(--text-faint); border-color: var(--border); }
 .badgeSoon { color: var(--yellow); border-color: var(--yellow-bd); background: var(--yellow-bg); }
+
+/* ------------------------------------------------------------ responsive */
+/*
+ * `minmax(0, 1fr)` lets the COLUMN shrink but not the text inside it. At three
+ * columns on a 375 px screen each card is 125 px wide and "Telemetry" needs
+ * 112 px of that after padding — so the label pushed the card, the card pushed
+ * the grid, and the whole page gained seven pixels of horizontal scroll.
+ */
+@media (max-width: 1023px) {
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 599px) {
+  .cards { grid-template-columns: 1fr; }
+  .card { padding: 18px 14px 20px 14px; border-right: none; }
+}

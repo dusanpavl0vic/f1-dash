@@ -1,5 +1,7 @@
-import { useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { liveStore } from "../store/liveStore";
+
+const API_URL = import.meta.env["VITE_API_URL"] ?? "http://localhost:4000";
 import type { PaceLine, SessionSnapshot, TimelineBand } from "../model/types";
 
 /**
@@ -54,4 +56,35 @@ export function useDelay(): [number, (seconds: number) => void] {
     liveStore.getDelaySeconds,
   );
   return [seconds, liveStore.setDelaySeconds];
+}
+
+/**
+ * Which live source the backend settled on, or null for a replay.
+ *
+ * Polled rather than pushed: it changes at most once per session, when
+ * failover picks a source, so a socket message for it would be a channel that
+ * carries one value a day.
+ */
+export function useLiveSource(mode: "live" | "replay" | "none"): string | null {
+  const [source, setSource] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (mode !== "live") return;
+
+    let cancelled = false;
+
+    const check = () => {
+      void fetch(`${API_URL}/api/session`)
+        .then((r) => r.json() as Promise<{ liveSource: string | null }>)
+        .then((d) => { if (!cancelled) setSource(d.liveSource); })
+        .catch(() => undefined);
+    };
+
+    check();
+    const timer = window.setInterval(check, 15_000);
+
+    return () => { cancelled = true; window.clearInterval(timer); };
+  }, [mode]);
+
+  return source;
 }

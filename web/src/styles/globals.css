@@ -56,6 +56,16 @@ table { border-collapse: collapse; }
    inverted to ink on paper — printing a near-black page wastes toner and reads
    badly.
 --------------------------------------------------------------------------- */
+/*
+ * A page must never scroll horizontally: any element wide enough to need it
+ * scrolls inside its own container instead.
+ *
+ * Deliberately NOT `overflow-x: hidden` on the body — that hides the symptom
+ * while the layout stays too wide, and it breaks `position: sticky`, which the
+ * replay transport bar depends on.
+ */
+body { max-width: 100%; }
+
 @media print {
   @page {
     size: A4 landscape;

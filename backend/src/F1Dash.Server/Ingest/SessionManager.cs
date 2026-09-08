@@ -40,6 +40,7 @@ public sealed class SessionManager(
     LiveSessionState state,
     ArchiveClient archive,
     string archiveRoot,
+    RelaySessionSource relay,
     ILoggerFactory loggers) : IHostedService
 {
     private readonly ILogger _logger = loggers.CreateLogger<SessionManager>();
@@ -54,6 +55,7 @@ public sealed class SessionManager(
     private TelemetryRecorder? _telemetry;
     private AnalysisStore? _store;
     private string? _sessionDirectory;
+    private FailoverSessionSource? _failover;
 
     public CurrentSession Current { get; private set; } = new(SessionMode.None, "idle");
 
@@ -66,6 +68,16 @@ public sealed class SessionManager(
     /// <summary>Transport state, when a replay is running.</summary>
     public ReplayController? Controller => _controller;
 
+    /// <summary>
+    /// Which live source is actually delivering data, once one is.
+    ///
+    /// Surfaced because the two are not equivalent: polling is a second or
+    /// three behind the socket, and a dashboard silently running behind is
+    /// exactly the kind of staleness a user cannot detect.
+    /// </summary>
+    public string? LiveSource =>
+        _failover?.Active ?? (Current.Mode == SessionMode.Live ? relay.Description : null);
+
     /// <summary>Total length of the loaded stream, so the scrub bar has a scale.</summary>
     public long DurationMs { get; private set; }
     public bool TelemetryEnabled => _telemetry?.Enabled ?? false;
@@ -74,7 +86,10 @@ public sealed class SessionManager(
     {
         // Start from the environment so a plain `docker compose up` plays
         // something without anyone having to call the API.
-        var mode = Environment.GetEnvironmentVariable("F1_LIVE") == "1" ? "live" : "replay";
+        var mode =
+            Environment.GetEnvironmentVariable("F1_RELAY") == "1" ? "relay"
+            : Environment.GetEnvironmentVariable("F1_LIVE") == "1" ? "live"
+            : "replay";
         var stream = Environment.GetEnvironmentVariable("REPLAY_STREAM");
 
         if (mode == "replay" && !string.IsNullOrWhiteSpace(stream) && File.Exists(stream))
@@ -87,9 +102,9 @@ public sealed class SessionManager(
                 Environment.GetEnvironmentVariable("REPLAY_LOOP") != "0",
                 ct).ConfigureAwait(false);
         }
-        else if (mode == "live")
+        else if (mode is "live" or "relay")
         {
-            await SwitchAsync(new SessionRequest("live"), ct).ConfigureAwait(false);
+            await SwitchAsync(new SessionRequest(mode), ct).ConfigureAwait(false);
         }
         else
         {
@@ -109,15 +124,39 @@ public sealed class SessionManager(
         {
             await StopCurrentAsync().ConfigureAwait(false);
 
+            if (request.Mode == "relay")
+            {
+                // The collector is already connected, or will be. This source
+                // simply waits for it rather than reaching out to F1 itself.
+                _sessionDirectory = null;
+                _controller = null;
+                _lastReplay = null;
+                _failover = null;
+
+                Start(relay, new CurrentSession(SessionMode.Live, relay.Description));
+                return Current;
+            }
+
             if (request.Mode == "live")
             {
                 _sessionDirectory = null;
                 _controller = null;
                 _lastReplay = null;
-                var source = new LiveSignalrSource(
-                    Environment.GetEnvironmentVariable("F1_HTTP_PROXY"),
-                    loggers.CreateLogger<LiveSignalrSource>());
+                var proxy = Environment.GetEnvironmentVariable("F1_HTTP_PROXY");
 
+                // Ordered cheapest-first. The socket is lowest latency; polling
+                // the static archive is 1-3 s behind but reads from a CDN, so it
+                // survives the origin refusing the server's address entirely.
+                var source = new FailoverSessionSource(
+                    [
+                        new LiveSignalrSource(proxy, loggers.CreateLogger<LiveSignalrSource>()),
+                        new StaticPollingSource(
+                            ArchiveClient.CreateHttpClient(proxy),
+                            loggers.CreateLogger<StaticPollingSource>()),
+                    ],
+                    loggers.CreateLogger<FailoverSessionSource>());
+
+                _failover = source;
                 Start(source, new CurrentSession(SessionMode.Live, source.Description));
                 return Current;
             }
@@ -146,6 +185,7 @@ public sealed class SessionManager(
             }
 
             _lastReplay = request;
+            _failover = null;
 
             await SwitchToStreamAsync(
                 path,

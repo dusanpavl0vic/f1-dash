@@ -1,5 +1,8 @@
 .app {
-  width: var(--app-width);
+  /* A cap, not a fixed width. As `width: 1440px` this laid every page out at
+     1440 px regardless of the viewport, so a phone rendered the desktop layout
+     and clipped it — no media query below could have helped. */
+  width: min(var(--app-width), 100%);
   margin: 0 auto;
   background: var(--bg);
   color: var(--text);
@@ -45,6 +48,10 @@
   display: flex; align-items: center; gap: 8px;
   font-family: var(--font-mono); font-size: var(--fs-11);
   letter-spacing: var(--ls-wider); color: var(--text-dim);
+  /* A flex child will not shrink below its content unless told to. Without
+     this, "last was Italian Grand Prix" on one line sets the minimum width of
+     the entire page. */
+  min-width: 0;
 }
 .statusDotLive { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
 .statusDotIdle { width: 8px; height: 8px; border-radius: 50%; background: var(--text-disabled); }
@@ -87,4 +94,36 @@
   font-size: var(--fs-10);
   letter-spacing: 0.08em;
   color: var(--text-faint);
+}
+
+/* ------------------------------------------------------------ responsive */
+/*
+ * The navigation is the element that decides the page's minimum width. With
+ * nine links in a non-wrapping row it was ~1000 px wide, which stretched the
+ * BODY past the viewport — so every other panel looked clipped even though its
+ * own layout was fine. Scrolling the nav within itself fixes the whole page.
+ */
+@media (max-width: 1023px) {
+  .nav {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+  .link { padding: 11px 15px; font-size: var(--fs-12); white-space: nowrap; flex: 0 0 auto; }
+  .spacer, .brandStrip { display: none; }
+}
+
+@media (max-width: 767px) {
+  .masthead { padding: 12px 14px; flex-wrap: wrap; gap: 8px; }
+  .mastheadSpacer { display: none; }
+  .mastheadStatus {
+    font-size: var(--fs-10);
+    width: 100%;
+    /* Wrapping rather than eliding: which session it was is the useful half. */
+    align-items: flex-start;
+    text-wrap: pretty;
+  }
+  .mastheadStatus span { flex: 0 0 auto; margin-top: 4px; }
+  .link { padding: 10px 13px; font-size: var(--fs-11); }
 }

@@ -23,6 +23,7 @@ exec docker run --rm \
   -e DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 \
   -e "ARCHIVE_PATH=${ARCHIVE_PATH:-/repo/data/archive}" \
   -e "F1_HTTP_PROXY=${F1_HTTP_PROXY:-}" \
+  -e "F1_LIVE_TEST=${F1_LIVE_TEST:-}" \
   --user "$(id -u):$(id -g)" \
   -w /repo/backend \
   mcr.microsoft.com/dotnet/sdk:9.0 \

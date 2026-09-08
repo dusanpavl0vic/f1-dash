@@ -55,6 +55,15 @@ var builder = WebApplication.CreateBuilder();
 
 builder.Services.AddSingleton<LiveSessionState>();
 
+// The listening half of the relay. Always registered, even when unused: it is
+// an empty channel until a collector connects, and having it present means
+// switching to relay mode needs no restart.
+builder.Services.AddSingleton(sp => new RelaySessionSource(
+    sp.GetRequiredService<ILogger<RelaySessionSource>>()));
+
+builder.Services.AddSingleton<RelayCollector>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<RelayCollector>());
+
 builder.Services.AddSingleton(_ => new TrackService(
     TrackService.CreateHttpClient(),
     Path.Combine(archiveRoot, "track-cache")));
@@ -105,6 +114,7 @@ builder.Services.AddSingleton(sp => new SessionManager(
     sp.GetRequiredService<LiveSessionState>(),
     sp.GetRequiredService<ArchiveClient>(),
     archiveRoot,
+    sp.GetRequiredService<RelaySessionSource>(),
     sp.GetRequiredService<ILoggerFactory>()));
 
 builder.Services.AddHostedService(sp => sp.GetRequiredService<SessionManager>());
@@ -161,6 +171,9 @@ app.MapGet("/api/session", (SessionManager sessions) => Results.Ok(new
     // The controller's speed, not the request's: it changes at runtime, and
     // exposing both under camelCase collides on "speed".
     speed = sessions.Controller?.Speed ?? sessions.Current.Speed,
+    // Which live source won, so the UI can say when it is a second or three
+    // behind rather than letting the user assume it is not.
+    liveSource = sessions.LiveSource,
 }));
 
 // Transport controls. Play, pause and speed are immediate; seek restarts the
@@ -436,6 +449,7 @@ app.MapGet("/api/track/{circuitKey:int}/{year:int}",
     });
 
 app.MapLiveSocket();
+app.MapRelay(app.Services.GetRequiredService<RelaySessionSource>());
 
 
 
