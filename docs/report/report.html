@@ -464,6 +464,27 @@ accent, so a user typing "Sao Paulo" matched nothing. The first fix used Unicode
 a test proved it did nothing at all: this project builds with <code>InvariantGlobalization</code>,
 where <code>string.Normalize</code> silently returns the accented character unchanged.</div>
 
+<h3>What the indexes are actually asked</h3>
+<p>An index that is only ever written to is pure cost. Four endpoints exist for the questions the
+file layout cannot answer, and each returns an empty result rather than an error when its store is
+down — showing nothing is the correct answer for a deployment that runs no databases.</p>
+
+<table>
+<thead><tr><th style="width:34%">Endpoint</th><th>Question</th></tr></thead>
+<tbody>
+<tr><td><code>/api/insights/circuit/{slug}</code></td><td>Fastest laps at one circuit, every indexed season</td></tr>
+<tr><td><code>/api/insights/driver/{code}</code></td><td>One driver's pace season by season — <u>median, not mean</u>, because one safety-car lap moves a mean by seconds and a median not at all</td></tr>
+<tr><td><code>/api/insights/strategies/{year}</code></td><td>Who ran which strategy across a whole season</td></tr>
+<tr><td><code>/api/insights/speed</code></td><td>Every lap above a speed threshold — the one genuine time-series question</td></tr>
+</tbody></table>
+
+<div class="note blue"><span class="lbl">One documented path was wrong and is recorded, not deleted</span>
+An earlier draft said the session catalogue would be read from Postgres with a filesystem fallback.
+Postgres only knows sessions that have been <em>indexed</em>, while the archive index lists every
+session that exists — so making it primary would <b>hide</b> sessions from the picker. The database
+would have been authoritative about something it has an incomplete view of, which is the exact
+failure the "archive is authoritative" rule exists to prevent.</div>
+
 <h3>Two rules that hold regardless</h3>
 <ul>
 <li><b>The archive stays authoritative.</b> Any store added later is a derived index that can be
