@@ -6,7 +6,7 @@ services:
       context: ./backend
     environment:
       ASPNETCORE_URLS: http://0.0.0.0:4000
-      ARCHIVE_PATH: /data/archive
+      ARCHIVE_PATH: ${ARCHIVE_PATH:-/data/archive}
       ORIGIN: ${ORIGIN:-http://localhost:3000}
       # Points at a recorded session. This is the development default and the
       # reason the whole stack runs out of season — F1 runs on roughly 24

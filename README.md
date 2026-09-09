@@ -26,20 +26,69 @@ f1-dash/
 | Port | 3000 | 4000 |
 | Owns | Rendering, delay buffer, position interpolation | F1 feed connection, state merge, WebSocket fanout, REST, replay |
 
-## Quick start
+## Running it
+
+The only host requirement is Docker. No .NET SDK, no Node install — even the
+build toolchain runs in containers.
 
 ```bash
-docker compose up
+docker compose up -d          # backend on :4000, web on :3000
 ```
 
-Everything runs in containers. The only host requirements are Docker and an editor —
-no .NET SDK, no Node installation needed.
+Open <http://localhost:3000>. A fresh clone has **no data at all** — `data/` is
+gitignored — and that is fine: the session picker lists every session back to
+2018 from F1's own archive index, and downloading one takes a few seconds.
 
-For development against a recorded session (no live race required):
+Verified from an empty directory: 75 sessions listed for 2024, none local;
+choosing one downloaded 45 MB in 9 seconds and it replayed with 20 drivers and
+real lap times.
+
+### With the databases
 
 ```bash
-docker compose --profile dev up
+docker compose --profile stores up -d       # + postgres, influxdb, mongo
+cp .env.example .env                        # connection strings
 ```
+
+Then fill the indexes once:
+
+```bash
+curl -XPOST localhost:4000/api/storage/backfill   # laps, stints, analysis, telemetry
+curl -XPOST localhost:4000/api/storage/streams    # the raw sessions themselves
+```
+
+Both are idempotent. `GET /api/storage` says which stores are live.
+
+Every store is **optional**. With none configured the application behaves exactly
+as it did before they existed — the archive on disk is the only store, and
+`/insights` explains how to turn them on rather than showing an empty table.
+
+### Useful environment variables
+
+| Variable | Default | Effect |
+|---|---|---|
+| `ARCHIVE_PATH` | `/data/archive` | Where sessions are stored |
+| `REPLAY_STREAM` | 2024 Monza race | Session to play on startup; absent, it waits for a choice |
+| `F1_LIVE` | unset | `1` connects to the live feed instead |
+| `F1_RELAY` | unset | `1` waits for a collector (see `docs/22`) |
+| `POSTGRES_URL` / `INFLUX_URL` / `MONGO_URL` | unset | Enable each index |
+
+## Where the data comes from
+
+Four sources, none of them requiring an account or a key.
+
+| Source | Provides | Notes |
+|---|---|---|
+| **F1 live timing** — `livetiming.formula1.com/static/` | Every session since 2018, and live sessions as they run | S3 behind CloudFront. This is the backbone: the session archive and the replay fixtures both come from here |
+| **F1 SignalR** — `livetiming.formula1.com/signalrcore/` | The live feed as a socket | Lowest latency. The origin can refuse a server's address, which is why the static path above is also a live source — see `docs/22` |
+| **Jolpica** — `api.jolpi.ca/ergast/f1` | Schedule, results, championship standings | The Ergast successor. Only these pages depend on it |
+| **MultiViewer** — `api.multiviewer.app` | Circuit outlines for the track map | Cached on disk after the first fetch |
+
+Nothing is scraped and nothing is fabricated. Every number on screen came from
+one of these four, and where a value is estimated rather than measured — tyre
+wear, degradation — the interface says so on the panel.
+
+**This project is unofficial and unaffiliated with the Formula 1 companies.**
 
 ## Documentation
 
@@ -50,7 +99,8 @@ docker compose --profile dev up
 | `docs/20-implementation-plan.md` | Implementation use cases — the actual work order |
 | `docs/16-dotnet-architecture.md` | Backend architecture |
 | `docs/17-frontend-architecture.md` | Frontend architecture |
-| `docs/F1-Dash-Architecture-Report.pdf` | Technical report with diagrams |
+| `docs/Apex-Architecture.pdf` | Technical report — 17 pages, 8 diagrams |
+| `docs/22-data-architecture.md` | The three stores, schemas, and the two deployment modes |
 | `DECISIONS.md` | Every deviation from the original specification, with reasoning |
 
 ## Branching
